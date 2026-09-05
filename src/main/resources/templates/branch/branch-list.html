@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Branch List | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/branch-management.css}">
+    <link rel="stylesheet" th:href="@{/css/print.css}" media="print">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('branches')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+    <div class="workspace">
+        <header class="topbar">
+            <button class="icon-button menu-button" type="button" data-sidebar-open aria-controls="dashboard-sidebar" aria-expanded="false">☰</button>
+            <div class="topbar-context"><small th:text="${setup.businessName}">Business</small><strong>Branch management</strong></div>
+            <div class="topbar-actions">
+                <a class="branch-switcher" sec:authorize="hasRole('OWNER') or hasAuthority('BRANCH_CHANGE')" th:href="@{/owner/branches/change}"><span class="branch-avatar branch-avatar-small" th:text="${setup.branchCode}">BR</span><span><small>Working in</small><strong th:text="${setup.branchName}">Main Branch</strong></span></a>
+            </div>
+        </header>
+        <main class="branch-page">
+            <nav class="breadcrumb"><a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><strong>Branch List</strong></nav>
+            <section class="branch-page-heading">
+                <div><span class="eyebrow">Part O · Branch</span><h1>Branch List</h1><p>Manage store locations under <strong th:text="${setup.businessName}">your business</strong>.</p></div>
+                <div class="branch-actions"><a class="branch-button" sec:authorize="hasRole('OWNER') or hasAuthority('BRANCH_CHANGE')" th:href="@{/owner/branches/change}">Change active branch</a><a class="branch-button primary" th:if="${canCreateBranch}" th:href="@{/owner/branches/new}">+ Create branch</a></div>
+            </section>
+            <div class="success-banner" th:if="${successMessage}" role="status"><span>✓</span><strong th:text="${successMessage}">Updated</strong></div>
+            <section class="branch-panel">
+                <form class="branch-toolbar" method="get" th:action="@{/owner/branches}">
+                    <div class="branch-filter">
+                        <div class="branch-field"><label for="search">Search</label><input id="search" name="search" th:value="${search}" placeholder="Name, code, country or address"></div>
+                        <div class="branch-field"><label for="size">Rows</label><select id="size" name="size"><option th:each="option : ${pageSizes}" th:value="${option}" th:text="${option}" th:selected="${option == pageSize}">25</option></select></div>
+                        <div class="branch-field"><label for="sort">Sort by</label><select id="sort" name="sort"><option value="createdAt" th:selected="${sort == 'createdAt'}">Created date</option><option value="name" th:selected="${sort == 'name'}">Branch name</option><option value="country" th:selected="${sort == 'country'}">Country</option><option value="address" th:selected="${sort == 'address'}">Address</option></select></div>
+                        <div class="branch-field"><label for="direction">Order</label><select id="direction" name="direction"><option value="desc" th:selected="${direction == 'desc'}">Descending</option><option value="asc" th:selected="${direction == 'asc'}">Ascending</option></select></div>
+                        <button class="branch-button" type="submit">Apply</button>
+                    </div>
+                    <div class="branch-export-actions" aria-label="Print and export">
+                        <button class="branch-button" type="button" data-print-branches>Print</button>
+                        <a class="branch-button" th:href="@{/owner/branches/export(format='pdf',search=${search},sort=${sort},direction=${direction})}">PDF</a>
+                        <a class="branch-button" th:href="@{/owner/branches/export(format='xlsx',search=${search},sort=${sort},direction=${direction})}">Excel</a>
+                        <a class="branch-button" th:href="@{/owner/branches/export(format='csv',search=${search},sort=${sort},direction=${direction})}">CSV</a>
+                    </div>
+                </form>
+                <div class="branch-table-wrap" th:if="${branches.totalElements > 0}">
+                    <table class="branch-table">
+                        <thead><tr><th>#</th><th>Branch</th><th>Country</th><th>Address</th><th>Created</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody>
+                        <tr th:each="branch, row : ${branches.content}">
+                            <td th:text="${branches.number * branches.size + row.index + 1}">1</td>
+                            <td><div class="branch-name"><strong th:text="${branch.name}">Gulshan</strong><small th:text="${branch.code}">GUL-01</small><span class="current-chip" th:if="${branch.id == currentBranchId and branch.status.name() == 'ACTIVE'}">Active workspace</span></div></td>
+                            <td th:text="${branch.country}">BD</td>
+                            <td th:text="${branch.address}">Address</td>
+                            <td th:text="${branch.createdAt}">30 Aug 2026</td>
+                            <td><span class="branch-status" th:classappend="${branch.status.name() == 'ACTIVE'} ? ' active' : ' inactive'" th:text="${branch.status}">ACTIVE</span></td>
+                            <td><div class="row-actions"><a class="row-link" th:href="@{/owner/branches/{id}(id=${branch.id})}">Details</a><a class="row-link" th:href="@{/owner/branches/{id}/edit(id=${branch.id})}">Edit</a><form sec:authorize="hasRole('OWNER') or hasAuthority('BRANCH_CHANGE')" th:if="${branch.status.name() == 'ACTIVE' and branch.id != currentBranchId}" method="post" th:action="@{/owner/branches/change}" data-branch-switch-form th:data-current-branch="${setup.branchName}" th:data-target-branch="${branch.name}"><input type="hidden" name="branchId" th:value="${branch.id}"><button class="row-link" type="submit">Use branch</button></form><form th:if="${branch.status.name() == 'ACTIVE'}" method="post" th:action="@{/owner/branches/{id}/deactivate(id=${branch.id})}" onsubmit="return confirm('Deactivate this branch? It will remain in history and can be restored later.');"><button class="row-link" type="submit">Deactivate</button></form><form th:if="${branch.status.name() == 'INACTIVE'}" method="post" th:action="@{/owner/branches/{id}/activate(id=${branch.id})}"><button class="row-link" type="submit">Restore</button></form></div></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-state" th:if="${branches.totalElements == 0}"><strong>No branch found</strong><span>No branch matches the current search.</span></div>
+                <div class="branch-pagination" th:if="${branches.totalPages > 0}">
+                    <span th:text="|Showing page ${branches.number + 1} of ${branches.totalPages} · ${branches.totalElements} branches|">Page 1</span>
+                    <div class="pagination-actions">
+                        <a th:if="${branches.hasPrevious()}" th:href="@{/owner/branches(page=${branches.number - 1},size=${pageSize},sort=${sort},direction=${direction},search=${search})}">‹</a><span class="disabled" th:unless="${branches.hasPrevious()}">‹</span>
+                        <a th:if="${branches.hasNext()}" th:href="@{/owner/branches(page=${branches.number + 1},size=${pageSize},sort=${sort},direction=${direction},search=${search})}">›</a><span class="disabled" th:unless="${branches.hasNext()}">›</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script>
+<script th:src="@{/js/pages/branch-management.js}" defer></script>
+</body>
+</html>

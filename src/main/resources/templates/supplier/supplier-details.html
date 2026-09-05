@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supplier Details | Falcon POS</title>
+<link rel="stylesheet" th:href="@{/css/base.css}">
+<link rel="stylesheet" th:href="@{/css/components.css}">
+<link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+<link rel="stylesheet" th:href="@{/css/pages/catalog-management.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+<aside th:replace="~{fragments/settings-shell :: sidebar('suppliers')}">
+</aside>
+<button class="sidebar-scrim" type="button" data-sidebar-close>
+</button>
+<div class="workspace">
+<header th:replace="~{fragments/settings-shell :: topbar('Suppliers')}">
+</header>
+<main class="catalog-page">
+<nav class="catalog-breadcrumb">
+<a th:href="@{/owner/dashboard}">Dashboard</a>
+<span>/</span>
+<a th:href="@{/owner/suppliers}">Suppliers</a>
+<span>/</span>
+<strong>Details</strong>
+</nav>
+<div th:replace="~{fragments/supplier-ui :: feedback}"></div>
+<section class="catalog-card">
+<div class="catalog-card-body supplier-profile">
+<div class="supplier-avatar" th:text="${#strings.substring(supplier.name,0,1)}">S</div>
+<div>
+<span class="eyebrow">Supplier details</span>
+<h1 th:text="${supplier.name}">Supplier</h1>
+<p>
+<span th:text="${supplier.codeName ?: 'No code name'}">Code</span> · <span th:text="${supplier.mobileNumber ?: 'No mobile'}">Mobile</span>
+</p>
+</div>
+<div class="catalog-heading-actions">
+<a class="catalog-btn" th:if="${!supplier.archived and supplier.active and currentBranchAssigned}" th:href="@{/owner/purchases/new(supplierId=${supplier.id})}">Create Purchase</a>
+<a class="catalog-btn primary" th:if="${!supplier.archived}" th:href="@{/owner/suppliers/{id}/edit(id=${supplier.id})}">Edit Supplier</a>
+</div>
+</div>
+</section>
+<section class="metric-row" style="margin:20px 0">
+<div class="metric-card">
+<small>Total Confirmed Purchases</small>
+<strong th:text="${financialSummary.totalConfirmedPurchases}">0.0000</strong>
+</div>
+<div class="metric-card">
+<small>Total Paid</small>
+<strong th:text="${financialSummary.totalPaid}">0.0000</strong>
+</div>
+<div class="metric-card">
+<small>Outstanding Due</small><strong th:text="${financialSummary.outstandingDue}">0.0000</strong>
+</div>
+<div class="metric-card">
+<small>Returns / Credits</small><strong th:text="${financialSummary.purchaseReturnsOrCredits}">0.0000</strong>
+</div>
+<div class="metric-card">
+<small>Last Purchase</small><strong th:text="${financialSummary.lastPurchaseDate == null ? '—' : financialSummary.lastPurchaseDate}">—</strong>
+</div>
+</section>
+<div class="details-grid">
+<section class="catalog-card">
+<div class="catalog-card-head">
+<div>
+<h2>Profile</h2>
+<p>Supplier contact and address information.</p>
+</div>
+</div>
+<div class="details-list">
+<div class="detail-item">
+<small>Supplier ID</small>
+<strong th:text="${supplier.id}">1</strong>
+</div>
+<div class="detail-item">
+<small>Status</small>
+<strong th:text="${supplier.active ? 'Active' : 'Inactive'}">Active</strong>
+</div>
+<div class="detail-item">
+<small>Email</small>
+<strong th:text="${supplier.email ?: '—'}">—</strong>
+</div>
+<div class="detail-item">
+<small>Mobile</small>
+<strong th:text="${supplier.mobileNumber ?: '—'}">—</strong>
+</div>
+<div class="detail-item">
+<small>City</small>
+<strong th:text="${supplier.city ?: '—'}">—</strong>
+</div>
+<div class="detail-item">
+<small>State / Division</small>
+<strong th:text="${supplier.state ?: '—'}">—</strong>
+</div>
+<div class="detail-item">
+<small>Country</small>
+<strong th:text="${supplier.country ?: '—'}">—</strong>
+</div>
+<div class="detail-item">
+<small>Display order</small>
+<strong th:text="${supplier.displayOrder}">0</strong>
+</div>
+</div>
+<div class="catalog-card-body">
+<small class="eyebrow">Address</small>
+<p style="margin:8px 0 16px;color:#4e6057" th:text="${supplier.address ?: '—'}">—</p>
+<small class="eyebrow">Additional details</small>
+<p style="margin:8px 0 0;color:#4e6057;line-height:1.6" th:text="${supplier.additionalDetails ?: '—'}">—</p>
+</div>
+</section>
+<section class="catalog-card">
+<div class="catalog-card-head">
+<div>
+<h2>Branch assignment</h2>
+<p>Branches currently allowed to use this supplier.</p>
+</div>
+</div>
+<div class="catalog-card-body">
+<div class="branch-chip-row">
+<span class="branch-chip" th:each="branch : ${assignedBranches}">
+<span class="status-dot">
+</span>
+<span th:text="${branch.branchName}">Branch</span>
+</span>
+<span class="muted-value" th:if="${#lists.isEmpty(assignedBranches)}">No active assigned branch.</span>
+</div>
+</div>
+</section>
+</div>
+<section class="catalog-card">
+<div class="catalog-card-head">
+<div>
+<h2>Supplied Products</h2>
+<p>Current ProductSupplier connections.</p>
+</div>
+</div>
+<div class="catalog-card-body">
+<form class="inline-form" th:if="${!supplier.archived}" th:action="@{/owner/suppliers/{id}/products(id=${supplier.id})}" method="post">
+<div class="form-field">
+<label for="productLink">Link Product</label>
+<select id="productLink" name="productId" required>
+<option value="">Select product</option>
+<option th:each="product : ${productOptions}" th:value="${product.id}" th:text="|${product.name} · ${product.referenceCode}|">Product</option>
+</select>
+</div>
+<button class="catalog-btn primary" type="submit">Link Product</button>
+</form>
+</div>
+<div class="table-wrap">
+<table class="catalog-table">
+<thead>
+<tr>
+<th>Reference</th>
+<th>Product</th>
+<th>Status</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody>
+<tr th:if="${#lists.isEmpty(linkedProducts)}">
+<td colspan="4" class="table-empty">No products linked to this supplier.</td>
+</tr>
+<tr th:each="product : ${linkedProducts}">
+<td th:text="${product.referenceCode}">REF</td>
+<td th:text="${product.name}">Product</td>
+<td th:text="${product.archived ? 'Archived' : product.status}">Active</td>
+<td>
+<div class="actions-inline">
+<a class="table-action" th:href="@{/owner/products/{id}(id=${product.id})}">View Product</a>
+<form th:if="${!supplier.archived}" th:action="@{/owner/suppliers/{sid}/products/{pid}/remove(sid=${supplier.id},pid=${product.id})}" method="post">
+<button class="table-action danger" type="submit">Remove Link</button>
+</form>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section class="catalog-card">
+<div class="catalog-card-head">
+<div>
+<h2>Purchase History</h2>
+<p>Authoritative purchases for this supplier in the active branch.</p>
+</div>
+<a class="catalog-btn" th:href="@{/owner/purchases(supplierId=${supplier.id})}">Open Purchase List</a>
+</div>
+<div class="table-wrap">
+<table class="catalog-table">
+<thead>
+<tr>
+<th>Date</th>
+<th>Invoice / Reference</th>
+<th>Total</th>
+<th>Paid</th>
+<th>Due</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr th:if="${purchaseHistory.empty}">
+<td colspan="7" class="table-empty">No purchase history for this supplier in the active branch.</td>
+</tr>
+<tr th:each="purchase : ${purchaseHistory.content}">
+<td th:text="${purchase.purchaseDate}">—</td>
+<td th:text="${purchase.supplierInvoiceReference ?: '—'}">—</td>
+<td th:text="${purchase.totalPayable}">0.0000</td>
+<td th:text="${purchase.paidAmount}">0.0000</td>
+<td th:text="${purchase.dueAmount}">0.0000</td>
+<td th:text="${purchase.status}">CONFIRMED</td>
+<td>
+<a class="table-action" th:href="@{/owner/purchases/{id}(id=${purchase.id})}">View</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section class="catalog-card">
+<div class="catalog-card-head">
+<div>
+<h2>Expiry Performance</h2>
+<p>Read-only projections from authoritative Purchase and Inventory records for the active branch.</p>
+</div>
+</div>
+<div class="catalog-card-body">
+<div class="expiry-performance-grid">
+<div class="metric-card">
+<small>Active Expiry-Controlled Batches Supplied</small>
+<strong th:text="${expiryPerformance.activeExpiryControlledBatchesSupplied}">0</strong>
+</div>
+<div class="metric-card">
+<small>Near-Expiry Stock</small>
+<strong th:text="|${expiryPerformance.nearExpiryBatchCount} batch(es)|">0 batch(es)</strong>
+</div>
+<div class="metric-card">
+<small>Expired Stock</small>
+<strong th:text="|${expiryPerformance.expiredBatchCount} batch(es)|">0 batch(es)</strong>
+</div>
+<div class="metric-card">
+<small>Expiry-Related Purchase Returns</small>
+<strong th:text="${expiryPerformance.expiryRelatedPurchaseReturnCount}">0</strong>
+</div>
+<div class="metric-card">
+<small>Supplier Refunds / Credits</small>
+<strong th:text="${expiryPerformance.supplierRefundsAndCredits}">0.0000</strong>
+</div>
+<div class="metric-card">
+<small>Expiry Losses</small>
+<strong th:text="${expiryPerformance.expiryLossAmount}">0.0000</strong>
+</div>
+</div>
+<small class="form-hint" style="display:block;margin-top:14px">Expiry-related return count uses confirmed return records linked to this supplier's expiry-controlled batches; no separate return-reason field is invented.</small>
+</div>
+</section>
+</main>
+</div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer>
+</script>
+<script th:src="@{/js/pages/catalog-management.js}" defer>
+</script>
+</body>
+</html>

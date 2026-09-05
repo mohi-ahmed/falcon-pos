@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav class="product-module-nav" th:fragment="nav(active)" aria-label="Product module">
+    <a class="product-module-nav__item" th:classappend="${active == 'products'} ? ' is-active'" th:href="@{/owner/products}">Products</a>
+    <a class="product-module-nav__item" th:classappend="${active == 'add-product'} ? ' is-active'" th:href="@{/owner/products/new}">Add Product</a>
+    <a class="product-module-nav__item" th:classappend="${active == 'categories'} ? ' is-active'" th:href="@{/owner/products/categories}">Categories</a>
+    <a class="product-module-nav__item" th:classappend="${active == 'add-category'} ? ' is-active'" th:href="@{/owner/products/categories/new}">Add Category</a>
+    <a class="product-module-nav__item" th:classappend="${active == 'stock-alert'} ? ' is-active'" th:href="@{/owner/products/stock-alert}">Stock Alert</a>
+    <a class="product-module-nav__item" th:classappend="${active == 'expiry-alert'} ? ' is-active'" th:href="@{/owner/products/expiry-alert}">Expiry Alert</a>
+</nav>
+</body>
+</html>

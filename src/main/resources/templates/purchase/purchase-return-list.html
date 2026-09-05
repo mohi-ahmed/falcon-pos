@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Purchase Return List | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/operations.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/purchase.css}">
+</head>
+<body class="dashboard-body purchase-module" data-purchase-page="returns">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('purchases')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Purchase Return List')}"></header>
+        <main class="operations-page">
+            <nav class="ops-breadcrumb" aria-label="Breadcrumb"><a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><strong>Purchase Return List</strong></nav>
+            <div th:replace="~{fragments/purchase-ui :: subnav('returns')}"></div>
+            <section class="ops-heading">
+                <div>
+                    <span class="eyebrow">Purchase Management</span>
+                    <h1>Purchase Return List</h1>
+                    <p>Review supplier returns and their current status.</p>
+                </div>
+                <div class="ops-actions"><button class="ops-btn" data-print-page type="button">Print</button></div>
+            </section>
+
+            <div class="flash-message" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="flash-message error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+            <section class="ops-card">
+                <div class="ops-card-head"><div><h2>Search and filters</h2><p>Search or filter supplier returns.</p></div></div>
+                <div class="ops-card-body">
+                    <form class="ops-filter-form" method="get" th:action="@{/owner/purchases/returns}" data-purchase-filter-primary="3">
+                        <div class="ops-field wide"><label for="returnQuery">Search reference / supplier</label><input id="returnQuery" name="q" type="search" th:value="${query}" placeholder="Return reference or purchase context"></div>
+                        <div class="ops-field"><label for="returnSupplier">Supplier</label><select id="returnSupplier" name="supplierId"><option value="">All suppliers</option><option th:each="s:${suppliers}" th:value="${s.id}" th:text="${s.name}" th:selected="${selectedSupplierId == s.id}">Supplier</option></select></div>
+                        <div class="ops-field"><label for="returnStatus">Status</label><select id="returnStatus" name="status"><option value="">All statuses</option><option th:each="s:${T(com.spark.falcon.purchase.entity.enumtype.PurchaseReturnStatus).values()}" th:value="${s}" th:text="${#strings.replace(s.name(),'_',' ')}" th:selected="${selectedStatus == s}">Status</option></select></div>
+                        <div class="ops-field"><label for="returnFrom">From date</label><input id="returnFrom" name="fromDate" type="date" th:value="${fromDate}"></div>
+                        <div class="ops-field"><label for="returnTo">To date</label><input id="returnTo" name="toDate" type="date" th:value="${toDate}"></div>
+                        <div class="ops-field"><label for="returnSize">Rows per page</label><select id="returnSize" name="size"><option value="10" th:selected="${selectedSize == 10}">10</option><option value="25" th:selected="${selectedSize == 25}">25</option><option value="50" th:selected="${selectedSize == 50}">50</option><option value="100" th:selected="${selectedSize == 100}">100</option></select></div>
+                        <div class="ops-filter-actions"><a class="ops-btn" th:href="@{/owner/purchases/returns}">Reset</a><button class="ops-btn primary" type="submit">Apply filters</button></div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="ops-card">
+                <div class="ops-card-head">
+                    <div><h2>Purchase returns</h2><p th:text="|${returns.totalElements} return(s) · page ${returns.number + 1} of ${returns.totalPages == 0 ? 1 : returns.totalPages}|">Results</p></div>
+                    <div class="ops-pending-actions no-print" aria-label="Purchase return export actions">
+                        <a class="ops-btn" th:href="@{/owner/purchases/returns/export(branchId=${setup.branchId},supplierId=${selectedSupplierId},status=${selectedStatus},fromDate=${fromDate},toDate=${toDate},keyword=${query},format='xlsx')}">Excel</a>
+                        <a class="ops-btn" th:href="@{/owner/purchases/returns/export(branchId=${setup.branchId},supplierId=${selectedSupplierId},status=${selectedStatus},fromDate=${fromDate},toDate=${toDate},keyword=${query},format='csv')}">CSV</a>
+                        <a class="ops-btn" th:href="@{/owner/purchases/returns/export(branchId=${setup.branchId},supplierId=${selectedSupplierId},status=${selectedStatus},fromDate=${fromDate},toDate=${toDate},keyword=${query},format='pdf')}">PDF</a>
+                    </div>
+                </div>
+                <div class="ops-table-wrap">
+                    <table class="ops-table">
+                        <thead><tr><th>Return Date</th><th>Reference Number</th><th>Purchase</th><th>Supplier</th><th class="numeric">Total Return Amount</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody>
+                        <tr th:each="r:${returns.content}">
+                            <td class="purchase-date-cell"><span th:text="${#temporals.format(r.returnDate,'dd/MM/yyyy')}">—</span></td><td th:text="${r.referenceNumber}">—</td><td th:text="${r.purchaseId}">—</td>
+                            <td th:text="${supplierMap[r.supplierId] != null ? supplierMap[r.supplierId].name : 'Supplier #' + r.supplierId}">—</td>
+                            <td class="numeric" th:text="${#numbers.formatDecimal(r.totalReturnAmount,1,2)}">0.00</td><td><span class="ops-status" th:text="${#strings.replace(r.status.name(),'_',' ')}">—</span></td>
+                            <td><a class="ops-btn" th:href="@{/owner/purchases/returns/{id}(id=${r.id})}">View</a></td>
+                        </tr>
+                        <tr th:if="${returns.empty}"><td colspan="7"><div class="ops-empty"><strong>No returns match the current filters</strong><span>Adjust the filters or open an eligible purchase to create a documented supplier return.</span></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="ops-pagination" th:if="${returns.totalPages > 1}">
+                    <small th:text="|Showing ${returns.number * returns.size + 1}–${returns.number * returns.size + returns.numberOfElements} of ${returns.totalElements}|">Rows</small>
+                    <nav aria-label="Purchase return pagination">
+                        <a class="ops-page-link" th:classappend="${returns.first ? ' disabled' : ''}" th:href="@{/owner/purchases/returns(page=${returns.number-1},size=${selectedSize},supplierId=${selectedSupplierId},status=${selectedStatus},fromDate=${fromDate},toDate=${toDate},q=${query})}" aria-label="Previous page">‹</a>
+                        <span class="ops-page-link active" th:text="${returns.number+1}">1</span>
+                        <a class="ops-page-link" th:classappend="${returns.last ? ' disabled' : ''}" th:href="@{/owner/purchases/returns(page=${returns.number+1},size=${selectedSize},supplierId=${selectedSupplierId},status=${selectedStatus},fromDate=${fromDate},toDate=${toDate},q=${query})}" aria-label="Next page">›</a>
+                    </nav>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script>
+<script th:src="@{/js/pages/operations.js}" defer></script>
+<script th:src="@{/js/pages/purchase-ui.js}" defer></script>
+</body>
+</html>

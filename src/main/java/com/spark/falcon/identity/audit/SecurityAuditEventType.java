@@ -1,0 +1,19 @@
+package com.spark.falcon.identity.audit;
+
+public enum SecurityAuditEventType {
+
+    LOGIN_SUCCESS,
+    LOGIN_FAILURE,
+    LOGOUT,
+
+    PASSWORD_RESET_REQUESTED,
+    PASSWORD_RESET_VERIFIED,
+    PASSWORD_RESET_FAILED,
+    PASSWORD_RESET_COMPLETED,
+
+    ACCOUNT_LOCKED,
+
+    MFA_CHALLENGE_STARTED,
+    MFA_SUCCESS,
+    MFA_FAILURE
+}

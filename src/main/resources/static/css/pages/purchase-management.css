@@ -1,0 +1,324 @@
+/* ==========================================================================
+   Purchase module — premium presentation layer
+   Scope: .purchase-shell only (added to <main class="operations-page ...">)
+   Purpose: elevate Purchase List / Add Purchase / Purchase Details / Returns /
+   Purchase Log / Stock Import to a Toast/Square-grade visual standard.
+   This file is purely presentational — it never changes ids, names,
+   th:* bindings, form actions or data-* hooks used by operations.js.
+   It layers on top of the shared /css/pages/operations.css and only
+   applies inside pages that carry the .purchase-shell class, so every
+   other module using operations.css (Inventory, Cash Management, etc.)
+   is completely unaffected.
+   ========================================================================== */
+
+.purchase-shell {
+    --pm-success-bg: #eaf7f1;
+    --pm-success-text: #0d6b4f;
+    --pm-success-dot: #1fa87a;
+    --pm-warning-bg: #fff6e6;
+    --pm-warning-text: #8a5a10;
+    --pm-warning-dot: #e0a53a;
+    --pm-danger-bg: #fdecec;
+    --pm-danger-text: #a92f2a;
+    --pm-danger-dot: #d64545;
+    --pm-neutral-bg: #eef1f0;
+    --pm-neutral-text: #566a61;
+    --pm-neutral-dot: #93a29b;
+    --pm-info-bg: #eaf3fc;
+    --pm-info-text: #1f5c96;
+    --pm-info-dot: #3f83c4;
+    --pm-card-radius: 18px;
+    --pm-shadow-sm: 0 1px 2px rgba(16, 28, 24, .04), 0 1px 1px rgba(16, 28, 24, .03);
+    --pm-shadow-md: 0 10px 28px rgba(16, 40, 32, .08), 0 2px 8px rgba(16, 40, 32, .04);
+    --pm-shadow-lg: 0 22px 55px rgba(16, 40, 32, .12);
+    background: var(--canvas);
+}
+
+/* ---------- Page frame & typography ---------- */
+.purchase-shell.operations-page { padding: 28px 30px 72px; }
+.purchase-shell .ops-breadcrumb {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 20px; padding: 0;
+    color: var(--ink-500); font-size: 12.5px; font-weight: 600;
+}
+.purchase-shell .ops-breadcrumb a {
+    color: var(--ink-600); font-weight: 700; text-decoration: none;
+    padding: 3px 2px; border-radius: 6px; transition: color .15s ease;
+}
+.purchase-shell .ops-breadcrumb a:hover { color: var(--brand-700); }
+.purchase-shell .ops-breadcrumb strong { color: var(--ink-950); font-weight: 700; }
+.purchase-shell .ops-breadcrumb span { color: #b7c3bd; }
+
+.purchase-shell .ops-heading {
+    align-items: flex-start; gap: 24px; margin-bottom: 26px;
+    padding-bottom: 22px; border-bottom: 1px solid var(--line);
+}
+.purchase-shell .ops-heading .eyebrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--brand-700); font-size: 11.5px; font-weight: 800;
+    letter-spacing: .1em; text-transform: uppercase;
+}
+.purchase-shell .ops-heading h1 {
+    margin: 8px 0 8px; color: var(--ink-950);
+    font-size: 30px; font-weight: 750; letter-spacing: -.02em; line-height: 1.2;
+}
+.purchase-shell .ops-heading p {
+    max-width: 720px; margin: 0; color: var(--ink-600);
+    font-size: 14px; line-height: 1.65;
+}
+.purchase-shell .ops-actions { gap: 10px; }
+
+/* ---------- Buttons ---------- */
+.purchase-shell .ops-btn {
+    min-height: 42px; padding: 0 16px; gap: 8px;
+    border: 1px solid var(--line); border-radius: 11px;
+    background: var(--surface); color: var(--ink-800);
+    font-size: 13px; font-weight: 700; letter-spacing: -.005em;
+    box-shadow: var(--pm-shadow-sm);
+    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease, transform .1s ease, color .15s ease;
+}
+.purchase-shell .ops-btn:hover:not(:disabled):not(.ops-disabled-action) {
+    border-color: #bcd0c7; background: #fbfdfc; box-shadow: var(--pm-shadow-md); transform: translateY(-1px);
+}
+.purchase-shell .ops-btn:active:not(:disabled) { transform: translateY(0); box-shadow: var(--pm-shadow-sm); }
+.purchase-shell .ops-btn.primary {
+    border-color: var(--brand-700); background: var(--brand-700); color: #fff;
+    box-shadow: 0 10px 22px rgba(8, 120, 91, .22);
+}
+.purchase-shell .ops-btn.primary:hover:not(:disabled) {
+    border-color: var(--brand-800); background: var(--brand-800);
+    box-shadow: 0 14px 28px rgba(8, 120, 91, .28);
+}
+.purchase-shell .ops-btn.danger {
+    border-color: #f1cfcf; background: #fffafa; color: #9a3838;
+}
+.purchase-shell .ops-btn.danger:hover:not(:disabled) { border-color: #e3a9a9; background: #fff2f2; }
+.purchase-shell .ops-btn.sm { min-height: 33px; padding: 0 11px; font-size: 12px; border-radius: 9px; }
+.purchase-shell .ops-btn:disabled, .purchase-shell .ops-disabled-action { box-shadow: none; }
+.purchase-shell .ops-btn:focus-visible { outline: 3px solid rgba(10, 138, 103, .25); outline-offset: 2px; }
+
+/* ---------- Cards ---------- */
+.purchase-shell .ops-card {
+    border: 1px solid #e4ece8; border-radius: var(--pm-card-radius);
+    background: var(--surface); box-shadow: var(--pm-shadow-sm);
+    margin-bottom: 20px; overflow: hidden;
+    transition: box-shadow .2s ease;
+}
+.purchase-shell .ops-card-head {
+    padding: 20px 24px; border-bottom: 1px solid #eef2f0;
+    background: linear-gradient(180deg, #fbfdfc 0%, #ffffff 100%);
+}
+.purchase-shell .ops-card-head h2 {
+    margin: 0 0 4px; color: var(--ink-950); font-size: 16.5px; font-weight: 750; letter-spacing: -.01em;
+}
+.purchase-shell .ops-card-head p { margin: 0; color: var(--ink-600); font-size: 12.5px; line-height: 1.55; }
+.purchase-shell .ops-card-body { padding: 22px 24px; }
+
+/* ---------- Status pills ---------- */
+.purchase-shell .ops-status {
+    position: relative; display: inline-flex; align-items: center; gap: 7px;
+    min-height: 27px; padding: 0 12px 0 10px; border-radius: 999px;
+    background: var(--pm-neutral-bg); color: var(--pm-neutral-text);
+    font-size: 11px; font-weight: 800; letter-spacing: .02em; text-transform: capitalize;
+    white-space: nowrap;
+}
+.purchase-shell .ops-status::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--pm-neutral-dot); flex: 0 0 auto;
+}
+.purchase-shell .ops-status.success, .purchase-shell .ops-status.paid, .purchase-shell .ops-status.confirmed,
+.purchase-shell .ops-status.posted, .purchase-shell .ops-status.active, .purchase-shell .ops-status.received,
+.purchase-shell .ops-status.balanced {
+    background: var(--pm-success-bg); color: var(--pm-success-text);
+}
+.purchase-shell .ops-status.success::before, .purchase-shell .ops-status.paid::before,
+.purchase-shell .ops-status.confirmed::before, .purchase-shell .ops-status.posted::before,
+.purchase-shell .ops-status.active::before, .purchase-shell .ops-status.received::before,
+.purchase-shell .ops-status.balanced::before { background: var(--pm-success-dot); }
+.purchase-shell .ops-status.warning, .purchase-shell .ops-status.partial, .purchase-shell .ops-status.partially_paid,
+.purchase-shell .ops-status.submitted, .purchase-shell .ops-status.approved, .purchase-shell .ops-status.dispatched,
+.purchase-shell .ops-status.open {
+    background: var(--pm-warning-bg); color: var(--pm-warning-text);
+}
+.purchase-shell .ops-status.warning::before, .purchase-shell .ops-status.partial::before,
+.purchase-shell .ops-status.partially_paid::before, .purchase-shell .ops-status.submitted::before,
+.purchase-shell .ops-status.approved::before, .purchase-shell .ops-status.dispatched::before,
+.purchase-shell .ops-status.open::before { background: var(--pm-warning-dot); }
+.purchase-shell .ops-status.danger, .purchase-shell .ops-status.failed, .purchase-shell .ops-status.rejected,
+.purchase-shell .ops-status.cancelled, .purchase-shell .ops-status.voided, .purchase-shell .ops-status.reversed,
+.purchase-shell .ops-status.expired, .purchase-shell .ops-status.shortage {
+    background: var(--pm-danger-bg); color: var(--pm-danger-text);
+}
+.purchase-shell .ops-status.danger::before, .purchase-shell .ops-status.failed::before,
+.purchase-shell .ops-status.rejected::before, .purchase-shell .ops-status.cancelled::before,
+.purchase-shell .ops-status.voided::before, .purchase-shell .ops-status.reversed::before,
+.purchase-shell .ops-status.expired::before, .purchase-shell .ops-status.shortage::before { background: var(--pm-danger-dot); }
+.purchase-shell .ops-status.neutral, .purchase-shell .ops-status.draft, .purchase-shell .ops-status.closed,
+.purchase-shell .ops-status.returned, .purchase-shell .ops-status.inactive {
+    background: var(--pm-neutral-bg); color: var(--pm-neutral-text);
+}
+
+/* ---------- Filter / search toolbar ---------- */
+.purchase-shell .ops-filter-form { gap: 14px; align-items: end; padding: 2px; }
+.purchase-shell .ops-field label {
+    color: var(--ink-600); font-size: 11.5px; font-weight: 750; letter-spacing: .01em;
+}
+.purchase-shell .ops-field input,
+.purchase-shell .ops-field select,
+.purchase-shell .ops-field textarea {
+    min-height: 42px; border: 1px solid var(--line); border-radius: 10px;
+    padding: 0 13px; background: var(--surface); color: var(--ink-950);
+    font-size: 13px; transition: border-color .15s ease, box-shadow .15s ease;
+}
+.purchase-shell .ops-field textarea { padding: 10px 13px; }
+.purchase-shell .ops-field input:hover, .purchase-shell .ops-field select:hover { border-color: #b9c9c2; }
+.purchase-shell .ops-field input:focus, .purchase-shell .ops-field select:focus, .purchase-shell .ops-field textarea:focus {
+    border-color: var(--brand-600); box-shadow: 0 0 0 4px rgba(10, 138, 103, .1); outline: none;
+}
+.purchase-shell .ops-field input::placeholder { color: #a3b0aa; }
+.purchase-shell .ops-field.wide input[type="search"] {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2375837d' stroke-width='2' viewBox='0 0 24 24'><circle cx='11' cy='11' r='7'/><path d='M21 21l-4.3-4.3'/></svg>");
+    background-repeat: no-repeat; background-position: 12px center; padding-left: 36px;
+}
+.purchase-shell .ops-filter-actions { gap: 10px; }
+.purchase-shell .ops-toolbar-note { color: var(--ink-500); font-size: 11.5px; }
+
+/* ---------- Tables ---------- */
+.purchase-shell .ops-table-wrap { border-radius: 0 0 var(--pm-card-radius) var(--pm-card-radius); }
+.purchase-shell .ops-table { font-size: 12.5px; }
+.purchase-shell .ops-table thead th {
+    position: sticky; top: 0; z-index: 1;
+    padding: 13px 16px; border-bottom: 1px solid #e3eae7;
+    background: #f7faf8; color: #55675e;
+    font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+}
+.purchase-shell .ops-table tbody td { padding: 14px 16px; color: var(--ink-950); border-bottom: 1px solid #f0f3f1; }
+.purchase-shell .ops-table tbody tr { transition: background .12s ease; }
+.purchase-shell .ops-table tbody tr:nth-child(even) { background: #fbfdfc; }
+.purchase-shell .ops-table tbody tr:hover { background: var(--brand-100); }
+.purchase-shell .ops-table tbody tr:last-child td { border-bottom: none; }
+.purchase-shell .ops-table td.numeric, .purchase-shell .ops-table th.numeric {
+    text-align: right; font-variant-numeric: tabular-nums; font-weight: 650;
+}
+.purchase-shell .ops-mono { font-weight: 700; color: var(--ink-800); }
+
+/* Actions inside table rows */
+.purchase-shell .ops-table .ops-actions,
+.purchase-shell td .ops-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.purchase-shell .ops-table form { display: inline-flex; }
+
+/* Empty state */
+.purchase-shell .ops-empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 6px; padding: 56px 24px; text-align: center; color: var(--ink-500);
+}
+.purchase-shell .ops-empty::before {
+    content: "📦"; font-size: 30px; margin-bottom: 6px; filter: grayscale(.35); opacity: .85;
+}
+.purchase-shell .ops-empty strong { color: var(--ink-800); font-size: 15px; font-weight: 750; }
+.purchase-shell .ops-empty span { max-width: 380px; font-size: 12.5px; line-height: 1.6; }
+
+/* Pagination */
+.purchase-shell .ops-pagination {
+    padding: 16px 22px; background: #fbfdfc; border-top: 1px solid #eef2f0;
+}
+.purchase-shell .ops-page-link {
+    min-width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line);
+    color: var(--ink-800); font-weight: 750; transition: all .15s ease;
+}
+.purchase-shell .ops-page-link:hover { border-color: #b9cbc2; background: #fff; }
+.purchase-shell .ops-page-link.active { border-color: var(--brand-700); background: var(--brand-700); color: #fff; }
+
+/* Export / secondary action groups */
+.purchase-shell .ops-pending-actions { gap: 8px; }
+.purchase-shell .ops-pending-actions .ops-btn { min-width: unset; }
+
+/* ---------- Two-column layout (Add Purchase) ---------- */
+.purchase-shell .ops-split { grid-template-columns: minmax(0, 1.5fr) minmax(320px, .5fr); gap: 22px; align-items: flex-start; }
+.purchase-shell .ops-summary { position: sticky; top: 100px; }
+.purchase-shell .ops-summary .ops-card { box-shadow: var(--pm-shadow-md); }
+
+/* Line-item cards (purchase products entry) */
+.purchase-shell .ops-product-tools { padding: 2px 2px 4px; }
+.purchase-shell .ops-line-list { padding: 4px 22px 22px; gap: 16px; }
+.purchase-shell .ops-line {
+    border: 1px solid #dfe8e3; border-radius: 15px; background: #fff;
+    box-shadow: var(--pm-shadow-sm); overflow: hidden;
+    transition: box-shadow .15s ease, border-color .15s ease;
+}
+.purchase-shell .ops-line:focus-within { border-color: #b7cec4; box-shadow: var(--pm-shadow-md); }
+.purchase-shell .ops-line-head { padding: 13px 16px; background: #f6faf8; }
+.purchase-shell .ops-line-number {
+    background: var(--brand-100); color: var(--brand-800); border-radius: 8px; padding: 0 9px;
+}
+.purchase-shell .ops-line-grid { padding: 16px; gap: 14px; }
+.purchase-shell .ops-preview {
+    border: 1px dashed #c7d8d0; border-radius: 10px; background: #fbfdfc; color: var(--ink-600);
+}
+.purchase-shell .ops-preview strong { color: var(--brand-800); }
+
+/* Order & payment summary rows */
+.purchase-shell .ops-summary-row {
+    padding: 11px 0; border-bottom: 1px solid #eef2f0; color: var(--ink-600); font-size: 13px;
+}
+.purchase-shell .ops-summary-row strong { color: var(--ink-950); font-weight: 700; }
+.purchase-shell .ops-summary-row.total {
+    margin-top: 6px; padding-top: 14px; border-top: 2px solid var(--line); border-bottom: none;
+    font-size: 14.5px; font-weight: 700; color: var(--ink-950);
+}
+.purchase-shell .ops-summary-row.total strong { font-size: 21px; color: var(--brand-800); }
+.purchase-shell .ops-calculation { margin-top: 18px; padding: 16px 16px 4px; background: #fbfdfc; border: 1px solid #eef2f0; border-radius: 14px; }
+
+/* Notes / banners */
+.purchase-shell .ops-note, .purchase-shell .ops-inline-note {
+    border: 1px solid #dfe9e4; border-radius: 12px; background: #f6fbf9; color: #52685e;
+    padding: 13px 15px; font-size: 12.5px; line-height: 1.6;
+}
+.purchase-shell .ops-note strong, .purchase-shell .ops-inline-note strong { color: var(--ink-800); }
+.purchase-shell .ops-note code, .purchase-shell .ops-inline-note code {
+    padding: 1px 6px; border-radius: 5px; background: #e7f0eb; color: #275a45; font-size: 11.5px;
+}
+.purchase-shell .ops-banner.warn { border-color: #f0e1b8; background: #fff9ec; color: #7c5a12; }
+
+/* Detail grids (Purchase Details / Return Details / Stock Import Details) */
+.purchase-shell .ops-detail-list { border-radius: 14px; border-color: #e7eeea; background: #e7eeea; }
+.purchase-shell .ops-detail { padding: 16px; }
+.purchase-shell .ops-detail small {
+    color: var(--ink-500); font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+}
+.purchase-shell .ops-detail strong, .purchase-shell .ops-detail span { color: var(--ink-950); font-size: 13.5px; }
+
+/* File upload box (Stock Import) */
+.purchase-shell .ops-file-box {
+    border: 1.5px dashed #c3d5cc; border-radius: 16px; background: #fbfdfc; padding: 32px 24px;
+    transition: border-color .15s ease, background .15s ease;
+}
+.purchase-shell .ops-file-box:hover { border-color: var(--brand-600); background: #f5fbf8; }
+.purchase-shell .ops-file-box strong { color: var(--ink-800); font-size: 14px; }
+
+/* Action row */
+.purchase-shell .ops-action-row { border-top: 1px solid #eef2f0; padding-top: 18px; margin-top: 18px; }
+
+/* Flash messages */
+.purchase-shell .flash-message {
+    border-radius: 12px; padding: 13px 16px; font-size: 12.5px; font-weight: 600;
+    border: 1px solid #cfe8db; background: #f1faf5; color: var(--brand-800);
+    box-shadow: var(--pm-shadow-sm);
+}
+.purchase-shell .flash-message.error { border-color: #f1cfcf; background: #fff3f3; color: #9a3838; }
+
+/* Print polish (kept consistent with existing @media print rules in operations.css) */
+@media print {
+    .purchase-shell .ops-card { box-shadow: none; border-color: #dfe5e2; }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1200px) {
+    .purchase-shell .ops-split { grid-template-columns: 1fr; }
+    .purchase-shell .ops-summary { position: static; }
+}
+@media (max-width: 760px) {
+    .purchase-shell.operations-page { padding: 20px 14px 56px; }
+    .purchase-shell .ops-heading h1 { font-size: 25px; }
+    .purchase-shell .ops-card-head, .purchase-shell .ops-card-body { padding: 16px; }
+    .purchase-shell .ops-line-list { padding: 4px 14px 16px; }
+}

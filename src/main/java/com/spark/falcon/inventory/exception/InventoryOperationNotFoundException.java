@@ -1,0 +1,1 @@
+package com.spark.falcon.inventory.exception;public class InventoryOperationNotFoundException extends RuntimeException{public InventoryOperationNotFoundException(){super("Inventory operation not found");}}

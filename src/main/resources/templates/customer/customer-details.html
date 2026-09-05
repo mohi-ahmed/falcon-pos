@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Customer Details | Falcon POS</title>
+<link rel="stylesheet" th:href="@{/css/base.css}">
+<link rel="stylesheet" th:href="@{/css/components.css}">
+<link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+<link rel="stylesheet" th:href="@{/css/pages/customer-payment-sell.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+<aside th:replace="~{fragments/settings-shell :: sidebar('customers')}">
+</aside>
+<button class="sidebar-scrim" type="button" data-sidebar-close>
+</button>
+<div class="workspace">
+<header th:replace="~{fragments/settings-shell :: topbar('Customer Details')}">
+</header>
+<main class="module-page">
+<nav class="module-breadcrumb">
+<a th:href="@{/owner/customers}">Customers</a>
+<span>/</span>
+<strong th:text="|Customer #${customer.id}|">Customer</strong>
+</nav>
+<section class="module-hero">
+<div>
+<span class="module-eyebrow">Part G · Customer Details</span>
+<h1 th:text="${#strings.isEmpty(customer.name) ? 'Customer profile' : customer.name}">Customer</h1>
+<p>Read-only profile and operational actions. Financial history remains tied to the originating branch.</p>
+</div>
+<div class="module-actions">
+<a class="module-btn" th:if="${!customer.systemControlled}" th:href="@{/owner/customers/{id}/edit(id=${customer.id})}">Edit Profile</a>
+<a class="module-btn" th:href="@{/owner/customers/due-invoices(branchId=${setup.branchId},customerId=${customer.id})}">View Due Invoices</a>
+<a class="module-btn" th:href="@{/owner/payments/history(branchId=${setup.branchId},customerId=${customer.id})}">Payment History</a>
+<a class="module-btn" th:href="@{/owner/customers/{id}/statement(id=${customer.id},branchId=${setup.branchId})}">Statement</a>
+<a class="module-btn primary" th:if="${customer.dueEligible and !customer.archived}" th:href="@{/owner/payments/customer(branchId=${setup.branchId},customerId=${customer.id})}">Receive Due</a>
+</div>
+</section>
+<div class="module-alert" th:if="${successMessage}">
+<span>✓</span>
+<span th:text="${successMessage}">
+</span>
+</div>
+<div class="module-alert error" th:if="${errorMessage}">
+<span>!</span>
+<span th:text="${errorMessage}">
+</span>
+</div>
+<section class="metric-grid">
+<article class="metric-card">
+<small>Total confirmed purchases</small>
+<strong th:text="${#numbers.formatDecimal(financialSummary.totalConfirmedPurchases,1,'COMMA',2,'POINT')}">0.00</strong>
+<span>Confirmed invoices only</span>
+</article>
+<article class="metric-card">
+<small>Total paid</small>
+<strong th:text="${#numbers.formatDecimal(financialSummary.totalPaid,1,'COMMA',2,'POINT')}">0.00</strong>
+<span>Confirmed allocations</span>
+</article>
+<article class="metric-card">
+<small>Outstanding due</small>
+<strong th:text="${#numbers.formatDecimal(financialSummary.outstandingDue,1,'COMMA',2,'POINT')}">0.00</strong>
+<span>Selected branch</span>
+</article>
+<article class="metric-card">
+<small>Customer credit</small>
+<strong th:text="${#numbers.formatDecimal(financialSummary.customerCredit,1,'COMMA',2,'POINT')}">0.00</strong>
+<span>Available confirmed credit</span>
+</article>
+<article class="metric-card">
+<small>Total sales returns</small>
+<strong th:text="${#numbers.formatDecimal(financialSummary.totalSalesReturns,1,'COMMA',2,'POINT')}">0.00</strong>
+<span>Confirmed return amount</span>
+</article>
+<article class="metric-card">
+<small>Overdue amount</small>
+<strong th:text="${#numbers.formatDecimal(financialSummary.overdueAmount,1,'COMMA',2,'POINT')}">0.00</strong>
+<span>Invoice due-date aging</span>
+</article>
+<article class="metric-card">
+<small>Last purchase</small>
+<strong class="metric-date" th:text="${financialSummary.lastPurchaseAt == null ? '—' : #temporals.format(financialSummary.lastPurchaseAt,'dd MMM yyyy · hh:mm a')}">—</strong>
+<span>Latest confirmed invoice</span>
+</article>
+<article class="metric-card">
+<small>Profile status</small>
+<strong class="metric-state" th:text="${customer.archived ? 'Archived' : 'Active'}">Active</strong>
+<span>Business-level profile</span>
+</article>
+</section>
+<div class="module-grid">
+<div class="module-stack">
+<section class="module-card">
+<div class="profile-banner">
+<span class="profile-avatar-large" th:text="${#strings.isEmpty(customer.name) ? 'C' : #strings.substring(customer.name,0,1)}">C</span>
+<div>
+<h2 th:text="${#strings.isEmpty(customer.name) ? 'Unnamed customer' : customer.name}">Customer</h2>
+<p>
+<span th:text="|Customer ID ${customer.id}|">ID</span> · <span th:text="${customer.archived ? 'Archived' : 'Active'}">Active</span>
+</p>
+</div>
+</div>
+<div class="detail-grid">
+<div class="detail-item">
+<small>Phone</small>
+<span th:text="${#strings.isEmpty(customer.phone) ? '—' : customer.phone}">—</span>
+</div>
+<div class="detail-item">
+<small>Email</small>
+<span th:text="${#strings.isEmpty(customer.email) ? '—' : customer.email}">—</span>
+</div>
+<div class="detail-item">
+<small>Gender</small>
+<span th:text="${#strings.isEmpty(customer.gender) ? '—' : customer.gender}">—</span>
+</div>
+<div class="detail-item">
+<small>Date of Birth</small>
+<span th:text="${customer.dateOfBirth == null ? '—' : customer.dateOfBirth}">—</span>
+</div>
+<div class="detail-item">
+<small>Age</small>
+<span th:text="${customer.age == null ? '—' : customer.age}">—</span>
+</div>
+<div class="detail-item">
+<small>City</small>
+<span th:text="${#strings.isEmpty(customer.city) ? '—' : customer.city}">—</span>
+</div>
+<div class="detail-item">
+<small>State / Division</small>
+<span th:text="${#strings.isEmpty(customer.stateDivision) ? '—' : customer.stateDivision}">—</span>
+</div>
+<div class="detail-item">
+<small>Country</small>
+<span th:text="${#strings.isEmpty(customer.country) ? '—' : customer.country}">—</span>
+</div>
+<div class="detail-item">
+<small>Due Eligible</small>
+<span th:text="${customer.dueEligible ? 'Yes' : 'No'}">Yes</span>
+</div>
+<div class="detail-item detail-wide">
+<small>Address</small>
+<span th:text="${#strings.isEmpty(customer.address) ? '—' : customer.address}">—</span>
+</div>
+<div class="detail-item detail-wide">
+<small>Notes</small>
+<span th:text="${#strings.isEmpty(customer.notes) ? '—' : customer.notes}">—</span>
+</div>
+</div>
+</section>
+<section class="module-card">
+<div class="module-card-head">
+<div>
+<h3>Recent invoice history</h3>
+<p>Connected to the existing Sell backend for the active branch.</p>
+</div>
+<a class="table-link" th:href="@{/owner/sales(branchId=${branchId},customerId=${customer.id})}">Open Sell List</a>
+</div>
+<div class="table-wrap">
+<table class="module-table">
+<thead>
+<tr>
+<th>Invoice</th>
+<th>Date</th>
+<th>Status</th>
+<th>Payment Status</th>
+<th>Payable</th>
+<th>Paid</th>
+<th>Due</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr th:each="s:${recentSales}">
+<td th:text="|#${s.id}|">
+</td>
+<td th:text="${#temporals.format(s.createdAt,'dd MMM yyyy · hh:mm a')}">
+</td>
+<td>
+<span class="module-status" th:text="${s.status}">
+</span>
+</td>
+<td th:text="${s.paymentStatus}">
+</td>
+<td th:text="${s.totalPayable}">
+</td>
+<td th:text="${s.paidAmount}">
+</td>
+<td th:text="${s.dueAmount}">
+</td>
+<td>
+<a class="table-link primary" th:href="@{/owner/sales/{id}(id=${s.id},branchId=${branchId})}">View</a>
+</td>
+</tr>
+<tr th:if="${#lists.isEmpty(recentSales)}">
+<td colspan="8">
+<div class="empty-state">
+<strong>No invoices for this branch</strong>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section class="module-card">
+<div class="module-card-head">
+<div>
+<h3>Payment history</h3>
+<p>Connected to existing customer Payment records.</p>
+</div>
+<a class="table-link" th:href="@{/owner/payments/history(branchId=${branchId},customerId=${customer.id})}">Open Payment History</a>
+</div>
+<div class="table-wrap">
+<table class="module-table">
+<thead>
+<tr>
+<th>Payment</th>
+<th>Date</th>
+<th>Amount</th>
+<th>Method</th>
+<th>Reference</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr th:each="p:${payments}">
+<td th:text="|#${p.id}|">
+</td>
+<td th:text="${#temporals.format(p.createdAt,'dd MMM yyyy · hh:mm a')}">
+</td>
+<td th:text="${p.amount}">
+</td>
+<td th:text="${p.paymentMethodName}">
+</td>
+<td th:text="${#strings.isEmpty(p.transactionReference) ? '—' : p.transactionReference}">
+</td>
+<td>
+<span class="module-status" th:text="${p.status}">
+</span>
+</td>
+<td>
+<a class="table-link primary" th:href="@{/owner/payments/{id}(id=${p.id},branchId=${branchId})}">View</a>
+</td>
+</tr>
+<tr th:if="${#lists.isEmpty(payments)}">
+<td colspan="7">
+<div class="empty-state">
+<strong>No payment records</strong>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section class="module-card">
+<div class="module-card-head">
+<div>
+<h3>Return & refund source history</h3>
+<p>Sales Return records are connected; refund payment details remain linked through their Payment records.</p>
+</div>
+<a class="table-link" th:href="@{/owner/sales/returns/list(branchId=${branchId},customerId=${customer.id})}">Open Return List</a>
+</div>
+<div class="table-wrap">
+<table class="module-table">
+<thead>
+<tr>
+<th>Reference</th>
+<th>Date</th>
+<th>Sale</th>
+<th>Settlement</th>
+<th>Return Amount</th>
+<th>Refund</th>
+<th>Credit</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr th:each="r:${saleReturns}">
+<td th:text="${r.referenceNumber}">
+</td>
+<td th:text="${#temporals.format(r.createdAt,'dd MMM yyyy · hh:mm a')}">
+</td>
+<td th:text="|#${r.saleId}|">
+</td>
+<td th:text="${r.settlementType}">
+</td>
+<td th:text="${r.totalReturnAmount}">
+</td>
+<td th:text="${r.refundAmount}">
+</td>
+<td th:text="${r.customerCreditAmount}">
+</td>
+<td>
+<span class="module-status" th:text="${r.status}">
+</span>
+</td>
+<td>
+<a class="table-link primary" th:href="@{/owner/sales/returns/{id}(id=${r.id},branchId=${branchId})}">View</a>
+</td>
+</tr>
+<tr th:if="${#lists.isEmpty(saleReturns)}">
+<td colspan="9">
+<div class="empty-state">
+<strong>No return records</strong>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+<aside class="module-stack">
+<section class="module-card">
+<div class="module-card-head">
+<div>
+<h3>Record information</h3>
+</div>
+<span class="module-status" th:classappend="${customer.archived ? ' archived' : ' active'}" th:text="${customer.archived ? 'Archived' : 'Active'}">
+</span>
+</div>
+<div class="module-card-body">
+<div class="summary-list">
+<div class="summary-row">
+<span>Created</span>
+<strong th:text="${#temporals.format(customer.createdAt,'dd MMM yyyy · hh:mm a')}">—</strong>
+</div>
+<div class="summary-row">
+<span>Updated</span>
+<strong th:text="${#temporals.format(customer.updatedAt,'dd MMM yyyy · hh:mm a')}">—</strong>
+</div>
+<div class="summary-row">
+<span>System controlled</span>
+<strong th:text="${customer.systemControlled ? 'Yes' : 'No'}">No</strong>
+</div>
+</div>
+</div>
+</section>
+<section class="module-card danger-zone" th:if="${!customer.systemControlled}">
+<div class="module-card-head">
+<div>
+<h3>Profile state</h3>
+<p>Historical transactions remain preserved.</p>
+</div>
+</div>
+<div class="module-card-body">
+<form th:if="${!customer.archived}" th:action="@{/owner/customers/{id}/archive(id=${customer.id})}" method="post" data-confirm-message="Archive this customer?">
+<button class="module-btn danger" type="submit">Archive Customer</button>
+</form>
+<form th:if="${customer.archived}" th:action="@{/owner/customers/{id}/restore(id=${customer.id})}" method="post">
+<button class="module-btn primary" type="submit">Restore Customer</button>
+</form>
+<form th:if="${customer.archived}" th:action="@{/owner/customers/{id}/delete(id=${customer.id})}" method="post" data-confirm-message="Permanently delete this customer only if it has never been used by any transaction, payment, return, credit, statement or audit record?">
+<button class="module-btn danger danger-action-spaced" type="submit">Permanently Delete Unused</button>
+</form>
+</div>
+</section>
+</aside>
+</div>
+</main>
+</div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer>
+</script>
+<script th:src="@{/js/pages/customer-payment-sell.js}" defer>
+</script>
+</body>
+</html>

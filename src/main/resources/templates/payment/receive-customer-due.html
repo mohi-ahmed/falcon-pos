@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Receive Customer Due | Falcon POS</title>
+<link rel="stylesheet" th:href="@{/css/base.css}">
+<link rel="stylesheet" th:href="@{/css/components.css}">
+<link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+<link rel="stylesheet" th:href="@{/css/pages/customer-payment-sell.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+<aside th:replace="~{fragments/settings-shell :: sidebar('payments')}"></aside>
+<button class="sidebar-scrim" type="button" data-sidebar-close></button>
+<div class="workspace">
+<header th:replace="~{fragments/settings-shell :: topbar('Receive Customer Due')}"></header>
+<main class="module-page">
+<nav class="module-breadcrumb"><a th:href="@{/owner/payments}">Payments</a><span>/</span><strong>Receive Customer Due</strong></nav>
+<section class="module-hero">
+<div><span class="module-eyebrow">Part I · Customer Payment</span><h1>Receive Customer Due</h1><p>Allocate a confirmed customer payment to eligible outstanding invoices with live due and settlement preview.</p></div>
+<div class="module-actions">
+<a class="module-btn" th:if="${customerPaymentRequest.customerId != null}" th:href="@{/owner/customers/due-invoices(branchId=${customerPaymentRequest.branchId},customerId=${customerPaymentRequest.customerId})}">View Due Invoices</a>
+<a class="module-btn" th:if="${customerPaymentRequest.customerId != null}" th:href="@{/owner/payments/history(branchId=${customerPaymentRequest.branchId},customerId=${customerPaymentRequest.customerId})}">Payment History</a>
+</div>
+</section>
+<div class="module-alert success" th:if="${successMessage != null}" th:text="${successMessage}"></div>
+<div class="module-alert error" th:if="${errorMessage != null}" th:text="${errorMessage}"></div>
+<section class="module-card context-card">
+<div class="module-card-head"><div><h2>Customer context</h2><p>Load a customer first so only eligible invoices from the selected branch can be allocated.</p></div><span class="module-status active" th:if="${customerPaymentRequest.customerId != null}">Context loaded</span></div>
+<div class="module-card-body">
+<form class="toolbar context-load-form" method="get" th:action="@{/owner/payments/customer}">
+<input type="hidden" name="branchId" th:value="${customerPaymentRequest.branchId}">
+<div class="field"><label>Branch</label><input th:value="${setup.branchName}" disabled></div>
+<div class="field search"><label>Customer ID</label><input name="customerId" type="number" min="1" th:value="${customerPaymentRequest.customerId}" required placeholder="Enter customer ID"></div>
+<button class="module-btn primary" type="submit">Load Eligible Invoices</button>
+</form>
+</div>
+</section>
+<form th:action="@{/owner/payments/customer}" th:object="${customerPaymentRequest}" method="post" data-payment-form="customer" th:attr="data-total-outstanding=${customerOutstandingDue}">
+<input th:field="*{branchId}" type="hidden"><input th:field="*{customerId}" type="hidden"><input th:field="*{idempotencyKey}" type="hidden">
+<div class="module-grid wide-aside">
+<div class="module-stack">
+<section class="module-card">
+<div class="module-card-head"><div><h2>Payment information</h2><p>Payment date/time is captured in branch time and stored with the confirmed transaction.</p></div><span class="module-status active">Backend connected</span></div>
+<div class="module-card-body"><div class="form-grid three">
+<div class="field"><label>Customer</label><input th:value="${customerPaymentRequest.customerId == null ? 'Load a customer above' : 'Customer #' + customerPaymentRequest.customerId}" readonly></div>
+<div class="field"><label>Payment Date &amp; Time</label><input th:field="*{paymentDateTime}" type="datetime-local" required><small>Uses the selected branch time zone.</small></div>
+<div class="field"><label>Amount Received</label><input th:field="*{amount}" data-payment-amount type="number" min="0.0001" step="0.0001" required placeholder="0.0000"></div>
+<div class="field"><label>Payment Method</label><select th:field="*{paymentMethodId}" data-payment-method required><option value="">Select method</option><option th:each="m:${paymentMethods}" th:value="${m.id}" th:text="${m.name}" th:attr="data-cash=${m.cash},data-reference-required=${m.transactionReferenceRequired}"></option></select></div>
+<div class="field"><label>Transaction Reference</label><input th:field="*{transactionReference}" data-transaction-reference maxlength="160" placeholder="Required when configured"></div>
+<div class="field"><label>Receiving Account / Channel</label><input th:field="*{accountReference}" data-account-reference maxlength="160" placeholder="Account or reconciliation reference"></div>
+<div class="field"><label>Cash Location ID</label><input th:field="*{cashLocationId}" data-cash-context type="number" min="1" placeholder="Cash payment only"></div>
+<div class="field"><label>Register ID</label><input th:field="*{registerId}" data-cash-context type="number" min="1" placeholder="Cash payment only"></div>
+<div class="field"><label>Cashier Shift ID</label><input th:field="*{cashierShiftId}" data-cash-context type="number" min="1" placeholder="Active cash shift"></div>
+<div class="field"><label>Excess Settlement</label><select th:field="*{excessSettlementType}" data-excess-settlement><option value="">Only when amount exceeds allocation</option><option value="CUSTOMER_CREDIT">Customer Credit</option><option value="CHANGE">Return as Change</option></select><small>Customer Credit and Change cannot both be used.</small></div>
+<div class="field span-2"><label>Attachment Reference</label><input th:field="*{attachmentReference}" maxlength="500" placeholder="Optional attachment reference"></div>
+<div class="field span-all"><label>Notes</label><textarea th:field="*{notes}" maxlength="1000"></textarea></div>
+</div></div>
+</section>
+<section class="module-card">
+<div class="module-card-head"><div><h2>Invoice allocation</h2><p>Select from the customer’s eligible confirmed invoices. Manual allocation cannot exceed an invoice’s outstanding due.</p></div><button class="module-btn" type="button" data-add-allocation th:disabled="${#lists.isEmpty(eligibleCustomerInvoices)}">+ Add Invoice</button></div>
+<div class="module-card-body">
+<label class="check-line"><input th:field="*{automaticOldestDueFirst}" data-auto-allocation type="checkbox"><span><strong>Automatic oldest-due-first allocation</strong><small>Backend allocates chronologically across eligible invoices up to the Amount Received.</small></span></label>
+<div class="eligible-summary"><span>Eligible invoices</span><strong th:text="${#lists.size(eligibleCustomerInvoices)}">0</strong><span>Total outstanding</span><strong th:text="${customerOutstandingDue}">0</strong></div>
+<div class="allocation-list" data-allocation-list style="margin-top:14px">
+<div class="allocation-row" data-allocation-row th:each="a,st:*{allocations}">
+<div class="field"><label>Eligible Invoice</label><select th:field="*{allocations[__${st.index}__].saleId}" data-allocation-field="saleId" data-invoice-select><option value="">Select invoice</option><option th:each="invoice:${eligibleCustomerInvoices}" th:value="${invoice.saleId}" th:text="|Sale #${invoice.saleId} · Due ${invoice.outstandingDue}|" th:attr="data-due=${invoice.outstandingDue},data-payment-status=${invoice.paymentStatus},data-aging-date=${invoice.agingDate}"></option></select></div>
+<div class="field"><label>Allocation Amount</label><input th:field="*{allocations[__${st.index}__].amount}" data-allocation-field="amount" data-allocation-amount type="number" min="0.0001" step="0.0001" placeholder="0.0000"></div>
+<button class="module-btn danger" type="button" data-remove-allocation>Remove</button>
+</div>
+</div>
+<template id="allocationTemplate"><div class="allocation-row" data-allocation-row><div class="field"><label>Eligible Invoice</label><select data-allocation-field="saleId" data-invoice-select><option value="">Select invoice</option><option th:each="invoice:${eligibleCustomerInvoices}" th:value="${invoice.saleId}" th:text="|Sale #${invoice.saleId} · Due ${invoice.outstandingDue}|" th:attr="data-due=${invoice.outstandingDue},data-payment-status=${invoice.paymentStatus},data-aging-date=${invoice.agingDate}"></option></select></div><div class="field"><label>Allocation Amount</label><input data-allocation-field="amount" data-allocation-amount type="number" min="0.0001" step="0.0001" placeholder="0.0000"></div><button class="module-btn danger" type="button" data-remove-allocation>Remove</button></div></template>
+<div class="empty-state compact" th:if="${customerPaymentRequest.customerId != null and #lists.isEmpty(eligibleCustomerInvoices)}"><strong>No eligible outstanding invoices</strong><span>This customer has no confirmed invoice with an outstanding due in the selected branch.</span></div>
+</div>
+</section>
+</div>
+<aside class="module-stack">
+<section class="module-card sticky-card">
+<div class="module-card-head"><div><h3>Confirmation preview</h3><p>Live preview for the current form. Backend revalidates all amounts, invoice locks, branch scope and cash context before posting.</p></div></div>
+<div class="module-card-body"><div class="summary-list">
+<div class="summary-row"><span>Customer total due</span><strong th:text="${customerOutstandingDue}">0</strong></div>
+<div class="summary-row"><span>Selected Due Before</span><strong data-preview-due-before>0.0000</strong></div>
+<div class="summary-row"><span>Allocated</span><strong data-preview-allocated>0.0000</strong></div>
+<div class="summary-row"><span>Unallocated Amount</span><strong data-preview-unallocated>0.0000</strong></div>
+<div class="summary-row"><span>Due After</span><strong data-preview-due-after>0.0000</strong></div>
+<div class="summary-row"><span>Expected invoice status</span><strong data-preview-status>—</strong></div>
+<div class="summary-row"><span>Cash / non-cash effect</span><strong data-preview-effect>Select method</strong></div>
+</div>
+<div class="read-model-note" style="margin-top:14px">Confirmed payment and allocations are immutable. A correction uses the linked Payment Reversal workflow; duplicate submission is protected by the idempotency key.</div>
+<button class="module-btn primary" type="submit" style="width:100%;margin-top:16px" th:disabled="${customerPaymentRequest.customerId == null or #lists.isEmpty(eligibleCustomerInvoices) or !canConfirmPayment}">Confirm Customer Payment</button>
+<small class="form-permission-note" th:if="${!canConfirmPayment}">Confirm Payment permission is required to post this transaction.</small>
+</div>
+</section>
+</aside>
+</div>
+</form>
+</main></div></div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script>
+<script th:src="@{/js/pages/customer-payment-sell.js}" defer></script>
+</body></html>

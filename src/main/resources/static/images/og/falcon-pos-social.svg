@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="Falcon POS social preview">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e4f5ed"/><stop offset=".58" stop-color="#f9fcfa"/><stop offset="1" stop-color="#f5ead9"/></linearGradient></defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="90" y="78" width="76" height="76" rx="22" fill="#08785b"/>
+  <path d="M113 99h34v11h-23v11h19v11h-19v22h-11V99Z" fill="#fff"/>
+  <text x="188" y="125" font-family="Segoe UI,Arial,sans-serif" font-size="34" font-weight="700" fill="#101c18">Falcon POS</text>
+  <text x="90" y="290" font-family="Segoe UI,Arial,sans-serif" font-size="68" font-weight="750" fill="#101c18">Run service faster.</text>
+  <text x="90" y="375" font-family="Segoe UI,Arial,sans-serif" font-size="68" font-weight="750" fill="#08785b">See the business clearly.</text>
+  <text x="94" y="449" font-family="Segoe UI,Arial,sans-serif" font-size="25" fill="#5e6d66">Modern retail operations on one dependable platform.</text>
+  <rect x="90" y="500" width="245" height="58" rx="15" fill="#08785b"/>
+  <text x="127" y="537" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="700" fill="#fff">Create workspace</text>
+</svg>

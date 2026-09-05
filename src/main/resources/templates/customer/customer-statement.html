@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Customer Statement | Falcon POS</title>
+<link rel="stylesheet" th:href="@{/css/base.css}">
+<link rel="stylesheet" th:href="@{/css/components.css}">
+<link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+<link rel="stylesheet" th:href="@{/css/pages/customer-payment-sell.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+<aside th:replace="~{fragments/settings-shell :: sidebar('customers')}">
+</aside>
+<button class="sidebar-scrim" type="button" data-sidebar-close>
+</button>
+<div class="workspace">
+<header th:replace="~{fragments/settings-shell :: topbar('Customer Statement')}">
+</header>
+<main class="module-page">
+<nav class="module-breadcrumb">
+<a th:href="@{/owner/customers/{id}(id=${customer.id})}">Customer Details</a>
+<span>/</span>
+<strong>Statement</strong>
+</nav>
+<section class="module-hero">
+<div>
+<span class="module-eyebrow">Part G · Statement</span>
+<h1 th:text="|${#strings.isEmpty(customer.name) ? 'Customer' : customer.name} Statement|">Customer Statement</h1>
+<p>Read-only chronological ledger calculated from confirmed customer financial activity.</p>
+</div>
+<div class="module-actions">
+<button class="module-btn" type="button" data-print>Print</button>
+<a class="module-btn" th:href="@{/owner/customers/{id}/statement/export(id=${customer.id},branchId=${branchId},from=${from},to=${to},format='xlsx')}">Excel</a>
+<a class="module-btn" th:href="@{/owner/customers/{id}/statement/export(id=${customer.id},branchId=${branchId},from=${from},to=${to},format='csv')}">CSV</a>
+<a class="module-btn" th:href="@{/owner/customers/{id}/statement/export(id=${customer.id},branchId=${branchId},from=${from},to=${to},format='pdf')}">PDF</a>
+<a class="module-btn primary" th:href="@{/owner/payments/customer(branchId=${branchId},customerId=${customer.id})}">Receive Due</a>
+</div>
+</section>
+<section class="module-card statement-filter">
+<form class="toolbar" method="get" th:action="@{/owner/customers/{id}/statement(id=${customer.id})}">
+<input type="hidden" name="branchId" th:value="${branchId}">
+<div class="field">
+<label for="statementBranch">Branch</label>
+<input id="statementBranch" th:value="${setup.branchName}" disabled>
+</div>
+<div class="field">
+<label for="statementFrom">From Date</label>
+<input id="statementFrom" name="from" type="date" th:value="${from}">
+</div>
+<div class="field">
+<label for="statementTo">To Date</label>
+<input id="statementTo" name="to" type="date" th:value="${to}">
+</div>
+<button class="module-btn primary" type="submit">Apply</button>
+<a class="module-btn" th:href="@{/owner/customers/{id}/statement(id=${customer.id},branchId=${branchId})}">Reset</a>
+</form>
+</section>
+<section class="module-card">
+<div class="module-card-head">
+<div>
+<h2>Statement ledger</h2>
+<p>Invoices, allocations, returns, credits, refunds and reversals in chronological order.</p>
+</div>
+<span class="module-status active" th:text="|${#lists.size(statementEntries)} entries|">0 entries</span>
+</div>
+<div class="table-wrap">
+<table class="module-table">
+<thead>
+<tr>
+<th>Transaction Date</th>
+<th>Reference</th>
+<th>Branch</th>
+<th>Type</th>
+<th class="numeric">Debit</th>
+<th class="numeric">Credit</th>
+<th class="numeric">Running Due</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr th:each="entry:${statementEntries}">
+<td><span th:text="${#temporals.format(entry.transactionAt,'dd MMM yyyy')}">—</span><small class="table-meta" th:text="${#temporals.format(entry.transactionAt,'hh:mm a')}">—</small></td>
+<td th:text="${entry.reference}">—</td>
+<td th:text="${entry.branchId}">—</td>
+<td>
+<span class="module-status" th:text="${entry.type}">—</span>
+</td>
+<td class="numeric" th:text="${#numbers.formatDecimal(entry.debit,1,'COMMA',2,'POINT')}">0.00</td>
+<td class="numeric" th:text="${#numbers.formatDecimal(entry.credit,1,'COMMA',2,'POINT')}">0.00</td>
+<td class="numeric">
+<strong th:text="${#numbers.formatDecimal(entry.runningDueBalance,1,'COMMA',2,'POINT')}">0.00</strong>
+</td>
+<td>
+<a class="table-link" th:if="${!#strings.isEmpty(entry.sourcePath)}" th:href="${entry.sourcePath}">View source</a>
+</td>
+</tr>
+<tr th:if="${#lists.isEmpty(statementEntries)}">
+<td colspan="8">
+<div class="empty-state">
+<strong>No statement entries</strong>
+<span>No confirmed activity matches the selected date range.</span>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+</div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer>
+</script>
+<script th:src="@{/js/pages/customer-payment-sell.js}" defer>
+</script>
+</body>
+</html>

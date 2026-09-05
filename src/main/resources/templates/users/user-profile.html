@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>User Profile | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}"><link rel="stylesheet" th:href="@{/css/components.css}"><link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}"><link rel="stylesheet" th:href="@{/css/pages/settings.css}"><link rel="stylesheet" th:href="@{/css/pages/user-management.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('users')}"></aside><button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Users & Roles')}"></header>
+        <main class="settings-main" id="main-content">
+            <nav class="settings-breadcrumb" aria-label="Breadcrumb"><a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><a th:href="@{/owner/users}">Users &amp; Roles</a><span>/</span><strong th:text="${user.fullName()}">User Profile</strong></nav>
+            <div class="settings-page-shell">
+                <aside th:replace="~{fragments/user-shell :: userNav(${userSection})}"></aside>
+                <div class="settings-page-content">
+                    <div class="alert alert-success" th:if="${successMessage}" role="status"><span>✓</span><div><strong>Completed</strong><span th:text="${successMessage}">Saved.</span></div></div>
+                    <section class="profile-hero">
+                        <div class="profile-hero-avatar"><img th:if="${user.profilePhotoReference() != null}" th:src="${user.profilePhotoReference()}" alt=""><span th:unless="${user.profilePhotoReference() != null}" th:text="${#strings.substring(user.fullName(),0,1)}">A</span></div>
+                        <div class="profile-hero-copy"><h1 th:text="${user.fullName()}">Amina Rahman</h1><p th:text="${user.email()}">amina@example.com</p><div class="profile-meta-row"><span class="type-pill" th:text="${user.userGroupName()}">Cashier</span><span class="status-badge" th:classappend="${user.status().name() == 'ACTIVE' ? ' status-active' : ' status-inactive'}" th:text="${user.status()}">ACTIVE</span><span class="branch-mini-chip" th:text="${#sets.size(user.branchIds()) + ' assigned branch' + (#sets.size(user.branchIds()) == 1 ? '' : 'es')}">1 assigned branch</span></div></div>
+                        <div class="profile-hero-actions"><a class="settings-secondary-button" th:href="@{/owner/users}">Back to list</a><a class="settings-primary-button" th:href="@{'/owner/users/' + ${user.id()} + '/edit'}">Edit user</a></div>
+                    </section>
+
+                    <div class="profile-details-grid">
+                        <section class="profile-detail-card"><div class="profile-detail-heading"><h2>Personal information</h2><small>Read-only profile view</small></div><dl class="profile-detail-list">
+                            <div class="profile-detail-row"><dt>User ID</dt><dd th:text="${user.id()}">1</dd></div>
+                            <div class="profile-detail-row"><dt>Full name</dt><dd th:text="${user.fullName()}">Amina Rahman</dd></div>
+                            <div class="profile-detail-row"><dt>Email</dt><dd th:text="${user.email()}">amina@example.com</dd></div>
+                            <div class="profile-detail-row"><dt>Mobile number</dt><dd th:text="${user.mobileNumber() ?: 'Not provided'}">Not provided</dd></div>
+                            <div class="profile-detail-row"><dt>Date of birth</dt><dd th:text="${user.dateOfBirth() ?: 'Not provided'}">Not provided</dd></div>
+                            <div class="profile-detail-row"><dt>Created</dt><dd><time data-format-instant th:datetime="${user.createdAt()}" th:text="${user.createdAt()}">27 Aug 2026</time></dd></div>
+                        </dl></section>
+
+                        <section class="profile-detail-card"><div class="profile-detail-heading"><h2>Role and account</h2><small>Role and account settings</small></div><dl class="profile-detail-list">
+                            <div class="profile-detail-row"><dt>User group</dt><dd th:text="${user.userGroupName()}">Cashier</dd></div>
+                            <div class="profile-detail-row"><dt>Account status</dt><dd><span class="status-badge" th:classappend="${user.status().name() == 'ACTIVE' ? ' status-active' : ' status-inactive'}" th:text="${user.status()}">ACTIVE</span></dd></div>
+                            <div class="profile-detail-row"><dt>Password</dt><dd>Hidden for security</dd></div>
+                            <div class="profile-detail-row"><dt>Archived</dt><dd th:text="${user.archived() ? 'Yes' : 'No'}">No</dd></div>
+                            <div class="profile-detail-row" th:each="group : ${userGroups}" th:if="${group.id() == user.userGroupId()}"><dt>Group permissions</dt><dd th:text="${#sets.size(group.permissionIds()) + ' configured'}">0 configured</dd></div>
+                        </dl></section>
+
+                        <section class="profile-detail-card full-width"><div class="profile-detail-heading"><h2>Assigned branches</h2><small>Branch access</small></div><div style="padding:18px"><div class="branch-assignment-grid"><div class="branch-assignment-card" th:each="branchId : ${user.branchIds()}"><span style="width:16px"></span><span class="branch-avatar branch-avatar-small" th:text="${branchId == setup.branchId ? setup.branchCode : 'BR'}">BR</span><span><strong th:text="${branchId == setup.branchId ? setup.branchName : 'Branch #' + branchId}">Main Branch</strong><small>Assigned branch</small></span><span class="check-mark" style="color:#fff;background:var(--brand-700)">✓</span></div></div></div></section>
+
+                        <section class="profile-detail-card full-width"><div class="profile-detail-heading"><h2>Permission summary</h2><small>Inherited from assigned User Group</small></div><div style="padding:18px"><div class="permission-preview-grid" style="padding:0" th:each="group : ${userGroups}" th:if="${group.id() == user.userGroupId()}"><div class="permission-preview-item" th:each="permission : ${permissions}" th:classappend="${group.permissionIds().contains(permission.id()) ? ' is-granted' : ''}"><i th:text="${group.permissionIds().contains(permission.id()) ? '✓' : '–'}">✓</i><span th:text="${permission.name()}">Open POS</span></div></div><div class="integration-note" style="margin-top:12px"><span>i</span><span>This profile shows the permissions inherited from the assigned User Group.</span></div></div></section>
+                    </div>
+
+                    <div class="user-form-actions"><span>Archiving a staff user deactivates the account and keeps previous sales, payments and audit activity traceable.</span><div><form th:action="@{'/owner/users/' + ${user.id()} + '/archive'}" method="post" data-confirm="Archive this staff account? Historical activity will remain preserved."><button class="settings-secondary-button" type="submit" style="color:#9f3025">Archive user</button></form><a class="settings-primary-button" th:href="@{'/owner/users/' + ${user.id()} + '/edit'}">Edit profile</a></div></div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script><script th:src="@{/js/pages/user-management.js}" defer></script>
+</body>
+</html>

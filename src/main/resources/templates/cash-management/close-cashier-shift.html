@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Close Shift &amp; Reconciliation | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}"><link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}"><link rel="stylesheet" th:href="@{/css/pages/operations.css}"><link rel="stylesheet" th:href="@{/css/pages/cash-management.css}">
+</head>
+<body class="dashboard-body cash-ui cash-page-close-shift"><div class="app-shell" data-app-shell>
+<aside th:replace="~{fragments/settings-shell :: sidebar('cash-management')}"></aside><button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+<div class="workspace"><header th:replace="~{fragments/settings-shell :: topbar('Close Shift & Reconciliation')}"></header><main class="operations-page">
+<nav class="ops-breadcrumb"><a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><a th:href="@{/owner/cash-management/shifts/active(shiftId=${shift.id})}">Active Shift</a><span>/</span><strong>Close &amp; Reconcile</strong></nav>
+<section class="ops-heading"><div><span class="eyebrow">Cashier Shift</span><div class="cash-heading-line"><h1>Close Shift &amp; Reconciliation</h1><span class="cash-head-status warn" th:if="${shift != null and shift.status.name() == 'OPEN'}">Reconciliation required</span></div><div class="cash-head-meta" th:if="${shift != null}"><strong th:text="${shift.shiftCode}">SHIFT</strong><span class="cash-dot-sep">•</span><span th:text="${registerNameById[shift.registerId]}">Register</span><span class="cash-dot-sep">•</span><span th:text="${setup.branchName}">Branch</span><span class="cash-dot-sep">•</span><span th:text="${currency}">BDT</span></div></div><div class="ops-actions"><a class="ops-btn" th:href="@{/owner/cash-management/shifts/active(shiftId=${shift.id})}">← Active shift</a></div></section>
+<div th:replace="~{fragments/operations-ui :: flashMessages}"></div>
+<div class="cash-form-shell" th:if="${shift != null}">
+<section class="ops-card cash-form-card"><div class="ops-card-head"><div><h2>Shift reconciliation</h2><p>Count physical cash, review variance and choose the approved closing destination.</p></div><span class="ops-status" th:classappend="| ${#strings.toLowerCase(shift.status.name())}|" th:text="${#strings.capitalizeWords(#strings.toLowerCase(shift.status.name()))}">Open</span></div>
+<form class="ops-card-body" method="post" th:if="${shift.status.name() == 'OPEN'}" th:action="@{/owner/cash-management/shifts/{id}/close(id=${shift.id})}" th:object="${closeShiftRequest}" data-shift-close-form th:attr="data-expected-cash=${expectedCash},data-variance-threshold=${branchSettings != null and branchSettings.varianceApprovalThreshold != null ? branchSettings.varianceApprovalThreshold : ''},data-currency=${currency}">
+<input type="hidden" th:field="*{closeKey}"><div class="ops-grid two">
+<div class="ops-field"><label for="closingTimePreview">Closing Time</label><input id="closingTimePreview" value="Recorded by server when submitted" readonly></div>
+<div class="ops-field"><label for="expectedCash">Expected Cash</label><input id="expectedCash" th:value="${#numbers.formatDecimal(expectedCash,1,2)}" readonly></div>
+<div class="ops-field" th:classappend="${#fields.hasErrors('physicalCountedCash')} ? ' has-error'"><label for="physicalCountedCash">Physical Counted Cash *</label><input id="physicalCountedCash" th:field="*{physicalCountedCash}" type="number" min="0" step="0.0001" required data-counted-cash inputmode="decimal"><small class="field-error" th:errors="*{physicalCountedCash}"></small></div>
+<div class="ops-field"><label for="variancePreview">Variance</label><input id="variancePreview" readonly data-variance-preview></div>
+<div class="ops-field"><label for="resultPreview">Result</label><input id="resultPreview" readonly data-variance-result placeholder="Balanced / Shortage / Excess"></div>
+<div class="ops-field" th:classappend="${#fields.hasErrors('closingCashLocationId')} ? ' has-error'"><label for="closingCashLocationId">Closing Destination *</label><select id="closingCashLocationId" th:field="*{closingCashLocationId}" required><option value="">Select approved cash location</option><option th:each="c:${allowedClosingCashLocations}" th:value="${c.id}" th:text="|${c.name} · ${#strings.capitalizeWords(#strings.toLowerCase(#strings.replace(c.type.name(), '_', ' ')))}|">Branch Safe</option></select><small class="field-error" th:errors="*{closingCashLocationId}"></small></div>
+<div class="ops-field full"><label for="denominationCount">Denomination Count</label><textarea id="denominationCount" th:field="*{denominationCount}" maxlength="2000" th:attr="required=${branchSettings != null and branchSettings.denominationCountRequired ? 'required' : null}" placeholder="Example: 1000 × 5, 500 × 4, 100 × 10"></textarea><small class="ops-help" th:text="${branchSettings != null and branchSettings.denominationCountRequired ? 'Required by the active branch settings.' : 'Optional unless the active branch requires denomination counting.'}">Optional.</small><small class="field-error" th:errors="*{denominationCount}"></small></div>
+<div class="ops-field full" th:classappend="${#fields.hasErrors('note')} ? ' has-error'"><label for="closeNote">Closing Note / Variance Reason</label><textarea id="closeNote" th:field="*{note}" maxlength="1000" placeholder="Required when counted cash differs from expected cash"></textarea><small class="field-error" th:errors="*{note}"></small></div>
+<label class="ops-check full" data-variance-approval-wrap th:if="${ownerActor}"><input type="checkbox" th:field="*{varianceApproved}" data-variance-approval><span><strong>Owner approval for threshold variance</strong><small th:text="${branchSettings != null and branchSettings.varianceApprovalThreshold != null ? 'Required only when absolute variance exceeds ' + #numbers.formatDecimal(branchSettings.varianceApprovalThreshold,1,2) : 'No variance approval threshold is configured for this branch.'}">Approval threshold</small></span></label>
+<div class="ops-note full" th:unless="${ownerActor}"><strong>Threshold approval:</strong> when calculated variance exceeds the configured threshold, the primary owner must submit the close action so the audit trail records the real approver.</div>
+</div>
+<div class="ops-note cash-mt-12"><strong>Integrity rule:</strong> closing is atomic. Existing sales, payments, purchases and expenses are not reposted. A Closed shift becomes read-only; unresolved shortage or excess moves to Cash Variance Review.</div>
+<div class="ops-action-row"><a class="ops-btn" th:href="@{/owner/cash-management/shifts/active(shiftId=${shift.id})}">Cancel</a><button class="ops-btn primary" type="submit">Close &amp; reconcile shift</button></div>
+</form>
+<div class="ops-card-body" th:unless="${shift.status.name() == 'OPEN'}"><div class="ops-empty"><strong>This shift is already closed.</strong><span>Closed shifts are read-only. Open Shift Details to review the preserved reconciliation snapshot.</span></div><div class="ops-action-row"><a class="ops-btn primary" th:href="@{/owner/cash-management/shifts/{id}(id=${shift.id})}">Open Shift Details</a></div></div>
+</section>
+<aside class="ops-card cash-side-card"><div class="ops-card-head"><div><h2>Reconciliation summary</h2><p>Live preview from the current counted cash value.</p></div></div><div class="ops-card-body">
+<div class="cash-fact"><span>Expected cash</span><strong th:text="${currency + ' ' + #numbers.formatDecimal(expectedCash,1,2)}">BDT 0.00</strong></div>
+<div class="cash-fact"><span>Counted cash</span><strong data-close-summary-counted>—</strong></div>
+<div class="cash-fact"><span>Variance</span><strong data-close-summary-variance>—</strong></div>
+<div class="cash-fact"><span>Result</span><strong data-close-summary-result>—</strong></div>
+<div class="cash-fact"><span>Closing locations</span><strong th:text="${#lists.size(allowedClosingCashLocations)}">0</strong></div>
+<div class="ops-note cash-mt-12">Counted cash is transferred to the approved closing destination. The original Expected and Counted values remain immutable after close.</div>
+</div></aside>
+</div>
+</main></div></div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script><script th:src="@{/js/pages/operations.js}" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('[data-shift-close-form]');
+    if (!form) return;
+    const expected = Number.parseFloat(form.dataset.expectedCash || '0') || 0;
+    const thresholdRaw = form.dataset.varianceThreshold;
+    const threshold = thresholdRaw === '' ? null : Number.parseFloat(thresholdRaw);
+    const counted = form.querySelector('[data-counted-cash]');
+    const variance = form.querySelector('[data-variance-preview]');
+    const result = form.querySelector('[data-variance-result]');
+    const note = form.querySelector('#closeNote');
+    const approval = form.querySelector('[data-variance-approval]');
+    const approvalWrap = form.querySelector('[data-variance-approval-wrap]');
+    const sideCounted = document.querySelector('[data-close-summary-counted]');
+    const sideVariance = document.querySelector('[data-close-summary-variance]');
+    const sideResult = document.querySelector('[data-close-summary-result]');
+    const currency = form.dataset.currency || '';
+    const sync = () => {
+        const physicalRaw = Number.parseFloat(counted.value || '');
+        const physical = Number.isFinite(physicalRaw) ? physicalRaw : 0;
+        const value = physical - expected;
+        const label = Math.abs(value) < 0.00005 ? 'Balanced' : (value < 0 ? 'Shortage' : 'Excess');
+        variance.value = value.toFixed(2);
+        result.value = label;
+        if (sideCounted) sideCounted.textContent = `${currency} ${physical.toFixed(2)}`;
+        if (sideVariance) { sideVariance.textContent = `${value < 0 ? '− ' : value > 0 ? '+ ' : ''}${currency} ${Math.abs(value).toFixed(2)}`; sideVariance.classList.toggle('cash-negative', value < 0); sideVariance.classList.toggle('cash-positive', value > 0); }
+        if (sideResult) sideResult.textContent = label;
+        if (note) note.required = Math.abs(value) >= 0.00005;
+        const approvalRequired = threshold !== null && Number.isFinite(threshold) && Math.abs(value) > threshold;
+        if (approval) approval.required = approvalRequired;
+        if (approvalWrap) approvalWrap.classList.toggle('is-required', approvalRequired);
+    };
+    counted.addEventListener('input', sync); sync();
+});
+</script>
+<script th:src="@{/js/pages/cash-management.js}" defer></script></body></html>

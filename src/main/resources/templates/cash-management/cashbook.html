@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Branch Cashbook | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/operations.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/cash-management.css}">
+</head>
+<body class="dashboard-body cash-ui cash-page-cashbook">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('cash-management')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Branch Cashbook')}"></header>
+        <main class="operations-page">
+            <nav class="ops-breadcrumb"><a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><strong>Cash Management</strong></nav>
+
+            <section class="ops-heading">
+                <div>
+                    <span class="eyebrow">Cash Management</span>
+                    <div class="cash-heading-line">
+                        <h1>Branch Cashbook</h1><span class="cash-head-status">Read-only ledger</span>
+                    </div>
+                    <div class="cash-head-meta">
+                        <strong th:text="${setup.branchName}">Branch</strong><span class="cash-dot-sep">•</span>
+                        <span th:text="${setup.branchCode}">CODE</span><span class="cash-dot-sep">•</span>
+                        <span th:text="${branchZone}">Asia/Dhaka</span><span class="cash-dot-sep">•</span>
+                        <span th:text="${currency}">BDT</span>
+                    </div>
+                </div>
+                <div class="ops-actions no-print">
+                    <a class="ops-btn primary" th:href="@{/owner/cash-management/shifts/open}">＋ Open cashier shift</a>
+                    <a class="ops-btn" th:href="@{/owner/cash-management/transfers/new}">⇄ Transfer cash</a>
+                    <div class="cash-menu">
+                        <button class="ops-btn" type="button" data-cash-menu-toggle aria-expanded="false">Export ⌄</button>
+                        <div class="cash-menu-panel" data-cash-menu-panel>
+                            <a th:href="@{/owner/cash-management/export(format='xlsx',cashLocationId=${cashLocationId},registerId=${registerId},shiftId=${shiftId},movementType=${movementType},sourceModule=${sourceModule},userId=${userId},status=${movementStatus},from=${from},to=${to},q=${query})}">Excel workbook</a>
+                            <a th:href="@{/owner/cash-management/export(format='csv',cashLocationId=${cashLocationId},registerId=${registerId},shiftId=${shiftId},movementType=${movementType},sourceModule=${sourceModule},userId=${userId},status=${movementStatus},from=${from},to=${to},q=${query})}">CSV file</a>
+                            <a th:href="@{/owner/cash-management/export(format='pdf',cashLocationId=${cashLocationId},registerId=${registerId},shiftId=${shiftId},movementType=${movementType},sourceModule=${sourceModule},userId=${userId},status=${movementStatus},from=${from},to=${to},q=${query})}">PDF document</a>
+                        </div>
+                    </div>
+                    <button class="ops-btn" type="button" data-print-page>Print</button>
+                </div>
+            </section>
+
+            <div th:replace="~{fragments/operations-ui :: flashMessages}"></div>
+
+            <section class="ops-card cash-form-card" th:if="${cashbook == null}">
+                <div class="ops-card-head"><div><h2>Initialize Branch Cashbook</h2><p>Create the branch opening Cashbook once before physical cash can be posted.</p></div><span class="cash-head-status warn">Setup required</span></div>
+                <form class="ops-card-body" method="post" th:action="@{/owner/cash-management/initialize}">
+                    <div class="ops-grid two">
+                        <div class="ops-field"><label for="cashbookInitBranch">Active Branch</label><input id="cashbookInitBranch" th:value="${setup.branchName}" readonly></div>
+                        <div class="ops-field"><label for="cashbookOpeningBalance">Approved Opening Balance</label><input id="cashbookOpeningBalance" name="openingBalance" type="number" min="0" step="0.0001" value="0" required><small class="ops-help">Backend fixed precision remains unchanged; UI summaries display two decimals.</small></div>
+                    </div>
+                    <div class="ops-note cash-mt-12">This is a one-time Cashbook initialization, not a recurring manual balance override.</div>
+                    <div class="ops-action-row"><button class="ops-btn primary" type="submit">Initialize Cashbook</button></div>
+                </form>
+            </section>
+
+            <section class="ops-kpis" aria-label="Cash position">
+                <article class="ops-kpi cash-primary"><small>Current Cash Balance</small><strong th:text="${cashbook != null ? currency + ' ' + #numbers.formatDecimal(cashbook.currentBalance,1,'COMMA',2,'POINT') : '—'}">—</strong><span>Posted physical cash movements only</span></article>
+                <article class="ops-kpi"><small>Opening Balance</small><strong th:text="${cashbook != null ? currency + ' ' + #numbers.formatDecimal(cashbook.openingBalance,1,'COMMA',2,'POINT') : '—'}">—</strong><span>Controlled branch opening cash</span></article>
+                <article class="ops-kpi"><small>Posted Movements</small><strong th:text="${movementPage.totalElements}">0</strong><span>Records matching current backend filters</span></article>
+                <article class="ops-kpi"><small>Cash Controls</small><strong th:text="${#lists.size(activeRegisters) + (#lists.size(activeRegisters) == 1 ? ' register' : ' registers') + ' · ' + #lists.size(activeCashLocations) + (#lists.size(activeCashLocations) == 1 ? ' location' : ' locations')}">0 registers · 0 locations</strong><span>Active controls in the current branch</span></article>
+            </section>
+
+            <section class="cash-active-shift" th:if="${activeShift != null}">
+                <div class="cash-active-shift-main"><span class="cash-live-dot" aria-hidden="true"></span><div class="cash-active-shift-copy">
+                    <strong th:text="${'Active Shift — ' + activeShift.shiftCode}">Active Shift</strong>
+                    <span class="cash-active-shift-line-one" th:text="|${registerNameById[activeShift.registerId] != null ? registerNameById[activeShift.registerId] : 'Register #' + activeShift.registerId} · ${userNameById[activeShift.cashierUserId] != null ? userNameById[activeShift.cashierUserId] : 'User #' + activeShift.cashierUserId}|">Register · Cashier</span>
+                    <span class="cash-active-shift-line-two">Opened <span th:text="${#temporals.format(activeShift.openingTime.atZone(branchZone),'dd/MM/yyyy · hh:mm a')}">Date · Time</span> · <strong>Expected <span th:text="${currency + ' ' + #numbers.formatDecimal(activeShiftExpectedCash,1,'COMMA',2,'POINT')}">BDT 0.00</span></strong></span>
+                </div></div>
+                <div class="cash-active-shift-actions no-print">
+                    <a class="ops-btn sm" th:href="@{/owner/cash-management/shifts/active(shiftId=${activeShift.id})}">View Shift</a>
+                    <a class="ops-btn sm primary" th:href="@{/owner/cash-management/shifts/{id}/close(id=${activeShift.id})}">Close Shift</a>
+                </div>
+            </section>
+
+            <div class="ops-banner warn" th:if="${#lists.isEmpty(activeRegisters) or #lists.isEmpty(activeCashLocations)}"><div><strong>Cash-control configuration is incomplete.</strong> Open Shift and physical-cash posting require an active Register/Counter and Cash Location in the current branch.</div></div>
+
+            <section class="ops-card cash-ledger-card">
+                <div class="ops-card-head"><div><h2>Cash Movement Ledger</h2><p>Immutable physical-cash movements with source, register/shift context, amount and running branch balance.</p></div><span class="ops-status">Read-only</span></div>
+
+                <form id="cashbookFilterForm" method="get" th:action="@{/owner/cash-management}" class="cash-filter-shell">
+                    <div class="cash-filter-primary">
+                        <div class="ops-field cash-search"><label for="cashbookSearch">Search</label><input id="cashbookSearch" name="q" th:value="${query}" data-cash-search-shortcut placeholder="Search source, reference or note"></div>
+                        <div class="ops-field"><label for="cashbookMovementType">Movement Type</label><select id="cashbookMovementType" name="movementType"><option value="">All movement types</option><option th:each="v:${T(com.spark.falcon.cashmanagement.entity.CashMovementType).values()}" th:value="${v}" th:text="${#strings.capitalizeWords(#strings.toLowerCase(#strings.replace(v.name(),'_',' ')))}" th:selected="${movementType == v}">Type</option></select></div>
+                        <div class="ops-field cash-date-field"><label for="cashbookFromDisplay">From</label><div class="cash-date-control" data-cash-date-control><input class="cash-date-display" id="cashbookFromDisplay" type="text" inputmode="numeric" autocomplete="off" data-cash-date-display placeholder="DD/MM/YYYY" maxlength="10" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" aria-label="From date, DD/MM/YYYY"><input class="cash-date-native" id="cashbookFrom" name="from" type="date" th:value="${from}" data-cash-date-native tabindex="-1" aria-hidden="true"><button class="cash-date-picker" type="button" data-cash-date-picker aria-label="Open From date calendar"></button></div></div>
+                        <div class="ops-field cash-date-field"><label for="cashbookToDisplay">To</label><div class="cash-date-control" data-cash-date-control><input class="cash-date-display" id="cashbookToDisplay" type="text" inputmode="numeric" autocomplete="off" data-cash-date-display placeholder="DD/MM/YYYY" maxlength="10" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" aria-label="To date, DD/MM/YYYY"><input class="cash-date-native" id="cashbookTo" name="to" type="date" th:value="${to}" data-cash-date-native tabindex="-1" aria-hidden="true"><button class="cash-date-picker" type="button" data-cash-date-picker aria-label="Open To date calendar"></button></div></div>
+                        <button class="ops-btn cash-more-btn" type="button" data-cash-filter-toggle aria-controls="cashbookAdvancedFilters" th:attr="aria-expanded=${cashLocationId != null or registerId != null or shiftId != null or sourceModule != null or userId != null or movementStatus != null}">☷ More filters <span class="cash-filter-count" th:if="${cashLocationId != null or registerId != null or shiftId != null or sourceModule != null or userId != null or movementStatus != null}">Active</span></button>
+                        <button class="ops-btn primary cash-filter-submit" type="submit">Apply</button>
+                    </div>
+                    <div id="cashbookAdvancedFilters" class="cash-advanced-filters" th:classappend="${cashLocationId != null or registerId != null or shiftId != null or sourceModule != null or userId != null or movementStatus != null} ? ' is-open' : ''">
+                        <div class="cash-advanced-grid">
+                            <div class="ops-field"><label for="cashbookLocation">Cash Location</label><select id="cashbookLocation" name="cashLocationId"><option value="">All locations</option><option th:each="v:${cashLocations}" th:value="${v.id}" th:text="${v.name}" th:selected="${cashLocationId == v.id}">Location</option></select></div>
+                            <div class="ops-field"><label for="cashbookRegister">Register</label><select id="cashbookRegister" name="registerId"><option value="">All registers</option><option th:each="v:${registers}" th:value="${v.id}" th:text="|${v.name} (${v.code})|" th:selected="${registerId == v.id}">Register</option></select></div>
+                            <div class="ops-field"><label for="cashbookShift">Shift ID</label><input id="cashbookShift" name="shiftId" type="number" min="1" th:value="${shiftId}" placeholder="Any shift"></div>
+                            <div class="ops-field"><label for="cashbookSource">Source Module</label><select id="cashbookSource" name="sourceModule"><option value="">All sources</option><option th:each="v:${T(com.spark.falcon.cashmanagement.entity.CashSourceModule).values()}" th:value="${v}" th:text="${#strings.capitalizeWords(#strings.toLowerCase(#strings.replace(v.name(),'_',' ')))}" th:selected="${sourceModule == v}">Source</option></select></div>
+                            <div class="ops-field"><label for="cashbookUser">User</label><select id="cashbookUser" name="userId"><option value="">All users</option><option th:each="u:${branchUsers}" th:value="${u.id}" th:text="${u.fullName}" th:selected="${userId == u.id}">User</option></select></div>
+                            <div class="ops-field"><label for="cashbookStatus">Status</label><select id="cashbookStatus" name="status"><option value="">All statuses</option><option th:each="v:${T(com.spark.falcon.cashmanagement.entity.CashMovementStatus).values()}" th:value="${v}" th:text="${#strings.capitalizeWords(#strings.toLowerCase(#strings.replace(v.name(),'_',' ')))}" th:selected="${movementStatus == v}">Status</option></select></div>
+                        </div>
+                        <div class="cash-filter-foot"><span class="cash-filter-note">All filters run on the backend, remain branch-scoped, and carry into export.</span><div class="cash-filter-actions"><a class="ops-btn sm" th:href="@{/owner/cash-management}">Reset all</a><button class="ops-btn sm primary" type="submit">Apply filters</button></div></div>
+                    </div>
+                </form>
+
+                <div class="ops-table-wrap">
+                    <table class="ops-table cash-table-wide">
+                        <thead><tr><th>Posted at</th><th>Movement</th><th>Cash context</th><th class="numeric">Amount</th><th class="numeric">Balance</th><th>Posted by</th><th>Status</th><th class="cash-action-cell">Action</th></tr></thead>
+                        <tbody>
+                        <tr th:each="m:${movements}">
+                            <td class="cash-date-cell"><span class="cash-date-main" th:text="${m.postedAt != null ? #temporals.format(m.postedAt.atZone(branchZone),'dd/MM/yyyy') : '—'}">—</span><span class="cash-secondary" th:text="${m.postedAt != null ? #temporals.format(m.postedAt.atZone(branchZone),'hh:mm a') : '—'}">—</span></td>
+                            <td><div class="cash-txn"><span class="cash-txn-mark" th:text="${m.direction.name() == 'INFLOW' ? '↗' : (m.direction.name() == 'OUTFLOW' ? '↘' : '⇄')}">↗</span><div class="cash-txn-copy"><strong th:text="${#strings.capitalizeWords(#strings.toLowerCase(#strings.replace(m.movementType.name(),'_',' ')))}">Movement</strong><div class="cash-txn-meta"><span th:text="${#strings.capitalizeWords(#strings.toLowerCase(#strings.replace(m.sourceModule.name(),'_',' ')))}">Source</span><span>•</span><span class="ops-mono" th:text="|CM-${m.id}|">CM-1</span><span th:if="${m.sourceReference != null}">•</span><span class="ops-mono" th:if="${m.sourceReference != null}" th:text="${m.sourceReference}">Reference</span></div></div></div></td>
+                            <td>
+                                <span class="cash-main-text" th:if="${m.registerId != null}" th:text="${registerNameById[m.registerId] != null ? registerNameById[m.registerId] : 'Register #' + m.registerId}">Register</span>
+                                <span class="cash-main-text" th:if="${m.registerId == null and m.destinationRegisterId != null}" th:text="${'→ ' + (registerNameById[m.destinationRegisterId] != null ? registerNameById[m.destinationRegisterId] : 'Register #' + m.destinationRegisterId)}">Register</span>
+                                <span class="cash-main-text" th:if="${m.registerId == null and m.destinationRegisterId == null}" th:text="${m.cashLocationId != null ? (cashLocationNameById[m.cashLocationId] != null ? cashLocationNameById[m.cashLocationId] : 'Location #' + m.cashLocationId) : (m.destinationCashLocationId != null ? '→ ' + cashLocationNameById[m.destinationCashLocationId] : 'Branch cash')}">Context</span>
+                                <span class="cash-secondary" th:if="${m.cashierShiftId != null}"><a th:href="@{/owner/cash-management/shifts/{id}(id=${m.cashierShiftId})}" th:text="${'Shift #' + m.cashierShiftId}">Shift</a><span th:if="${m.cashLocationId != null}" th:text="${' · ' + cashLocationNameById[m.cashLocationId]}"> · Location</span></span>
+                                <span class="cash-secondary" th:if="${m.cashierShiftId == null and m.destinationCashierShiftId != null}"><a th:href="@{/owner/cash-management/shifts/{id}(id=${m.destinationCashierShiftId})}" th:text="${'→ Shift #' + m.destinationCashierShiftId}">Shift</a><span th:if="${m.destinationCashLocationId != null}" th:text="${' · ' + cashLocationNameById[m.destinationCashLocationId]}"> · Location</span></span>
+                                <span class="cash-secondary" th:if="${m.cashierShiftId == null and m.destinationCashierShiftId == null and m.registerId != null and m.cashLocationId != null}" th:text="${cashLocationNameById[m.cashLocationId]}">Location</span>
+                            </td>
+                            <td class="numeric"><span class="cash-amount" th:classappend="${m.direction.name() == 'INFLOW' ? ' inflow' : (m.direction.name() == 'OUTFLOW' ? ' outflow' : '')}" th:text="${(m.direction.name() == 'INFLOW' ? '+ ' : (m.direction.name() == 'OUTFLOW' ? '− ' : '')) + #numbers.formatDecimal(m.amount,1,'COMMA',2,'POINT')}">0.00</span><span class="cash-secondary" th:text="${#strings.capitalizeWords(#strings.toLowerCase(m.direction.name()))}">Direction</span></td>
+                            <td class="numeric"><span class="cash-balance" th:text="${#numbers.formatDecimal(m.balanceAfter,1,'COMMA',2,'POINT')}">0.00</span><span class="cash-secondary" th:text="${'Before ' + #numbers.formatDecimal(m.balanceBefore,1,'COMMA',2,'POINT')}">Before 0.00</span></td>
+                            <td><span class="cash-main-text" th:text="${userNameById[m.postedByUserId] != null ? userNameById[m.postedByUserId] : 'User #' + m.postedByUserId}">User</span></td>
+                            <td><span class="ops-status" th:classappend="| ${#strings.toLowerCase(m.status.name())}|" th:text="${#strings.capitalizeWords(#strings.toLowerCase(m.status.name()))}">Posted</span></td>
+                            <td class="cash-action-cell"><a class="ops-btn sm" th:href="@{/owner/cash-management/movements/{id}(id=${m.id})}">View</a></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(movements)}"><td colspan="8"><div class="ops-empty"><strong>No cash movements found</strong><span>Adjust the current filters or wait for a valid physical-cash posting.</span></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="ops-pagination cash-table-footer">
+                    <div class="cash-footer-meta">
+                        <small th:text="${movementPage.totalElements == 0 ? 'Showing 0 of 0' : 'Showing ' + (movementPage.number * movementPage.size + 1) + '–' + (movementPage.number * movementPage.size + movementPage.numberOfElements) + ' of ' + movementPage.totalElements}">Showing 0 of 0</small>
+                        <label class="cash-rows" for="cashbookRows">Rows per page <select id="cashbookRows" name="size" form="cashbookFilterForm" onchange="this.form.submit()"><option value="10" th:selected="${selectedSize == 10}">10</option><option value="25" th:selected="${selectedSize == 25}">25</option><option value="50" th:selected="${selectedSize == 50}">50</option><option value="100" th:selected="${selectedSize == 100}">100</option></select></label>
+                    </div>
+                    <nav th:if="${movementPage.totalPages > 1}">
+                        <a class="ops-page-link" th:classappend="${movementPage.first ? ' disabled' : ''}" th:href="@{/owner/cash-management(page=${movementPage.number-1},size=${selectedSize},cashLocationId=${cashLocationId},registerId=${registerId},shiftId=${shiftId},movementType=${movementType},sourceModule=${sourceModule},userId=${userId},status=${movementStatus},from=${from},to=${to},q=${query})}">‹</a>
+                        <span class="ops-page-link active" th:text="${movementPage.number+1}">1</span>
+                        <a class="ops-page-link" th:classappend="${movementPage.last ? ' disabled' : ''}" th:href="@{/owner/cash-management(page=${movementPage.number+1},size=${selectedSize},cashLocationId=${cashLocationId},registerId=${registerId},shiftId=${shiftId},movementType=${movementType},sourceModule=${sourceModule},userId=${userId},status=${movementStatus},from=${from},to=${to},q=${query})}">›</a>
+                    </nav>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script>
+<script th:src="@{/js/pages/operations.js}" defer></script>
+<script th:src="@{/js/pages/cash-management.js}" defer></script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Analytics | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/operations.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/analytics.css}">
+</head>
+<body class="dashboard-body analytics-ui">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('analytics')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Analytics & Reports')}"></header>
+        <main class="operations-page analytics-page analytics-overview-page" data-analytics-root th:attr="data-currency=${currency}">
+            <nav class="ops-breadcrumb" aria-label="Breadcrumb">
+                <a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><strong>Analytics</strong>
+            </nav>
+
+            <section class="ops-heading analytics-page-heading">
+                <div class="analytics-heading-copy">
+                    <span class="eyebrow">Business performance</span>
+                    <h1>Analytics overview</h1>
+                    <p th:text="|${setup.branchName} · ${#temporals.format(overview.from,'dd MMM yyyy')} – ${#temporals.format(overview.to,'dd MMM yyyy')}|">Branch · reporting period</p>
+                </div>
+                <div class="ops-actions no-print">
+                    <a class="ops-btn primary" th:href="@{/owner/analytics/reports}">Browse reports <span aria-hidden="true">→</span></a>
+                </div>
+            </section>
+
+            <div class="ops-banner danger" th:if="${errorMessage != null}" th:text="${errorMessage}">Unable to load analytics.</div>
+
+            <section class="ops-card analytics-filter-card no-print">
+                <div class="analytics-filter-head analytics-overview-filter-head">
+                    <div><h2>Reporting period</h2><p>Use a date range for KPIs and a month for the daily performance chart.</p></div>
+                    <span class="analytics-filter-status" th:text="${setup.branchName}">Branch</span>
+                </div>
+                <form method="get" th:action="@{/owner/analytics}" class="analytics-filter-form">
+                    <div class="ops-field"><label for="analyticsFrom">From</label><input id="analyticsFrom" type="date" name="from" th:value="${overview.from}"></div>
+                    <div class="ops-field"><label for="analyticsTo">To</label><input id="analyticsTo" type="date" name="to" th:value="${overview.to}"></div>
+                    <div class="ops-field"><label for="chartMonth">Chart month</label><input id="chartMonth" type="month" name="month" th:value="${chartMonth}"></div>
+                    <div class="analytics-filter-actions"><button class="ops-btn primary" type="submit">Apply</button><a class="ops-btn" th:href="@{/owner/analytics}">Reset</a></div>
+                </form>
+            </section>
+
+            <section class="analytics-section-block" aria-labelledby="financialPerformanceTitle">
+                <div class="analytics-section-heading">
+                    <div><span class="analytics-section-kicker">Financial performance</span><h2 id="financialPerformanceTitle">Key metrics</h2></div>
+                    <span class="analytics-section-period" th:text="|${#temporals.format(overview.from,'dd MMM')} – ${#temporals.format(overview.to,'dd MMM yyyy')}|">Period</span>
+                </div>
+                <div class="analytics-kpi-grid" aria-label="Financial performance">
+                    <article class="analytics-kpi primary">
+                        <div class="analytics-kpi-top"><small>Net sales</small><span class="analytics-kpi-mark">NS</span></div>
+                        <strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.netSales,1,'COMMA',2,'POINT')}|">0.00</strong>
+                        <span>After returns and discounts</span>
+                    </article>
+                    <article class="analytics-kpi">
+                        <div class="analytics-kpi-top"><small>Gross profit</small><span class="analytics-kpi-mark">GP</span></div>
+                        <strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.grossProfit,1,'COMMA',2,'POINT')}|">0.00</strong>
+                        <span>Net sales less COGS</span>
+                    </article>
+                    <article class="analytics-kpi" th:classappend="${overview.financial.netProfit.signum() < 0 ? ' negative' : ''}">
+                        <div class="analytics-kpi-top"><small>Net profit</small><span class="analytics-kpi-mark">NP</span></div>
+                        <strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.netProfit,1,'COMMA',2,'POINT')}|">0.00</strong>
+                        <span>After operating expense and inventory loss</span>
+                    </article>
+                    <article class="analytics-kpi actionable">
+                        <div class="analytics-kpi-top"><small>Customer due</small><span class="analytics-kpi-mark">CD</span></div>
+                        <strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.customerDue,1,'COMMA',2,'POINT')}|">0.00</strong>
+                        <a th:href="@{/owner/analytics/reports/customer-outstanding-due}">View outstanding <span aria-hidden="true">→</span></a>
+                    </article>
+                    <article class="analytics-kpi actionable">
+                        <div class="analytics-kpi-top"><small>Supplier due</small><span class="analytics-kpi-mark">SD</span></div>
+                        <strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.supplierDue,1,'COMMA',2,'POINT')}|">0.00</strong>
+                        <a th:href="@{/owner/analytics/reports/supplier-due-payment}">View payments <span aria-hidden="true">→</span></a>
+                    </article>
+                    <article class="analytics-kpi">
+                        <div class="analytics-kpi-top"><small>Available cash</small><span class="analytics-kpi-mark">CA</span></div>
+                        <strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.availableCashBalance,1,'COMMA',2,'POINT')}|">0.00</strong>
+                        <span>Branch cashbook balance</span>
+                    </article>
+                </div>
+            </section>
+
+            <section class="ops-card analytics-snapshot-card" aria-labelledby="financialSnapshotTitle">
+                <div class="analytics-card-title-row">
+                    <div><span class="analytics-section-kicker">Period breakdown</span><h2 id="financialSnapshotTitle">Financial snapshot</h2></div>
+                    <span class="analytics-muted-badge">Confirmed data</span>
+                </div>
+                <div class="analytics-secondary-metrics">
+                    <div><span>Today income</span><strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.todayIncome,1,'COMMA',2,'POINT')}|">0.00</strong></div>
+                    <div><span>Total income</span><strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.totalIncome,1,'COMMA',2,'POINT')}|">0.00</strong></div>
+                    <div><span>Today operating expense</span><strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.todayOperatingExpense,1,'COMMA',2,'POINT')}|">0.00</strong></div>
+                    <div><span>Gross sales</span><strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.grossSales,1,'COMMA',2,'POINT')}|">0.00</strong></div>
+                    <div><span>Sales returns</span><strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.salesReturns,1,'COMMA',2,'POINT')}|">0.00</strong></div>
+                    <div><span>Discounts</span><strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.discounts,1,'COMMA',2,'POINT')}|">0.00</strong></div>
+                    <div><span>COGS</span><strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.cogs,1,'COMMA',2,'POINT')}|">0.00</strong></div>
+                    <div><span>Operating expense</span><strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.operatingExpense,1,'COMMA',2,'POINT')}|">0.00</strong></div>
+                    <div><span>Inventory loss</span><strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.inventoryLoss,1,'COMMA',2,'POINT')}|">0.00</strong></div>
+                    <div><span>Received payments</span><strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.receivedPayments,1,'COMMA',2,'POINT')}|">0.00</strong></div>
+                    <div><span>Opening balance</span><strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.openingBalance,1,'COMMA',2,'POINT')}|">0.00</strong></div>
+                    <div><span>Closing balance</span><strong th:text="|${currency} ${#numbers.formatDecimal(overview.financial.closingBalance,1,'COMMA',2,'POINT')}|">0.00</strong></div>
+                </div>
+            </section>
+
+            <section class="analytics-section-block" aria-labelledby="performanceTrendsTitle">
+                <div class="analytics-section-heading analytics-chart-section-heading">
+                    <div>
+                        <span class="analytics-section-kicker">Trends</span>
+                        <h2 id="performanceTrendsTitle">Performance charts</h2>
+                        <p>Compare sales, operating expense, payment mix and product movement without leaving the active branch.</p>
+                    </div>
+                    <span class="analytics-chart-help no-print">Hover, tap or use arrow keys to inspect values</span>
+                </div>
+
+                <div class="analytics-chart-grid analytics-chart-grid-primary">
+                    <article class="ops-card analytics-chart-card analytics-performance-card">
+                        <div class="analytics-card-title-row">
+                            <div>
+                                <span class="analytics-section-kicker">Daily comparison</span>
+                                <h2>Sales vs operating expense</h2>
+                                <p th:text="|Daily net sales and posted operating expense · ${chartMonth}|">Daily comparison</p>
+                            </div>
+                            <button class="ops-btn sm no-print" type="button" data-download-chart="salesExpenseChart">Download PNG</button>
+                        </div>
+                        <div class="analytics-chart-stage analytics-sales-expense-stage">
+                            <canvas id="salesExpenseChart" width="960" height="320" tabindex="0" role="img" aria-label="Daily net sales versus operating expense grouped bar chart"></canvas>
+                            <div class="analytics-chart-tooltip" data-chart-tooltip="salesExpenseChart" role="status" aria-live="polite"></div>
+                        </div>
+                        <div class="analytics-chart-footer">
+                            <div class="analytics-chart-legend"><span><i class="legend-income"></i>Net sales</span><span><i class="legend-expense"></i>Operating expense</span></div>
+                            <span class="analytics-chart-unit" th:text="${currency}">BDT</span>
+                        </div>
+                    </article>
+
+                    <article class="ops-card analytics-chart-card compact analytics-payment-card">
+                        <div class="analytics-card-title-row">
+                            <div>
+                                <span class="analytics-section-kicker">Collections</span>
+                                <h2>Payment mix</h2>
+                                <p>Share of confirmed customer collections</p>
+                            </div>
+                        </div>
+                        <div class="analytics-donut-layout">
+                            <div class="analytics-chart-stage analytics-donut-canvas">
+                                <canvas id="paymentMixChart" width="360" height="250" tabindex="0" role="img" aria-label="Payment method collection share donut chart"></canvas>
+                                <div class="analytics-chart-tooltip" data-chart-tooltip="paymentMixChart" role="status" aria-live="polite"></div>
+                            </div>
+                            <div class="analytics-mix-list" data-payment-legend></div>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="analytics-chart-grid analytics-chart-grid-secondary">
+                    <article class="ops-card analytics-chart-card analytics-sales-trend-card">
+                        <div class="analytics-card-title-row">
+                            <div>
+                                <span class="analytics-section-kicker">Sales momentum</span>
+                                <h2>Net sales trend</h2>
+                                <p th:text="|Daily net sales trend · ${chartMonth}|">Daily net sales trend</p>
+                            </div>
+                            <button class="ops-btn sm no-print" type="button" data-download-chart="salesTrendChart">Download PNG</button>
+                        </div>
+                        <div class="analytics-chart-stage analytics-sales-trend-stage">
+                            <canvas id="salesTrendChart" width="720" height="270" tabindex="0" role="img" aria-label="Daily net sales line chart"></canvas>
+                            <div class="analytics-chart-tooltip" data-chart-tooltip="salesTrendChart" role="status" aria-live="polite"></div>
+                        </div>
+                        <div class="analytics-chart-footer">
+                            <div class="analytics-chart-legend"><span><i class="legend-income"></i>Net sales</span></div>
+                            <span class="analytics-chart-unit">Daily trend</span>
+                        </div>
+                    </article>
+
+                    <article class="ops-card analytics-chart-card analytics-bar-chart-card">
+                        <div class="analytics-card-title-row">
+                            <div>
+                                <span class="analytics-section-kicker">Product performance</span>
+                                <h2>Top-selling products</h2>
+                                <p>Top products ranked by net sold quantity</p>
+                            </div>
+                            <button class="ops-btn sm no-print" type="button" data-download-chart="topProductsChart">Download PNG</button>
+                        </div>
+                        <div class="analytics-chart-stage analytics-product-stage">
+                            <canvas id="topProductsChart" width="720" height="280" tabindex="0" role="img" aria-label="Top-selling products horizontal bar chart"></canvas>
+                            <div class="analytics-chart-tooltip" data-chart-tooltip="topProductsChart" role="status" aria-live="polite"></div>
+                        </div>
+                        <div class="analytics-chart-footer analytics-product-footer"><span>Ranked by sold quantity</span><span>Top 6</span></div>
+                    </article>
+                </div>
+
+                <div hidden data-performance-source><span th:each="point:${overview.dailyPerformance}" th:attr="data-date=${point.date},data-income=${point.income},data-expense=${point.expense},data-profit=${point.netProfit}"></span></div>
+                <div hidden data-payment-source><span th:each="mix:${overview.paymentMix}" th:attr="data-label=${mix.label},data-amount=${mix.amount},data-cash=${mix.cash}"></span></div>
+                <div hidden data-top-products-source><span th:each="item:${overview.topProducts}" th:attr="data-label=${item.label},data-quantity=${item.quantity}"></span></div>
+            </section>
+
+            <section class="ops-card analytics-expiry-card" aria-labelledby="expiryTitle">
+                <div class="analytics-card-title-row">
+                    <div><span class="analytics-section-kicker">Stock risk</span><h2 id="expiryTitle">Expiry watch</h2><p>Items that may need attention before stock value is lost.</p></div>
+                    <a class="analytics-text-link no-print" th:href="@{/owner/analytics/reports/expiry-report}">Open expiry reports <span aria-hidden="true">→</span></a>
+                </div>
+                <div class="analytics-expiry-strip" aria-label="Expiry summary">
+                    <a th:href="@{/owner/analytics/reports/near-expiry-stock(expiryStatus=7)}"><small>Expiring ≤ 7 days</small><strong th:text="${overview.expiry.expiringWithin7Products}">0</strong><span>products</span></a>
+                    <a th:href="@{/owner/analytics/reports/near-expiry-stock(expiryStatus=30)}"><small>Expiring ≤ 30 days</small><strong th:text="${overview.expiry.expiringWithin30Products}">0</strong><span>products</span></a>
+                    <a th:href="@{/owner/analytics/reports/expired-stock-valuation}"><small>Expired quantity</small><strong th:text="${#numbers.formatDecimal(overview.expiry.expiredQuantity,1,'COMMA',2,'POINT')}">0</strong><span>base units</span></a>
+                    <a th:href="@{/owner/analytics/reports/expired-stock-valuation}"><small>Expired stock value</small><strong th:text="|${currency} ${#numbers.formatDecimal(overview.expiry.expiredStockValue,1,'COMMA',2,'POINT')}|">0.00</strong><span>current value</span></a>
+                    <a th:href="@{/owner/analytics/reports/expiry-wastage}"><small>Expiry loss this month</small><strong th:text="|${currency} ${#numbers.formatDecimal(overview.expiry.currentMonthExpiryLoss,1,'COMMA',2,'POINT')}|">0.00</strong><span>recognized loss</span></a>
+                </div>
+            </section>
+
+            <section class="analytics-section-block" aria-labelledby="leadersTitle">
+                <div class="analytics-section-heading"><div><span class="analytics-section-kicker">Leaders</span><h2 id="leadersTitle">Business leaders</h2></div></div>
+                <div class="analytics-leader-grid">
+                    <article class="ops-card analytics-list-card">
+                        <div class="analytics-card-title-row"><div><h2>Top-selling products</h2><p>Net sold quantity</p></div></div>
+                        <div class="analytics-rank-list"><div th:each="item,stat:${overview.topProducts}"><span class="rank" th:text="${stat.count}">1</span><div><strong th:text="${item.label}">Product</strong><small th:text="${item.secondaryLabel}">Variant</small></div><b th:text="${#numbers.formatDecimal(item.quantity,1,'COMMA',2,'POINT')}">0</b></div><p class="analytics-empty" th:if="${#lists.isEmpty(overview.topProducts)}">No sales in this period.</p></div>
+                    </article>
+                    <article class="ops-card analytics-list-card">
+                        <div class="analytics-card-title-row"><div><h2>Most valuable customers</h2><p>Confirmed purchase value</p></div></div>
+                        <div class="analytics-rank-list"><div th:each="item,stat:${overview.topCustomers}"><span class="rank" th:text="${stat.count}">1</span><div><strong th:text="${item.label}">Customer</strong><small th:text="${item.secondaryLabel}">Contact</small></div><b th:text="|${currency} ${#numbers.formatDecimal(item.value,1,'COMMA',2,'POINT')}|">0</b></div><p class="analytics-empty" th:if="${#lists.isEmpty(overview.topCustomers)}">No customer sales in this period.</p></div>
+                    </article>
+                    <article class="ops-card analytics-list-card">
+                        <div class="analytics-card-title-row"><div><h2>Leading suppliers</h2><p>Confirmed purchase value</p></div></div>
+                        <div class="analytics-rank-list"><div th:each="item,stat:${overview.leadingSuppliers}"><span class="rank" th:text="${stat.count}">1</span><div><strong th:text="${item.label}">Supplier</strong><small th:text="${item.secondaryLabel}">Contact</small></div><b th:text="|${currency} ${#numbers.formatDecimal(item.value,1,'COMMA',2,'POINT')}|">0</b></div><p class="analytics-empty" th:if="${#lists.isEmpty(overview.leadingSuppliers)}">No purchases in this period.</p></div>
+                    </article>
+                    <article class="ops-card analytics-list-card">
+                        <div class="analytics-card-title-row"><div><h2>Top-performing brands</h2><p>Sales value</p></div></div>
+                        <div class="analytics-rank-list"><div th:each="item,stat:${overview.topBrands}"><span class="rank" th:text="${stat.count}">1</span><div><strong th:text="${item.label}">Brand</strong></div><b th:text="|${currency} ${#numbers.formatDecimal(item.value,1,'COMMA',2,'POINT')}|">0</b></div><p class="analytics-empty" th:if="${#lists.isEmpty(overview.topBrands)}">No brand sales in this period.</p></div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="analytics-bottom-grid">
+                <article class="ops-card analytics-birthday-card">
+                    <div class="analytics-card-title-row"><div><span class="analytics-section-kicker">Customer care</span><h2>Upcoming birthdays</h2><p>Today and the next 30 days</p></div></div>
+                    <div class="analytics-birthday-list">
+                        <div th:each="birthday:${overview.birthdays}"><span class="birthday-day" th:text="${#temporals.format(birthday.nextBirthday,'dd MMM')}">05 Sep</span><div><strong th:text="${birthday.customerName}">Customer</strong><small th:text="${birthday.daysUntilBirthday == 0 ? 'Today' : birthday.daysUntilBirthday + ' days away'}">Coming soon</small></div><span th:text="|Member ${birthday.memberDays} days|">Member</span></div>
+                        <p class="analytics-empty" th:if="${#lists.isEmpty(overview.birthdays)}">No customer birthdays in the next 30 days.</p>
+                    </div>
+                </article>
+
+                <article class="ops-card analytics-login-card">
+                    <div class="analytics-card-title-row"><div><span class="analytics-section-kicker">Security</span><h2>Recent login activity</h2><p>Recent management access activity</p></div></div>
+                    <div class="ops-table-wrap"><table class="ops-table"><thead><tr><th>User</th><th>IP address</th><th>Date &amp; time</th><th>Event</th><th>Status</th></tr></thead><tbody>
+                    <tr th:each="log:${overview.loginLogs}"><td th:text="${log.username}">user</td><td class="analytics-mono" th:text="${log.ipAddress}">IP</td><td th:text="${log.loginAt != null ? #temporals.format(log.loginAt.atZone(branchZone),'dd/MM/yyyy · hh:mm a') : '—'}">Date</td><td><span class="analytics-event" th:text="${#strings.capitalizeWords(#strings.toLowerCase(#strings.replace(log.eventType,'_',' ')))}">Event</span></td><td><span class="ops-status" th:text="${log.loginStatus}">Status</span></td></tr>
+                    <tr th:if="${#lists.isEmpty(overview.loginLogs)}"><td colspan="5" class="ops-empty"><strong>No login activity</strong><span>Recent management access will appear here.</span></td></tr>
+                    </tbody></table></div>
+                </article>
+            </section>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}"></script>
+<script th:src="@{/js/pages/analytics.js}"></script>
+</body>
+</html>

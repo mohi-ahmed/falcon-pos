@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Falcon POS brings retail sales, inventory, purchasing and business insights together in one dependable platform.">
+    <meta name="theme-color" content="#08785b">
+    <meta name="robots" content="index,follow">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Falcon POS | Retail operations, made clear">
+    <meta property="og:description" content="Connect retail sales, inventory, purchasing and business insights in one dependable platform.">
+    <meta property="og:image" content="../../static/images/og/falcon-pos-social.svg" th:content="@{/images/og/falcon-pos-social.svg}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Falcon POS | Retail operations, made clear">
+    <meta name="twitter:description" content="Modern retail operations, built on a dependable foundation.">
+    <meta name="twitter:image" content="../../static/images/og/falcon-pos-social.svg" th:content="@{/images/og/falcon-pos-social.svg}">
+    <title>Falcon POS | Retail operations, made clear</title>
+    <link rel="icon" type="image/svg+xml" href="../../static/images/brand/falcon-mark.svg" th:href="@{/images/brand/falcon-mark.svg}">
+    <link rel="stylesheet" href="../../static/css/base.css?v=20260815b" th:href="@{/css/base.css(v='20260815b')}">
+    <link rel="stylesheet" href="../../static/css/components.css?v=20260815b" th:href="@{/css/components.css(v='20260815b')}">
+    <link rel="stylesheet" href="../../static/css/pages/landing.css?v=20260815d" th:href="@{/css/pages/landing.css(v='20260815d')}">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<header class="site-header" data-header>
+    <div class="nav-shell">
+        <a class="brand" href="index.html" th:href="@{/}" aria-label="Falcon POS home">
+            <span class="brand-mark" aria-hidden="true">F</span>
+            <span><strong>Falcon POS</strong><small>Retail operations</small></span>
+        </a>
+        <button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"
+                aria-controls="primaryNav" data-menu-button><span></span><span></span><span></span></button>
+        <nav class="primary-nav" id="primaryNav" aria-label="Primary navigation" data-menu>
+            <a href="#platform">Platform</a><a href="#workflow">How it works</a>
+            <a href="#intelligence">Intelligence</a><a href="#readiness">Why Falcon</a>
+            <div class="nav-actions">
+                <a class="nav-signin" href="../auth/sign-in.html" th:href="@{/login}">Sign in</a>
+                <a class="nav-cta" href="../auth/owner-signup.html" th:href="@{/signup}">Create workspace <span aria-hidden="true">&rarr;</span></a>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<main id="main-content" tabindex="-1">
+    <section class="hero">
+        <div class="hero-shell">
+            <div class="hero-copy">
+                <div class="status-pill"><span></span> Built for mini marts, grocery shops and general retail stores</div>
+                <h1>Sell faster.<br><em>See the business clearly.</em></h1>
+                <p>Falcon POS connects every sale, product, purchase and stock movement&mdash;so your team can sell confidently and you can make better decisions.</p>
+                <div class="hero-actions">
+                    <a class="hero-primary" href="../auth/owner-signup.html" th:href="@{/signup}">Create your business <span aria-hidden="true">&rarr;</span></a>
+                    <a class="hero-secondary" href="#platform"><span class="play-icon" aria-hidden="true">&#9654;</span> Explore the platform</a>
+                </div>
+                <div class="trust-row"><span>Guided owner setup</span><span>Owner-controlled staff access</span><span>Bangladesh-ready foundation</span></div>
+            </div>
+
+            <div class="product-stage" aria-label="Interactive Falcon POS product preview" data-product-stage>
+                <div class="glow"></div>
+                <div class="app-window">
+                    <div class="window-bar"><div class="window-brand"><span>F</span><strong>Falcon POS</strong></div><div class="window-branch"><i></i> Gulshan Branch</div><div class="window-user">MA</div></div>
+                    <div class="window-body">
+                        <aside class="mini-nav" aria-label="POS preview navigation"><span class="active">&#9638;</span><span>&#8962;</span><span>&#9636;</span><span>&#9474;</span></aside>
+                        <div class="catalog-preview">
+                            <div class="preview-heading"><span>SALES DESK</span><h2>Create new sale</h2></div>
+                            <div class="search-preview">Search or scan a product</div>
+                            <div class="chips"><b>All products</b><span>Popular</span><span>Grocery</span><span>Household</span></div>
+                            <div class="product-grid">
+                                <button class="product-tile" type="button" data-product="Premium Rice 5 KG" data-price="690"><span class="product-art green">PR</span><strong>Premium Rice 5 KG</strong><small>24 in stock</small><b>BDT 690</b></button>
+                                <button class="product-tile" type="button" data-product="Shampoo 400 ML" data-price="380"><span class="product-art sand">SH</span><strong>Shampoo 400 ML</strong><small>18 in stock</small><b>BDT 380</b></button>
+                                <button class="product-tile" type="button" data-product="LED Bulb 12W" data-price="220"><span class="product-art blue">LB</span><strong>LED Bulb 12W</strong><small>31 in stock</small><b>BDT 220</b></button>
+                            </div>
+                        </div>
+                        <aside class="order-preview" aria-label="Current sale preview">
+                            <span>CURRENT SALE</span><h3>Sale <small>#NEW</small></h3>
+                            <div data-order-lines>
+                                <div class="order-line" data-order-product="Shampoo 400 ML" data-price="380"><strong>Shampoo 400 ML</strong><b>BDT 380</b><small><span data-quantity>1</span> item <button type="button" data-remove-item aria-label="Remove Shampoo 400 ML">Remove</button></small></div>
+                                <div class="order-line" data-order-product="Premium Rice 5 KG" data-price="690"><strong>Premium Rice 5 KG</strong><b>BDT 690</b><small><span data-quantity>1</span> item <button type="button" data-remove-item aria-label="Remove Premium Rice 5 KG">Remove</button></small></div>
+                            </div>
+                            <div class="order-total"><span>Total</span><strong data-order-total>BDT 1,070</strong></div>
+                            <button type="button" data-payment-demo>Proceed to payment</button>
+                            <div class="demo-meta"><small class="demo-feedback" data-demo-feedback aria-live="polite">Tap a product to try the demo</small><button type="button" data-reset-demo>Reset</button></div>
+                        </aside>
+                    </div>
+                </div>
+                <div class="floating-card sales-card"><span>Today&rsquo;s sales</span><strong>BDT <span data-count="48620">0</span></strong><small><b>+12.4%</b> from yesterday</small></div>
+                <div class="floating-card inventory-card"><i></i><div><strong>Stock under control</strong><small>8 low-stock products</small></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="proof-strip" aria-label="Platform capabilities">
+        <div><i aria-hidden="true">01</i><strong>Unified operations</strong><span>Sales, purchasing and stock in one system</span></div>
+        <div><i aria-hidden="true">02</i><strong>Multi-branch control</strong><span>Manage every location with clarity</span></div>
+        <div><i aria-hidden="true">03</i><strong>Role-based access</strong><span>Purpose-built access for every team</span></div>
+        <div><i aria-hidden="true">04</i><strong>Intelligence-ready</strong><span>Structured for forecasting and planning</span></div>
+    </section>
+
+    <section class="section platform-section" id="platform" data-reveal>
+        <div class="section-heading"><span class="eyebrow">One connected platform</span><h2>Everything your retail business needs to move as one.</h2><p>Replace disconnected tools with a clear operational system designed around the way retail teams actually work.</p></div>
+        <div class="product-tabs" role="tablist" aria-label="Falcon platform areas">
+            <button class="active" id="tab-pos" role="tab" aria-selected="true" aria-controls="feature-panel" tabindex="0" data-feature-tab="pos">Point of Sale</button>
+            <button id="tab-purchasing" role="tab" aria-selected="false" aria-controls="feature-panel" tabindex="-1" data-feature-tab="purchasing">Purchasing</button>
+            <button id="tab-inventory" role="tab" aria-selected="false" aria-controls="feature-panel" tabindex="-1" data-feature-tab="inventory">Inventory</button>
+            <button id="tab-management" role="tab" aria-selected="false" aria-controls="feature-panel" tabindex="-1" data-feature-tab="management">Management</button>
+        </div>
+        <div class="feature-showcase" id="feature-panel" role="tabpanel" aria-labelledby="tab-pos" tabindex="0">
+            <div class="showcase-copy"><span class="eyebrow" data-feature-label>Point of sale</span><h3 data-feature-title>Fast, focused counter sales</h3><p data-feature-copy>Keep barcode and counter sales moving with a cashier workspace built for speed and accuracy.</p><ul data-feature-points><li>Purpose-built cashier workspace</li><li>Clear product, quantity and totals</li><li>Keyboard and touch friendly</li></ul></div>
+            <div class="showcase-visual"><div class="visual-top"><span>Live workspace</span><i></i></div><div class="visual-metric"><small>Current sale</small><strong>BDT 1,290</strong></div><div class="visual-rows"><span><i></i> Premium Rice 5 KG <b>BDT 690</b></span><span><i></i> Shampoo 400 ML <b>BDT 380</b></span><span><i></i> LED Bulb 12W <b>BDT 220</b></span></div><button type="button">Proceed to payment</button></div>
+        </div>
+    </section>
+
+    <section class="workflow-section" id="workflow">
+        <div class="workflow-shell"><div class="workflow-copy"><span class="eyebrow">From signup to first sale</span><h2>Start simple. Configure deeply when you are ready.</h2><p>Falcon keeps initial setup short, then guides the owner through the operational details needed to go live confidently.</p><ol><li><b>01</b><div><strong>Create the owner workspace</strong><span>Verify your email and create the business with its first store branch.</span></div></li><li><b>02</b><div><strong>Complete the guided checklist</strong><span>Configure products, categories, tax, staff and payment settings.</span></div></li><li><b>03</b><div><strong>Test, train and go live</strong><span>Run a complete test sale before opening the register.</span></div></li></ol></div><div class="checklist-card"><div class="checklist-top"><div><span>OPENING CHECKLIST</span><h3>Gulshan Branch</h3></div><b>64%</b></div><div class="check-progress"><span></span></div><ul><li class="done"><i>&#10003;</i><span><strong>Business profile</strong><small>Business and branch details</small></span></li><li class="done"><i>&#10003;</i><span><strong>Tax and payment methods</strong><small>Configured for this branch</small></span></li><li class="current"><i>3</i><span><strong>Build your product catalogue</strong><small>Add products, categories and units</small></span><b>&rarr;</b></li><li><i>4</i><span><strong>Invite your team</strong><small>Assign roles and permissions</small></span></li><li><i>5</i><span><strong>Complete a test sale</strong><small>Confirm the full sales flow</small></span></li></ul></div></div>
+    </section>
+
+    <section class="section intelligence-section" id="intelligence">
+        <div class="intelligence-card"><div class="intelligence-copy"><span class="eyebrow light">Planned intelligence preview</span><h2>Built today for the decisions you will make tomorrow.</h2><p>Falcon&rsquo;s foundation keeps operational data structured so future forecasting, demand planning and purchase recommendations can be added responsibly.</p><div class="intelligence-tags"><span>Sales forecasting</span><span>Demand planning</span><span>Purchase recommendations</span><span>Business health</span></div></div><div class="forecast-panel"><div class="forecast-head"><span>Tomorrow&rsquo;s forecast</span><small>Concept preview</small></div><strong>BDT 18,500</strong><div class="bars" aria-label="Illustrative seven-day forecast chart"><i style="height:38%"></i><i style="height:49%"></i><i style="height:44%"></i><i style="height:68%"></i><i style="height:61%"></i><i style="height:82%"></i><i class="future" style="height:72%"></i></div><div class="recommendation"><span>Suggested purchase</span><strong>Rice 24 &nbsp; Shampoo 18</strong></div></div></div>
+    </section>
+
+    <section class="section readiness-section" id="readiness">
+        <div class="section-heading"><span class="eyebrow">Designed for dependable growth</span><h2>Local where it matters. Flexible where you grow.</h2></div>
+        <div class="readiness-grid"><article><b>BDT</b><h3>Bangladesh-ready</h3><p>Local currency and configurable retail workflows grounded in the market we know first.</p></article><article><b>RBAC</b><h3>Secure by role</h3><p>Owners, managers and store staff receive purpose-built access rather than one shared account.</p></article><article><b>API</b><h3>Ready to evolve</h3><p>A modular foundation designed for integrations, multi-branch growth and future intelligence services.</p></article></div>
+    </section>
+
+    <section class="final-cta"><div><span class="eyebrow light">Your retail business. One clear system.</span><h2>Build your Falcon workspace today.</h2><p>Create the owner account first. Your team, products and store setup come next.</p><a href="../auth/owner-signup.html" th:href="@{/signup}">Create workspace <span>&rarr;</span></a></div></section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-shell">
+        <div class="footer-intro"><a class="brand footer-brand" href="index.html" th:href="@{/}" aria-label="Falcon POS home"><span class="brand-mark">F</span><span><strong>Falcon POS</strong><small>Retail operations</small></span></a><p>Modern retail operations, built on a dependable foundation for sales, control and growth.</p></div>
+        <nav class="footer-group" aria-label="Product links"><strong>Product</strong><a href="#platform">Platform</a><a href="#workflow">How it works</a><a href="#intelligence">Intelligence</a><a href="#readiness">Why Falcon</a></nav>
+        <nav class="footer-group" aria-label="Account and legal links"><strong>Account &amp; legal</strong><a href="../auth/sign-in.html" th:href="@{/login}">Sign in</a><a href="../auth/owner-signup.html" th:href="@{/signup}">Create account</a><a href="privacy.html" th:href="@{/privacy}">Privacy</a><a href="terms.html" th:href="@{/terms}">Terms</a></nav>
+        <div class="footer-bottom"><small>&copy; 2026 Falcon POS. Demo product identity.</small><span>Designed for modern retail</span></div>
+    </div>
+</footer>
+<script src="../../static/js/pages/landing.js" th:src="@{/js/pages/landing.js}" defer></script>
+</body>
+</html>

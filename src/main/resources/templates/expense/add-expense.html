@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Add Expense | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/customer-payment-sell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/expense-management.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('expenses')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Expenses')}"></header>
+        <main class="module-page expense-page">
+            <nav class="module-breadcrumb"><a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><a th:href="@{/owner/expenses}">Expenses</a><span>/</span><strong>Add Expense</strong></nav>
+
+            <section class="module-hero expense-hero">
+                <div>
+                    <span class="module-eyebrow">Expense Management</span>
+                    <h1>Record an expense</h1>
+                    <p>Record an operating expense or recoverable deposit/advance.</p>
+                </div>
+                <div class="module-actions">
+                    <a class="module-btn" th:href="@{/owner/expenses}">Expense List</a>
+                    <a class="module-btn" th:href="@{/owner/expense-categories}">Categories</a>
+                    <a class="module-btn" th:href="@{/owner/expenses/summary}">Summary</a>
+                </div>
+            </section>
+
+            <div class="module-alert" th:if="${successMessage}"><span>✓</span><span th:text="${successMessage}">Success</span></div>
+            <div class="module-alert error" th:if="${errorMessage}"><span>!</span><span th:text="${errorMessage}">Error</span></div>
+
+            <form th:action="@{/owner/expenses}" th:object="${expenseRequest}" method="post" class="expense-form" data-expense-form>
+                <input type="hidden" th:field="*{idempotencyKey}">
+                <div class="module-grid wide-aside">
+                    <div class="module-stack">
+                        <section class="module-card">
+                            <div class="module-card-head"><div><h2>Expense type</h2><p>Choose the type of expense.</p></div><span class="required-note">Required</span></div>
+                            <div class="module-card-body">
+                                <div class="classification-choice-grid" data-classification-group>
+                                    <label class="classification-choice" th:classappend="${expenseRequest.classification != null and expenseRequest.classification.name() == 'OPERATING_EXPENSE' ? ' is-selected' : ''}">
+                                        <input type="radio" th:field="*{classification}" value="OPERATING_EXPENSE" required data-classification="operating">
+                                        <span class="choice-icon">↘</span>
+                                        <span><strong>Operating Expense</strong><small>Day-to-day business costs such as rent, utilities or supplies.</small></span>
+                                    </label>
+                                    <label class="classification-choice" th:classappend="${expenseRequest.classification != null and expenseRequest.classification.name() == 'RECOVERABLE_DEPOSIT_ADVANCE' ? ' is-selected' : ''}">
+                                        <input type="radio" th:field="*{classification}" value="RECOVERABLE_DEPOSIT_ADVANCE" required data-classification="recoverable">
+                                        <span class="choice-icon">↺</span>
+                                        <span><strong>Recoverable Deposit / Advance</strong><small>Money expected to be recovered later, such as a deposit or advance.</small></span>
+                                    </label>
+                                </div>
+                                <small class="field-error field-error-block" th:if="${#fields.hasErrors('classification')}" th:errors="*{classification}">Select an accounting classification.</small>
+                            </div>
+                        </section>
+
+                        <section class="module-card">
+                            <div class="module-card-head"><div><h2>Expense information</h2></div></div>
+                            <div class="module-card-body">
+                                <div class="form-grid">
+                                    <div class="field"><label>Branch *</label><input type="text" th:value="${setup.branchName}" readonly><input type="hidden" th:field="*{branchId}"><small>This expense will be recorded for the active branch.</small></div>
+                                    <div class="field"><label>Expense date *</label><input type="date" th:field="*{expenseDate}" required><small class="field-error" th:if="${#fields.hasErrors('expenseDate')}" th:errors="*{expenseDate}">Invalid date</small></div>
+                                    <div class="field" data-operating-only><label>Expense category *</label><select th:field="*{categoryId}" data-category-select><option value="">Select category</option><option th:each="category : ${categories}" th:if="${category.active and !category.archived}" th:value="${category.id}" th:text="${category.parentCategory != null ? category.parentCategory + ' / ' + category.name : category.name}">Category</option></select><small class="field-error" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}">Select a valid category</small><small>Can't find the category? <a class="inline-text-link" th:href="@{/owner/expense-categories/add}">Create one.</a></small></div>
+                                    <div class="field" data-recoverable-only hidden><label>Expense category</label><input value="Not applicable" disabled></div>
+                                    <div class="field"><label>Title / purpose *</label><input th:field="*{title}" maxlength="180" placeholder="e.g. August store electricity bill" required><small class="field-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">Enter a title or purpose</small></div>
+                                    <div class="field"><label>Amount *</label><div class="money-input"><span>৳</span><input type="number" th:field="*{amount}" min="0.0001" step="0.0001" inputmode="decimal" placeholder="0.00" required></div><small class="field-error" th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}">Enter a valid amount</small></div>
+                                    <div class="field"><label>Payee</label><input th:field="*{payee}" maxlength="160" placeholder="Person, landlord, service provider or institution"></div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="module-card">
+                            <div class="module-card-head"><div><h2>Payment details</h2></div></div>
+                            <div class="module-card-body">
+                                <div class="form-grid">
+                                    <div class="field"><label>Payment method *</label><select th:field="*{paymentMethodId}" required data-payment-method><option value="">Select payment method</option><option th:each="method : ${paymentMethods}" th:value="${method.id}" th:text="${method.name}" th:attr="data-cash=${method.cash}">Payment Method</option></select><small class="field-error" th:if="${#fields.hasErrors('paymentMethodId')}" th:errors="*{paymentMethodId}">Select a payment method</small></div>
+                                    <div class="field"><label>Payment reference *</label><input th:field="*{paymentReference}" maxlength="160" placeholder="Transaction, cheque, voucher or receipt reference" required><small class="field-error" th:if="${#fields.hasErrors('paymentReference')}" th:errors="*{paymentReference}">Enter a payment reference</small></div>
+                                    <div class="field span-2"><label>Paid from register / account *</label><input th:field="*{paidFromReference}" maxlength="160" placeholder="e.g. Main Register / City Bank Operating Account" required><small class="field-error" th:if="${#fields.hasErrors('paidFromReference')}" th:errors="*{paidFromReference}">Enter the paid-from reference</small><small>Select the account or register used for this payment. Cash payments require an active register and shift.</small></div>
+                                </div>
+
+                                <div class="cash-context" data-cash-context hidden>
+                                    <div class="cash-context-head"><span>Physical cash context</span><small>Required only when the selected payment method is cash.</small></div>
+                                    <div class="form-grid three">
+                                        <div class="field"><label>Cash location *</label><select th:field="*{cashLocationId}" data-cash-required><option value="">Select cash location</option><option th:each="location : ${cashLocations}" th:if="${location.status.name() == 'ACTIVE'}" th:value="${location.id}" th:text="${location.name}">Location</option></select></div>
+                                        <div class="field"><label>Register *</label><select th:field="*{registerId}" data-cash-required><option value="">Select register</option><option th:each="register : ${registers}" th:if="${register.status.name() == 'ACTIVE'}" th:value="${register.id}" th:text="${register.name + ' · ' + register.code}">Register</option></select></div>
+                                        <div class="field"><label>Active cashier shift *</label><select th:field="*{cashierShiftId}" data-cash-required><option value="">Select open shift</option><option th:each="shift : ${cashierShifts}" th:if="${shift.status.name() == 'OPEN'}" th:value="${shift.id}" th:text="${shift.shiftCode + ' · Cashier #' + shift.cashierUserId}">Shift</option></select></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="module-card">
+                            <div class="module-card-head"><div><h2>Evidence & notes</h2></div></div>
+                            <div class="module-card-body">
+                                <div class="form-grid">
+                                    <div class="field span-2"><label>Receipt / document reference</label><input th:field="*{attachmentReference}" maxlength="500" placeholder="Invoice, receipt or document link/reference"><small>Optional. Add a supporting document reference.</small></div>
+                                    <div class="field span-2"><label>Notes</label><textarea th:field="*{notes}" maxlength="1000" placeholder="Add any relevant notes or billing details"></textarea></div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <div class="expense-form-actions">
+                            <a class="module-btn" th:href="@{/owner/expenses}">Cancel</a>
+                            <button class="module-btn" type="reset" data-expense-reset>Reset</button>
+                            <button class="module-btn primary" type="submit">Save as Draft</button>
+                        </div>
+                    </div>
+
+                    <aside class="module-stack">
+                        <section class="module-card sticky-card effect-card">
+                            <div class="module-card-head"><div><h3>Posting effect preview</h3></div></div>
+                            <div class="module-card-body">
+                                <div class="effect-grid">
+                                    <div class="effect-item"><span>Operating Expense</span><strong data-effect-operating>Included after posting</strong></div>
+                                    <div class="effect-item"><span>Recoverable Balance</span><strong data-effect-recoverable>Not affected</strong></div>
+                                    <div class="effect-item"><span>Cashbook</span><strong data-effect-cash>Depends on payment method</strong></div>
+                                    <div class="effect-item"><span>Net Profit</span><strong data-effect-profit>Reduced after posting</strong></div>
+                                </div>
+                            </div>
+                        </section>
+
+                    </aside>
+                </div>
+            </form>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script>
+<script th:src="@{/js/pages/expense-management.js}" defer></script>
+</body>
+</html>

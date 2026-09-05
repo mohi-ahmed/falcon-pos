@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Sign in securely to manage your Falcon POS business workspace.">
+    <title>Management sign in | Falcon POS</title>
+    <link rel="stylesheet" href="../../static/css/base.css" th:href="@{/css/base.css}">
+    <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+    <link rel="stylesheet" href="../../static/css/pages/auth-flow.css" th:href="@{/css/pages/auth-flow.css}">
+</head>
+<body class="auth-body"><main class="auth-layout">
+    <aside class="auth-aside" aria-label="Falcon POS platform overview">
+        <a class="brand" href="../public/index.html" th:href="@{/}" aria-label="Falcon POS home"><span class="brand-mark" aria-hidden="true">F</span><span><strong>Falcon POS</strong><small>Retail operations</small></span></a>
+        <div class="aside-copy"><span class="aside-kicker">Secure management workspace</span><h2>Every shift, branch and decision in one place.</h2><p>Sign in to manage operations with the permissions assigned to your role.</p><ul class="trust-list"><li><span>✓</span>Role-based access for management teams</li><li><span>✓</span>Role-based access for authorized store staff</li><li><span>✓</span>Account protection and auditable activity</li></ul></div>
+        <p class="aside-foot">Falcon POS · Built for modern retail</p>
+    </aside>
+    <section class="auth-main"><div class="auth-card" aria-labelledby="pageTitle">
+        <a class="brand mobile-brand" href="../public/index.html"><span class="brand-mark">F</span><span><strong>Falcon POS</strong><small>Retail operations</small></span></a>
+        <span class="eyebrow">Management access</span><h1 id="pageTitle">Welcome back</h1><p class="auth-copy">Owners and authorized staff sign in using their registered account credentials.</p>
+        <div class="status-message"
+             data-auth-status
+             role="alert"
+             aria-live="assertive"
+             th:hidden="${!authenticationError and !logoutSuccess and !sessionExpired}"
+             hidden>
+            <span class="status-icon">!</span>
+
+            <span
+                    data-status-copy
+                    th:text="${authenticationError}
+                ? 'The business code, email or password is incorrect, or the account is not active.'
+                : (${logoutSuccess}
+                    ? 'You have signed out securely.'
+                    : (${sessionExpired}
+                        ? 'Your session has expired. Please sign in again.'
+                        : ''))">
+    </span>
+        </div>        <form class="auth-form" data-auth-form="signin" data-server-form="true" th:action="@{/login}" method="post" novalidate>
+            <div class="form-field"><label for="businessCode">Business code <span class="field-hint">(staff only)</span></label><input id="businessCode" name="businessCode" type="text" autocomplete="organization" maxlength="20" placeholder="e.g. FALCON01"><small class="field-hint">Owners leave this blank. Staff use the business code provided by the owner.</small></div>
+            <div class="form-field"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="username" inputmode="email" placeholder="owner@yourbusiness.com" required><small class="field-error" data-error-for="email" aria-live="polite"></small></div>
+            <div class="form-field"><label for="loginPassword">Password</label><div class="password-control"><input id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required><button class="text-button" type="button" data-password-toggle="loginPassword" aria-label="Show password">Show</button></div><small class="field-error" data-error-for="loginPassword" aria-live="polite"></small></div>
+            <div class="helper-row"><label class="check-control"><input type="checkbox" name="rememberDevice"><span>Remember this device</span></label><a href="forgot-password.html" th:href="@{/forgot-password}">Forgot password?</a></div>
+            <button class="primary-button" type="submit" data-submit-label="Sign in">Sign in <span aria-hidden="true">→</span></button>
+        </form>
+        <p class="signin-link">New business? <a href="owner-signup.html" th:href="@{/signup}">Create owner account</a></p>
+        <p class="auth-meta">Protected management access · Staff sign-in requires the business code, an active account and at least one assigned branch.</p>
+    </div></section>
+</main><script src="../../static/js/pages/auth-flow.js" th:src="@{/js/pages/auth-flow.js}" defer></script></body></html>

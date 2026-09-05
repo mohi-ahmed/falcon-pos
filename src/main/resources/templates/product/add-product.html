@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Add Product | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/catalog-management.css}">
+<link rel="stylesheet" th:href="@{/css/pages/product-ui.css}">
+</head>
+<body class="dashboard-body product-ui">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('products')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Products')}"></header>
+        <main class="catalog-page">
+<div th:replace="~{fragments/product-ui :: nav('add-product')}"></div>
+            <nav class="catalog-breadcrumb"><a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><a th:href="@{/owner/products}">Products</a><span>/</span><strong>Add Product</strong></nav>
+            <section class="catalog-heading">
+                <div class="catalog-heading-copy"><span class="eyebrow">Product catalogue</span><h1>Add product</h1><p>Enter product details, selling setup, supplier, units, images and expiry settings in one place.</p></div>
+                <div class="catalog-heading-actions"><a class="catalog-btn" th:href="@{/owner/products}">Product List</a></div>
+            </section>
+
+            <div class="flash-message" th:if="${successMessage}" th:text="${successMessage}">Product created.</div>
+            <div class="flash-message error" th:if="${errorMessage}" th:text="${errorMessage}">Unable to create product.</div>
+
+            <form class="catalog-card" th:action="@{/owner/products}" th:object="${productRequest}" method="post" enctype="multipart/form-data" novalidate>
+                <input type="hidden" name="returnTo" th:value="${returnTo}">
+                <input type="hidden" name="returnBranchId" th:value="${returnBranchId}">
+                <input type="hidden" name="draftId" th:value="${draftId}">
+                <div class="validation-summary" th:if="${#fields.hasAnyErrors()}" role="alert"><strong>Check the product information</strong><ul><li th:each="error : ${#fields.allErrors()}" th:text="${error}"></li></ul></div>
+                <div class="form-tabs" data-form-tabs role="tablist" aria-label="Product form sections">
+                    <button class="form-tab is-active" type="button" data-form-tab="general" role="tab" aria-selected="true">General</button>
+                    <button class="form-tab" type="button" data-form-tab="variant" role="tab" aria-selected="false">Variant &amp; Units</button>
+                    <button class="form-tab" type="button" data-form-tab="expiry" role="tab" aria-selected="false">Expiry</button>
+                    <button class="form-tab" type="button" data-form-tab="images" role="tab" aria-selected="false">Images</button>
+                </div>
+
+                <section class="form-panel is-active" data-form-panel="general">
+                    <div class="form-section-title"><div><h3>General information</h3><p>Basic product and catalogue information.</p></div><span class="eyebrow">Required fields marked *</span></div>
+                    <div class="form-grid">
+                        <div class="form-field"><label for="productType">Product type</label><input id="productType" th:field="*{productType}" maxlength="60" placeholder="Retail product"><small class="field-error" th:errors="*{productType}"></small></div>
+                        <div class="form-field"><label for="name">Product name *</label><input id="name" th:field="*{name}" maxlength="120" placeholder="Coca-Cola" required><small class="field-error" th:errors="*{name}"></small></div>
+                        <div class="form-field"><label for="referenceCode">Reference code *</label><input id="referenceCode" th:field="*{referenceCode}" maxlength="40" placeholder="PRD-000001" autocomplete="off" spellcheck="false" required><small class="form-hint">Generated automatically. You can edit it before saving.</small><small class="field-error" th:errors="*{referenceCode}"></small></div>
+                        <div class="form-field"><label for="category">Category</label><select id="category" th:field="*{categoryId}"><option value="">No category</option><option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}">Category</option></select></div>
+                        <div class="form-field"><label for="supplierId">Supplier</label><select id="supplierId" name="supplierId"><option value="">Select supplier</option><option th:each="supplier : ${suppliers}" th:value="${supplier.id}" th:text="${supplier.name}" th:selected="${selectedSupplierId != null and selectedSupplierId == supplier.id}">Supplier</option></select><small class="form-hint">Choose the supplier that provides this product.</small></div>
+                        <div class="form-field"><label for="brand">Brand</label><input id="brand" th:field="*{brand}" maxlength="100" placeholder="Coca-Cola"><small class="field-error" th:errors="*{brand}"></small></div>
+                        <div class="form-field"><label for="barcodeFormat">Barcode format</label><input id="barcodeFormat" th:field="*{barcodeFormat}" maxlength="40" placeholder="EAN-13"><small class="field-error" th:errors="*{barcodeFormat}"></small></div>
+                        <div class="form-field"><label for="packagingType">Box / packaging type</label><input id="packagingType" th:field="*{packagingType}" maxlength="60" placeholder="Bottle / Pack / Carton"><small class="field-error" th:errors="*{packagingType}"></small></div>
+                        <div class="form-field"><label for="taxRateId">Tax rate</label><select id="taxRateId" th:field="*{taxRateId}"><option value="">No tax</option><option th:each="tax : ${taxRates}" th:value="${tax.id}" th:text="|${tax.name} — ${tax.rate}%|">VAT</option></select></div>
+                        <div class="form-field"><label for="taxCalculationMethod">Tax calculation method</label><select id="taxCalculationMethod" th:field="*{taxCalculationMethod}"><option value="">Select method</option><option value="EXCLUSIVE">Exclusive</option><option value="INCLUSIVE">Inclusive</option></select><small class="field-error" th:errors="*{taxCalculationMethod}"></small></div>
+                        <div class="form-field"><label for="status">Status *</label><select id="status" th:field="*{status}"><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select></div>
+                        <div class="form-field"><label for="displayOrder">Display order</label><input id="displayOrder" type="number" min="0" th:field="*{displayOrder}"><small class="field-error" th:errors="*{displayOrder}"></small></div>
+                        <div class="form-field full"><label>Assigned branches *</label><div class="branch-chip-row"><label class="branch-chip" th:each="branch : ${branches}"><input type="checkbox" th:field="*{branchIds}" th:value="${branch.id}"><span th:text="${branch.name}">Branch</span></label></div><small class="field-error" th:errors="*{branchIds}"></small></div>
+                        <div class="form-field full"><label for="description">Description</label><textarea id="description" th:field="*{description}" maxlength="1000" placeholder="Product description"></textarea><small class="field-error" th:errors="*{description}"></small></div>
+                    </div>
+                </section>
+
+                <section class="form-panel" data-form-panel="variant" th:object="${variantRequest}">
+                    <div class="validation-summary" th:if="${#fields.hasAnyErrors()}" role="alert"><strong>Check the variant and unit information</strong><ul><li th:each="error : ${#fields.allErrors()}" th:text="${error}"></li></ul></div>
+                    <div class="form-section-title"><div><h3>Initial product variant</h3><p>Set the first sellable variant and its Base Inventory Unit.</p></div></div>
+                    <div class="form-grid">
+                        <div class="form-field"><label for="variantName">Variant name *</label><input id="variantName" th:field="*{variantName}" maxlength="120" placeholder="500 ml Bottle" required><small class="field-error" th:errors="*{variantName}"></small></div>
+                        <div class="form-field"><label for="sku">SKU *</label><input id="sku" th:field="*{sku}" maxlength="60" placeholder="SKU-000001" autocomplete="off" spellcheck="false" required><small class="form-hint">Generated automatically. You can edit it before saving.</small><small class="field-error" th:errors="*{sku}"></small></div>
+                        <div class="form-field"><label for="baseInventoryUnitId">Base Inventory Unit *</label><select id="baseInventoryUnitId" th:field="*{baseInventoryUnitId}" data-branch-unit-select required><option value="">Select unit</option><option th:each="unit : ${units}" th:value="${unit.id}" th:text="|${unit.name} (${unit.code})|" th:attr="data-branch-ids=${#strings.setJoin(unit.branchIds, ',')}">Bottle</option></select><small class="form-hint" data-unit-compatibility-hint>Only units active in every assigned branch can be selected.</small><small class="field-error" th:errors="*{baseInventoryUnitId}"></small></div>
+                        <div class="form-field"><label for="purchaseUnitId">Purchase Unit</label><select id="purchaseUnitId" name="purchaseUnitId" data-branch-unit-select><option value="">Same as base / not set</option><option th:each="unit : ${units}" th:value="${unit.id}" th:text="|${unit.name} (${unit.code})|" th:attr="data-branch-ids=${#strings.setJoin(unit.branchIds, ',')}" th:selected="${variantRequest.purchaseUnitId != null and variantRequest.purchaseUnitId == unit.id}">Carton</option></select></div>
+                        <div class="form-field"><label for="sellingUnitId">Selling Unit</label><select id="sellingUnitId" name="sellingUnitId" data-branch-unit-select><option value="">Same as base / not set</option><option th:each="unit : ${units}" th:value="${unit.id}" th:text="|${unit.name} (${unit.code})|" th:attr="data-branch-ids=${#strings.setJoin(unit.branchIds, ',')}" th:selected="${variantRequest.sellingUnitId != null and variantRequest.sellingUnitId == unit.id}">Bottle</option></select></div>
+                        <div class="form-field"><label for="sellingPrice">Selling price *</label><input id="sellingPrice" th:field="*{sellingPrice}" type="number" step="0.01" min="0" placeholder="0.00" required><small class="field-error" th:errors="*{sellingPrice}"></small></div>
+                        <div class="form-field"><label for="reorderLevel">Low-stock alert quantity *</label><input id="reorderLevel" th:field="*{reorderLevel}" type="number" step="0.001" min="0" placeholder="0" required><small class="field-error" th:errors="*{reorderLevel}"></small></div>
+                        <div class="form-field"><label for="variantStatus">Variant status *</label><select id="variantStatus" name="variantStatus"><option value="ACTIVE" th:selected="${variantRequest.status == null or variantRequest.status.name() == 'ACTIVE'}">Active</option><option value="INACTIVE" th:selected="${variantRequest.status != null and variantRequest.status.name() == 'INACTIVE'}">Inactive</option></select></div>
+                    </div>
+                    <div class="pending-note" style="margin-top:18px"><strong>Unit conversion:</strong><span>Additional purchase or selling package conversions and unit-specific barcodes are configured from Product Details after this initial product is saved.</span></div>
+                </section>
+
+                <section class="form-panel" data-form-panel="expiry">
+                    <div class="form-section-title"><div><h3>Expiry management</h3><p>Configure how expiry-controlled products behave. Batch dates are entered when stock is received.</p></div></div>
+                    <div class="form-grid">
+                        <label class="form-check full"><input type="checkbox" th:field="*{trackExpiry}" data-expiry-toggle><span>Track Expiry<small>Enable expiry or best-before control for this product.</small></span></label>
+                        <div class="form-field"><label for="expiryType">Expiry Type</label><select id="expiryType" th:field="*{expiryType}" data-expiry-field><option value="">Select type</option><option value="EXPIRY_DATE">Expiry Date</option><option value="BEST_BEFORE">Best Before</option></select><small class="field-error" th:errors="*{expiryType}"></small></div>
+                        <label class="form-check"><input type="checkbox" th:field="*{batchTrackingRequired}" data-expiry-field><span>Batch Tracking Required<small>Require a batch or lot number when stock is received.</small></span></label>
+                        <div class="form-field"><label for="defaultShelfLifeDays">Default Shelf-Life Days</label><input id="defaultShelfLifeDays" type="number" min="1" th:field="*{defaultShelfLifeDays}" data-expiry-field><small class="field-error" th:errors="*{defaultShelfLifeDays}"></small></div>
+                        <div class="form-field"><label for="expiryAlertBeforeDays">Expiry Alert Before Days</label><input id="expiryAlertBeforeDays" type="number" min="1" th:field="*{expiryAlertBeforeDays}" data-expiry-field><small class="field-error" th:errors="*{expiryAlertBeforeDays}"></small></div>
+                        <label class="form-check full"><input type="checkbox" th:field="*{blockSaleAfterExpiry}" data-expiry-field><span>Block Sale After Expiry<small>Expired stock must not remain sellable.</small></span></label>
+                    </div>
+                </section>
+
+                <section class="form-panel" data-form-panel="images">
+                    <div class="form-section-title"><div><h3>Product images</h3><p>Store image URLs/references, choose their order and select one primary image.</p></div></div>
+                    <div class="image-upload-box">
+                        <div class="image-preview" data-image-preview>P</div>
+                        <div class="image-copy">
+                            <h4>Primary product image</h4><p>Upload JPG, PNG or WebP (maximum 5 MB), or keep using an image URL/reference.</p>
+                            <label class="catalog-btn" style="width:max-content">Choose image<input type="file" name="primaryImageFile" accept="image/jpeg,image/png,image/webp" data-primary-image-file hidden></label>
+                            <div class="form-field"><label for="thumbnailReference">Stored image reference</label><input id="thumbnailReference" th:field="*{thumbnailReference}" maxlength="500" placeholder="/uploads/products/coca-500.webp" data-image-reference><small class="field-error" th:errors="*{thumbnailReference}"></small></div>
+                        </div>
+                    </div>
+                    <div class="catalog-card gallery-card" style="margin-top:18px;box-shadow:none" data-gallery-editor>
+                        <div class="catalog-card-head"><div><h3>Additional images</h3><p>Add image references, choose display order and select a primary image.</p></div><button class="catalog-btn" type="button" data-gallery-add>+ Add image</button></div>
+                        <div class="table-wrap">
+                            <table class="catalog-table gallery-table">
+                                <thead><tr><th>Serial</th><th>Image Preview</th><th>Image URL / reference</th><th>Display Order</th><th>Primary</th><th>Action</th></tr></thead>
+                                <tbody data-gallery-body>
+                                <tr data-gallery-empty><td colspan="6" class="table-empty">No additional images added.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <template data-gallery-template>
+                            <tr data-gallery-row>
+                                <td data-gallery-serial>1</td>
+                                <td><span class="gallery-thumb" data-gallery-preview>Image</span></td>
+                                <td><input class="gallery-url" type="text" maxlength="500" placeholder="URL/reference or choose file" data-gallery-url><input type="file" name="additionalImageFiles" accept="image/jpeg,image/png,image/webp" data-gallery-file></td>
+                                <td><input class="gallery-order" type="number" min="0" value="0" data-gallery-order></td>
+                                <td><label class="gallery-primary"><input type="radio" data-gallery-primary><span>Primary</span></label></td>
+                                <td><button class="table-action danger" type="button" data-gallery-remove>Remove</button></td>
+                            </tr>
+                        </template>
+                    </div>
+                </section>
+
+                <div class="sticky-form-actions"><small>Review the required information, then save the product.</small><div class="action-set"><button class="catalog-btn" type="button" data-reset-form>Reset</button><button class="catalog-btn primary" type="submit">Save Product</button></div></div>
+            </form>
+
+            <section class="catalog-card" style="margin-top:28px">
+                <div class="catalog-card-head"><div><h2>Product List</h2><p>Saved products appear here after confirmation.</p></div><a class="catalog-btn" th:href="@{/owner/products}">Open full Product List</a></div>
+                <div class="table-wrap">
+                    <table class="catalog-table">
+                        <thead><tr><th>Product</th><th>Reference</th><th>Supplier</th><th>Current Stock</th><th>Purchase Price</th><th>Selling Price</th><th>Nearest Expiry</th><th>Expiring Qty</th><th>Expired Qty</th><th>Active Batches</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(recentProductRows)}"><td colspan="12" class="table-empty">No products have been saved yet.</td></tr>
+                        <tr th:each="row : ${recentProductRows}" th:classappend="${row.product.archived ? ' is-archived' : ''}">
+                            <td><div class="product-cell"><span class="product-thumb"><img th:if="${row.product.thumbnailReference != null and !#strings.isEmpty(row.product.thumbnailReference)}" th:src="${row.product.thumbnailReference}" alt=""><span th:unless="${row.product.thumbnailReference != null and !#strings.isEmpty(row.product.thumbnailReference)}" th:text="${#strings.substring(row.product.name,0,1)}">P</span></span><span><strong th:text="${row.product.name}">Product</strong><small th:text="${row.primaryVariant != null ? row.primaryVariant.sku : 'Variant not configured'}">SKU</small></span></div></td>
+                            <td th:text="${row.product.referenceCode}">REF</td>
+                            <td><span th:if="${#lists.isEmpty(row.suppliers)}" class="muted-value">—</span><span th:each="supplier,iter : ${row.suppliers}" th:text="${supplier.name + (!iter.last ? ', ' : '')}">Supplier</span></td>
+                            <td th:text="${#aggregates.sum(row.variants.![availableStock]) ?: 0}">0</td>
+                            <td th:text="${row.purchasePrice ?: '—'}">—</td>
+                            <td th:text="${row.primaryVariant != null ? row.primaryVariant.sellingPrice : '—'}">0</td>
+                            <td th:text="${row.nearestExpiry ?: '—'}">—</td>
+                            <td th:text="${row.expiringQuantity}">0</td>
+                            <td th:text="${row.expiredQuantity}">0</td>
+                            <td th:text="${row.activeBatchCount}">0</td>
+                            <td><span class="status-pill" th:classappend="${row.product.archived ? ' archived' : (row.product.status.name() == 'INACTIVE' ? ' inactive' : '')}" th:text="${row.product.archived ? 'Archived' : row.product.status}">Active</span></td>
+                            <td><div class="actions-inline"><a class="table-action" th:href="@{/owner/products/{id}(id=${row.product.id})}">View</a><a class="table-action" th:if="${!row.product.archived}" th:href="@{/owner/products/{id}/edit(id=${row.product.id})}">Edit</a><a class="table-action" th:if="${!row.product.archived and !#lists.isEmpty(row.suppliers)}" th:href="@{/owner/purchases/new(supplierId=${row.suppliers[0].id})}">New Purchase</a><span class="table-action is-disabled" th:if="${!row.product.archived and #lists.isEmpty(row.suppliers)}">Link supplier first</span><a class="table-action" th:if="${!row.product.archived}" th:href="@{/owner/products/{id}/barcode-generator(id=${row.product.id})}">Print Barcode</a></div></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script>
+<script th:src="@{/js/pages/catalog-management.js}" defer></script>
+<script th:src="@{/js/pages/product-ui.js}" defer></script>
+</body>
+</html>

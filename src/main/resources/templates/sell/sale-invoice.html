@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title th:text="${'Invoice #' + invoice.saleId + ' | Falcon POS'}">Invoice | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/sale-invoice.css}">
+</head>
+<body class="invoice-body">
+<div class="invoice-shell">
+    <div class="invoice-toolbar">
+        <div class="invoice-toolbar-group">
+            <a sec:authorize="hasRole('OWNER') or hasAuthority('SELL_ACCESS')"
+               th:href="@{/owner/sales/{id}(id=${invoice.saleId},branchId=${invoice.branchId})}">← Sale details</a>
+            <a th:href="@{/owner/pos(branchId=${invoice.branchId})}">Back to POS</a>
+        </div>
+        <div class="invoice-toolbar-group">
+            <form method="post" th:if="${invoice.saleStatus.name() != 'DRAFT' and invoice.saleStatus.name() != 'HELD'}" th:action="@{/owner/sales/{id}/email-receipt(id=${invoice.saleId})}">
+                <input type="hidden" name="branchId" th:value="${invoice.branchId}">
+                <input type="hidden" name="returnTo" value="invoice">
+                <button type="submit">Email receipt</button>
+            </form>
+            <button class="primary" type="button" data-print-invoice>Print invoice</button>
+        </div>
+    </div>
+    <div class="invoice-notice" role="status" th:if="${successMessage}" th:text="${successMessage}">Receipt email sent.</div>
+    <div class="invoice-notice error" role="alert" th:if="${errorMessage}" th:text="${errorMessage}">Receipt email could not be sent.</div>
+
+    <article class="invoice-sheet">
+        <div class="invoice-topline"></div>
+        <div class="invoice-watermark"
+             th:if="${invoice.saleStatus.name() == 'VOIDED' or invoice.saleStatus.name() == 'REVERSED'}"
+             th:text="${invoice.saleStatus}">VOIDED</div>
+        <div class="invoice-content">
+            <header class="invoice-header">
+                <div class="invoice-brand">
+                    <img class="invoice-logo"
+                         th:if="${!#strings.isEmpty(invoice.businessLogoReference)}"
+                         th:src="${invoice.businessLogoReference}" alt="Business logo">
+                    <div class="invoice-logo-fallback"
+                         th:unless="${!#strings.isEmpty(invoice.businessLogoReference)}">F</div>
+                    <div class="invoice-business">
+                        <h1 th:text="${invoice.businessName}">Falcon Mart</h1>
+                        <strong th:text="${invoice.branchName}">Main Branch</strong>
+                        <p th:if="${!#strings.isEmpty(invoice.branchAddress)}" th:text="${invoice.branchAddress}">Address</p>
+                        <p th:if="${!#strings.isEmpty(invoice.branchPhone)}" th:text="|Phone: ${invoice.branchPhone}|">Phone</p>
+                        <p th:if="${!#strings.isEmpty(invoice.branchEmail)}" th:text="|Email: ${invoice.branchEmail}|">Email</p>
+                        <p th:if="${!#strings.isEmpty(invoice.vatBinNumber)}" th:text="|VAT/BIN: ${invoice.vatBinNumber}|">VAT/BIN</p>
+                    </div>
+                </div>
+                <div class="invoice-identity">
+                    <span class="eyebrow">Customer invoice</span>
+                    <h2>Invoice</h2>
+                    <span class="invoice-id" th:text="|#${invoice.saleId}|">#1001</span>
+                    <span class="invoice-status"
+                          th:classappend="| ${#strings.toLowerCase(invoice.saleStatus.name())}|"
+                          th:text="${#strings.replace(invoice.saleStatus.name(),'_',' ')}">Confirmed</span>
+                </div>
+            </header>
+
+            <section class="invoice-meta-grid">
+                <div class="invoice-meta">
+                    <small>Issued</small>
+                    <strong th:text="${invoice.issuedAt != null ? #temporals.format(invoice.issuedAt,'dd MMM yyyy') : '—'}">03 Sep 2026</strong>
+                    <span th:text="${invoice.issuedAt != null ? #temporals.format(invoice.issuedAt,'hh:mm a') : '—'}">02:35 AM</span>
+                </div>
+                <div class="invoice-meta">
+                    <small>Customer</small>
+                    <strong th:text="${invoice.customerName}">Walk-in Customer</strong>
+                    <span th:if="${!#strings.isEmpty(invoice.customerPhone)}" th:text="${invoice.customerPhone}">Phone</span>
+                    <span th:if="${!#strings.isEmpty(invoice.customerEmail)}" th:text="${invoice.customerEmail}">Email</span>
+                </div>
+                <div class="invoice-meta">
+                    <small>Payment status</small>
+                    <strong th:text="${#strings.replace(invoice.paymentStatus.name(),'_',' ')}">Paid</strong>
+                    <span th:if="${invoice.dueDate != null}" th:text="|Due date: ${invoice.dueDate}|">Due date</span>
+                    <span th:unless="${invoice.dueDate != null}">Final status from confirmed payments</span>
+                </div>
+                <div class="invoice-meta">
+                    <small>Branch</small>
+                    <strong th:text="${invoice.branchName}">Branch</strong>
+                    <span th:text="${!#strings.isEmpty(invoice.branchCode) ? invoice.branchCode : invoice.currency}">Code</span>
+                </div>
+            </section>
+
+            <span class="invoice-section-label">Items</span>
+            <div class="invoice-table-wrap">
+                <table class="invoice-table">
+                    <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th class="number">Qty</th>
+                        <th class="number">Unit price</th>
+                        <th class="number">Discount</th>
+                        <th class="number">Tax</th>
+                        <th class="number">Amount</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${invoice.items}">
+                        <td class="invoice-item-name">
+                            <strong th:text="${item.productName}">Product</strong>
+                            <span th:if="${!#strings.isEmpty(item.variantName)}"
+                                  th:text="${!#strings.isEmpty(item.productCode) ? item.variantName + ' · ' + item.productCode : item.variantName}">Variant</span>
+                            <span th:if="${#strings.isEmpty(item.variantName) and !#strings.isEmpty(item.productCode)}"
+                                  th:text="${item.productCode}">Code</span>
+                        </td>
+                        <td class="number" th:text="${item.quantity.stripTrailingZeros().toPlainString()}">1</td>
+                        <td class="number" th:text="|${invoice.currency} ${#numbers.formatDecimal(item.unitPrice,1,2)}|">BDT 0.00</td>
+                        <td class="number" th:text="|${invoice.currency} ${#numbers.formatDecimal(item.discountAmount,1,2)}|">BDT 0.00</td>
+                        <td class="number" th:text="|${invoice.currency} ${#numbers.formatDecimal(item.taxAmount,1,2)}|">BDT 0.00</td>
+                        <td class="number"><strong th:text="|${invoice.currency} ${#numbers.formatDecimal(item.linePayable,1,2)}|">BDT 0.00</strong></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <section class="invoice-summary">
+                <div>
+                    <span class="invoice-section-label">Payments</span>
+                    <div class="invoice-payment-card">
+                        <h3>Payment activity</h3>
+                        <p>Confirmed payment records currently applied to this invoice.</p>
+                        <div class="invoice-payment-row" th:each="payment : ${invoice.payments}">
+                            <div>
+                                <strong th:text="${payment.paymentMethodName}">Cash</strong>
+                                <small th:if="${payment.confirmedAt != null}" th:text="${#temporals.format(payment.confirmedAt,'dd MMM yyyy · hh:mm a')}">Date</small>
+                                <small th:if="${!#strings.isEmpty(payment.transactionReference)}" th:text="|Ref: ${payment.transactionReference}|">Reference</small>
+                            </div>
+                            <span th:text="|${invoice.currency} ${#numbers.formatDecimal(payment.amount,1,2)}|">BDT 0.00</span>
+                        </div>
+                        <div class="invoice-payment-empty" th:if="${#lists.isEmpty(invoice.payments)}">
+                            No confirmed payment has been applied to this invoice yet.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="invoice-totals">
+                    <span class="invoice-section-label">Summary</span>
+                    <div class="invoice-total-row"><span>Items subtotal</span><strong th:text="|${invoice.currency} ${#numbers.formatDecimal(invoice.grossItemTotal,1,2)}|">BDT 0.00</strong></div>
+                    <div class="invoice-total-row" th:if="${invoice.itemDiscountTotal.signum() > 0}"><span>Item discount</span><strong th:text="|− ${invoice.currency} ${#numbers.formatDecimal(invoice.itemDiscountTotal,1,2)}|">0</strong></div>
+                    <div class="invoice-total-row" th:if="${invoice.itemTaxTotal.signum() > 0}"><span>Tax</span><strong th:text="|${invoice.currency} ${#numbers.formatDecimal(invoice.itemTaxTotal,1,2)}|">0</strong></div>
+                    <div class="invoice-total-row" th:if="${invoice.orderDiscount.signum() > 0}"><span>Order discount</span><strong th:text="|− ${invoice.currency} ${#numbers.formatDecimal(invoice.orderDiscount,1,2)}|">0</strong></div>
+                    <div class="invoice-total-row" th:if="${invoice.shippingCharge.signum() > 0}"><span>Shipping</span><strong th:text="|${invoice.currency} ${#numbers.formatDecimal(invoice.shippingCharge,1,2)}|">0</strong></div>
+                    <div class="invoice-total-row" th:if="${invoice.otherCharge.signum() > 0}"><span>Other charge</span><strong th:text="|${invoice.currency} ${#numbers.formatDecimal(invoice.otherCharge,1,2)}|">0</strong></div>
+                    <div class="invoice-total-row grand"><span>Total</span><strong th:text="|${invoice.currency} ${#numbers.formatDecimal(invoice.totalPayable,1,2)}|">BDT 0.00</strong></div>
+                    <div class="invoice-total-row"><span>Paid</span><strong th:text="|${invoice.currency} ${#numbers.formatDecimal(invoice.paidAmount,1,2)}|">BDT 0.00</strong></div>
+                    <div class="invoice-total-row" th:if="${invoice.returnedAmount.signum() > 0}"><span>Returned / credited</span><strong th:text="|${invoice.currency} ${#numbers.formatDecimal(invoice.returnedAmount,1,2)}|">BDT 0.00</strong></div>
+                    <div class="invoice-total-row balance"><span>Due</span><strong th:text="|${invoice.currency} ${#numbers.formatDecimal(invoice.dueAmount,1,2)}|">BDT 0.00</strong></div>
+                    <div class="invoice-total-row balance" th:if="${invoice.changeAmount.signum() > 0}"><span>Change</span><strong th:text="|${invoice.currency} ${#numbers.formatDecimal(invoice.changeAmount,1,2)}|">BDT 0.00</strong></div>
+                </div>
+            </section>
+
+            <footer class="invoice-footer">
+                <strong>Thank you for shopping with us.</strong>
+                <p th:if="${!#strings.isEmpty(invoice.receiptFooter)}" th:text="${invoice.receiptFooter}">Receipt footer</p>
+                <p class="system-note">Generated from the confirmed Falcon POS sale snapshot. Internal inventory cost data is intentionally excluded.</p>
+            </footer>
+        </div>
+    </article>
+</div>
+<script th:src="@{/js/pages/sale-invoice.js}" defer></script>
+</body>
+</html>

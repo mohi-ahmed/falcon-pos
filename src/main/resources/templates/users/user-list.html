@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>User List | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}"><link rel="stylesheet" th:href="@{/css/components.css}"><link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}"><link rel="stylesheet" th:href="@{/css/pages/settings.css}"><link rel="stylesheet" th:href="@{/css/pages/user-management.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('users')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Users & Roles')}"></header>
+        <main class="settings-main" id="main-content">
+            <nav class="settings-breadcrumb" aria-label="Breadcrumb"><a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><strong>Users &amp; Roles</strong></nav>
+            <div class="settings-page-shell">
+                <aside th:replace="~{fragments/user-shell :: userNav(${userSection})}"></aside>
+                <div class="settings-page-content">
+                    <header class="settings-page-header settings-page-header-action">
+                        <div><span class="eyebrow">User management</span><h1>Staff directory</h1><p>Manage staff identity, group assignment, branch access and account status for the currently selected branch.</p></div>
+                        <a class="settings-primary-button settings-add-button" th:href="@{/owner/users/new}"><span aria-hidden="true">+</span>Add user</a>
+                    </header>
+
+                    <div class="alert alert-success" th:if="${successMessage}" role="status"><span>✓</span><div><strong>Completed</strong><span th:text="${successMessage}">Saved.</span></div></div>
+                    <div class="alert alert-danger" th:if="${errorMessage}" role="alert"><span>!</span><div><strong>Action failed</strong><span th:text="${errorMessage}">Please review the action.</span></div></div>
+                    <div class="alert alert-danger" th:if="${#lists.isEmpty(userGroups)}" role="alert"><span>!</span><div><strong>No user group is available yet</strong><span>Create a User Group before adding staff. <a th:href="@{/owner/user-groups/new}">Create group</a>.</span></div></div>
+
+                    <section class="user-overview-row" aria-label="Staff summary">
+                        <div class="user-stat-card"><span class="user-stat-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2.5 21v-1.5A6.5 6.5 0 0 1 9 13h.5a6.5 6.5 0 0 1 6.5 6.5V21M17 8h4M19 6v4"/></svg></span><span><small>Users in current result</small><strong th:text="${users.totalElements}">0</strong><em th:text="${setup.branchName}">Main Branch</em></span></div>
+                        <div class="user-stat-card"><span class="user-stat-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M8 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM16.5 9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM2.5 20v-1.3A5.7 5.7 0 0 1 8.2 13h.1a5.7 5.7 0 0 1 5.7 5.7V20"/></svg></span><span><small>Available user groups</small><strong th:text="${#lists.size(userGroups)}">0</strong><em>Roles available for this business</em></span></div>
+                        <div class="user-stat-card"><span class="user-stat-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20V8l8-4 8 4v12"/><path d="M8 20v-5h8v5M9 10h.01M15 10h.01"/></svg></span><span><small>Selected branch</small><strong th:text="${setup.branchName}">Main Branch</strong><em>Staff list is filtered to this branch</em></span></div>
+                    </section>
+
+                    <section class="create-panel" data-create-panel th:attr="data-open-initially=${openCreatePanel == true ? 'true' : 'false'}">
+                        <button class="create-panel-toggle" type="button" data-create-toggle aria-expanded="false"><span><span class="plus-icon">+</span><span><strong>Add New User</strong><small>Expand a compact create form without leaving the staff list.</small></span></span><span class="chevron">⌄</span></button>
+                        <div class="create-panel-body" data-create-body hidden>
+                            <form th:action="@{/owner/users}" th:object="${createUserRequest}" method="post" enctype="multipart/form-data" novalidate>
+                                <input type="hidden" name="source" value="list">
+                                <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}" role="alert" style="margin-top:16px"><span>!</span><div><strong>Please review the form</strong><span th:each="error : ${#fields.globalErrors()}" th:text="${error}">Validation error</span></div></div>
+                                <div class="compact-create-grid">
+                                    <div class="form-field form-field-span-all">
+                                        <label>Profile photo</label>
+                                        <div class="compact-photo-row">
+                                            <div class="profile-photo-preview compact-photo-preview" id="list-user-photo-preview"><span th:text="${#strings.isEmpty(createUserRequest.fullName) ? 'U' : #strings.substring(createUserRequest.fullName,0,1)}">U</span></div>
+                                            <div><label class="photo-upload-button">Choose photo<input type="file" name="profilePhoto" accept="image/png,image/jpeg,image/webp" data-photo-input data-photo-target="#list-user-photo-preview"></label><small class="field-hint">Preview the selected photo before saving the account.</small></div>
+                                        </div>
+                                        <input type="hidden" th:field="*{profilePhotoReference}">
+                                    </div>
+                                    <div class="form-field" th:classappend="${#fields.hasErrors('fullName')} ? ' has-error'"><label>Employee name *</label><input th:field="*{fullName}" maxlength="120" placeholder="e.g. Amina Rahman" required><small class="field-error" th:errors="*{fullName}"></small></div>
+                                    <div class="form-field" th:classappend="${#fields.hasErrors('email')} ? ' has-error'"><label>Email address *</label><input type="email" th:field="*{email}" maxlength="254" placeholder="amina@example.com" required><small class="field-error" th:errors="*{email}"></small></div>
+                                    <div class="form-field" th:classappend="${#fields.hasErrors('mobileNumber')} ? ' has-error'"><label>Mobile number</label><input th:field="*{mobileNumber}" placeholder="+8801XXXXXXXXX"><small class="field-error" th:errors="*{mobileNumber}"></small></div>
+                                    <div class="form-field" th:classappend="${#fields.hasErrors('dateOfBirth')} ? ' has-error'"><label>Date of birth</label><input type="date" th:field="*{dateOfBirth}"><small class="field-error" th:errors="*{dateOfBirth}"></small></div>
+                                    <div class="form-field" th:classappend="${#fields.hasErrors('password')} ? ' has-error'"><label>Password *</label><div class="password-input-shell"><input type="password" th:field="*{password}" minlength="8" maxlength="72" autocomplete="new-password" required><button class="password-toggle" type="button" data-password-toggle>Show</button></div><small class="field-error" th:errors="*{password}"></small></div>
+                                    <div class="form-field" th:classappend="${#fields.hasErrors('passwordConfirmation')} ? ' has-error'"><label>Confirm password *</label><div class="password-input-shell"><input type="password" th:field="*{passwordConfirmation}" autocomplete="new-password" required><button class="password-toggle" type="button" data-password-toggle>Show</button></div><small class="field-error" th:errors="*{passwordConfirmation}"></small></div>
+                                    <div class="form-field" th:classappend="${#fields.hasErrors('userGroupId')} ? ' has-error'"><label>User group / role *</label><select th:field="*{userGroupId}" data-role-select required><option value="">Select group</option><option th:each="group : ${userGroups}" th:value="${group.id()}" th:text="${group.name()}" th:attr="data-permission-ids=${#strings.listJoin(group.permissionIds(), ',')}">Cashier</option></select><small class="field-error" th:errors="*{userGroupId}"></small></div>
+                                    <div class="form-field"><label>Account status *</label><select th:field="*{status}"><option th:each="status : ${userStatuses}" th:value="${status}" th:text="${status}">ACTIVE</option></select><small class="field-error" th:errors="*{status}"></small></div>
+                                    <div class="form-field form-field-span-all">
+                                        <label>Function access</label>
+                                        <div class="permission-preview">
+                                            <div class="permission-preview-head"><span><strong>Group permission preview</strong><small data-role-permission-summary>Select a group to preview access</small></span></div>
+                                            <div class="permission-preview-grid"><div class="permission-preview-item" th:each="permission : ${permissions}" th:attr="data-permission-preview-item='',data-permission-id=${permission.id()}"><i>–</i><span th:text="${permission.name()}">Open POS</span></div></div>
+                                        </div>
+                                        <div class="permission-preview compact-direct-access"><div class="permission-preview-head"><span><strong>Access model</strong><small>Permissions are inherited only from the selected User Group.</small></span><span class="soft-badge">Group managed</span></div></div>
+                                    </div>
+                                    <div class="form-field form-field-span-all"><label>Branch assignment *</label><div class="branch-assignment-grid"><label class="branch-assignment-card" th:each="branch : ${availableBranches}"><input type="checkbox" th:field="*{branchIds}" th:value="${branch.branchId()}"><span class="branch-avatar branch-avatar-small" th:text="${branch.branchCode()}">BR</span><span><strong th:text="${branch.branchName()}">Branch</strong><small th:text="${branch.branchId() == setup.branchId ? 'Current branch' : 'Available branch'}">Available branch</small></span><span class="check-mark">✓</span></label></div><small class="field-error" th:errors="*{branchIds}"></small></div>
+                                </div>
+                                <div class="compact-create-actions"><a class="settings-secondary-button" th:href="@{/owner/users/new}">Open full form</a><button class="settings-primary-button" type="submit" th:disabled="${#lists.isEmpty(userGroups)}">Save user</button></div>
+                            </form>
+                        </div>
+                    </section>
+
+                    <section class="settings-table-card user-table-card" aria-labelledby="user-list-title">
+                        <div class="table-card-heading"><div><h2 id="user-list-title">Registered staff</h2><p>Passwords are never displayed. Profile, edit and archive actions are available only to authorized users.</p></div></div>
+                        <div class="table-toolbar">
+                            <form class="user-search-form" th:action="@{/owner/users}" method="get"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><input type="search" name="q" th:value="${query}" placeholder="Search name, email or mobile"><input type="hidden" name="size" th:value="${selectedSize}"><input type="hidden" name="sort" th:value="${selectedSort}"><button type="submit">Search</button></form>
+                            <div class="toolbar-actions">
+                                <form class="user-filter-row" th:action="@{/owner/users}" method="get"><input type="hidden" name="q" th:value="${query}"><label class="rows-control"><span>Rows</span><select name="size" onchange="this.form.submit()"><option value="10" th:selected="${selectedSize == 10}">10</option><option value="25" th:selected="${selectedSize == 25}">25</option><option value="50" th:selected="${selectedSize == 50}">50</option><option value="100" th:selected="${selectedSize == 100}">100</option></select></label><select name="sort" onchange="this.form.submit()"><option value="created-desc" th:selected="${selectedSort == 'created-desc'}">Newest first</option><option value="created-asc" th:selected="${selectedSort == 'created-asc'}">Oldest first</option><option value="name-asc" th:selected="${selectedSort == 'name-asc'}">Name A–Z</option><option value="name-desc" th:selected="${selectedSort == 'name-desc'}">Name Z–A</option><option value="email-asc" th:selected="${selectedSort == 'email-asc'}">Email A–Z</option><option value="status-asc" th:selected="${selectedSort == 'status-asc'}">Status</option></select></form>
+                                <div class="export-group"><button class="toolbar-button" type="button" onclick="window.print()">Print</button><a class="toolbar-button" th:href="@{/owner/users(format='xlsx',q=${query},sort=${selectedSort})}">Excel</a><a class="toolbar-button" th:href="@{/owner/users(format='csv',q=${query},sort=${selectedSort})}">CSV</a><a class="toolbar-button" th:href="@{/owner/users(format='pdf',q=${query},sort=${selectedSort})}">PDF</a></div>
+                            </div>
+                        </div>
+                        <div class="table-wrap">
+                            <table class="settings-table user-table" id="user-table" data-export-name="falcon-user-list">
+                                <thead><tr><th>ID</th><th>Name</th><th>Email address</th><th>Mobile number</th><th>Group / role</th><th>Created</th><th>Status</th><th class="action-column">Actions</th></tr></thead>
+                                <tbody>
+                                <tr th:each="user : ${users.content}">
+                                    <td class="muted-cell" th:text="${user.id()}">1</td>
+                                    <td><div class="table-primary"><span class="user-avatar"><img th:if="${user.profilePhotoReference() != null}" th:src="${user.profilePhotoReference()}" alt=""><span th:unless="${user.profilePhotoReference() != null}" th:text="${#strings.substring(user.fullName(),0,1)}">A</span></span><span><strong th:text="${user.fullName()}">Amina Rahman</strong><small th:text="${#sets.size(user.branchIds()) + ' assigned branch' + (#sets.size(user.branchIds()) == 1 ? '' : 'es')}">1 assigned branch</small></span></div></td>
+                                    <td><strong class="table-email" th:text="${user.email()}">amina@example.com</strong></td>
+                                    <td><span th:text="${user.mobileNumber() ?: 'Not provided'}">+880...</span></td>
+                                    <td><span class="type-pill" th:text="${user.userGroupName()}">Cashier</span></td>
+                                    <td class="muted-cell"><time data-format-instant th:datetime="${user.createdAt()}" th:text="${user.createdAt()}">27 Aug 2026</time></td>
+                                    <td><span class="status-badge" th:classappend="${user.status().name() == 'ACTIVE' ? ' status-active' : ' status-inactive'}" th:text="${user.status()}">ACTIVE</span></td>
+                                    <td><div class="row-actions"><a class="row-action row-action-primary" th:href="@{'/owner/users/' + ${user.id()}}">Profile</a><a class="row-action" th:href="@{'/owner/users/' + ${user.id()} + '/edit'}">Edit</a><form th:action="@{'/owner/users/' + ${user.id()} + '/archive'}" method="post" data-confirm="Archive this staff account? The account will be deactivated and historical activity will remain traceable."><button class="row-action row-action-danger" type="submit">Archive</button></form></div></td>
+                                </tr>
+                                <tr class="empty-table-row" th:if="${users.empty}"><td colspan="8"><div class="table-empty"><span class="empty-state-mark">+</span><strong>No matching staff users</strong><p th:text="${#strings.isEmpty(query) ? 'Add the first staff user for this branch.' : 'Try a different name, email or mobile search.'}">No users.</p><a class="settings-secondary-button" th:href="@{/owner/users/new}">Add user</a></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="table-footer"><span th:text="${users.totalElements == 0 ? 'No users to show' : 'Showing ' + (users.number * users.size + 1) + '–' + (users.number * users.size + users.numberOfElements) + ' of ' + users.totalElements}">Showing 1–10 of 10</span><nav class="server-pagination" aria-label="User list pagination"><span class="is-disabled" th:if="${users.first}">‹</span><a th:unless="${users.first}" th:href="@{/owner/users(page=${users.number - 1},size=${selectedSize},q=${query},sort=${selectedSort})}">‹</a><span class="is-active" th:text="${users.number + 1}">1</span><span th:text="${'of ' + (users.totalPages == 0 ? 1 : users.totalPages)}">of 1</span><span class="is-disabled" th:if="${users.last}">›</span><a th:unless="${users.last}" th:href="@{/owner/users(page=${users.number + 1},size=${selectedSize},q=${query},sort=${selectedSort})}">›</a></nav></div>
+                    </section>
+                    <div class="integration-note" style="margin-top:12px"><span>i</span><span>Exports follow your current filters and access. Print uses the current list view.</span></div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script><script th:src="@{/js/pages/user-management.js}" defer></script>
+</body>
+</html>

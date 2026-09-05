@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tax Rates | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/settings.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('settings')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Tax rates')}"></header>
+
+        <main class="settings-main" id="main-content">
+
+            <nav class="settings-breadcrumb" aria-label="Breadcrumb">
+                <a th:href="@{/owner/dashboard}">Dashboard</a>
+                <span>/</span>
+                <a th:href="@{/owner/settings/general}">Settings</a>
+                <span>/</span>
+                <strong>Tax rates</strong>
+            </nav>
+
+            <div class="settings-page-shell">
+                
+
+                <div class="settings-page-content">
+
+                    <header class="settings-page-header settings-page-header-action">
+                        <div>
+                            <span class="eyebrow">Tax configuration</span>
+                            <h1>Tax rates</h1>
+                            <p>Manage tax percentages used by products, orders and taxable charges.</p>
+                        </div>
+                        <button class="settings-primary-button settings-add-button" type="button" data-drawer-open="tax-create">
+                            <span aria-hidden="true">+</span>Add tax rate
+                        </button>
+                    </header>
+
+                    <div class="alert alert-success" th:if="${successMessage}" role="status">
+                        <span>✓</span>
+                        <div><strong>Completed</strong><span th:text="${successMessage}">Saved.</span></div>
+                    </div>
+                    <div class="alert alert-danger" th:if="${errorMessage}" role="alert">
+                        <span>!</span>
+                        <div><strong>Action failed</strong><span th:text="${errorMessage}">Please review the form.</span></div>
+                    </div>
+
+                    <section class="settings-overview-row" aria-label="Tax summary">
+                        <div class="overview-card">
+                            <span class="overview-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 7 20M17 4l-2 16M4 9h16M3 15h16"/></svg>
+                            </span>
+                            <span><small>Total rates</small><strong th:text="${#lists.size(taxRates)}">0</strong></span>
+                        </div>
+                        <div class="overview-card">
+                            <span class="overview-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="2.1"/><circle cx="17" cy="17" r="2.1"/><path d="m18 6-12 12"/></svg>
+                            </span>
+                            <span><small>Tax master</small><strong>Business</strong></span>
+                        </div>
+                        <div class="overview-card overview-card-note">
+                            <span class="overview-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>
+                            </span>
+                            <span><small>History rule</small><strong>Preserve old rates</strong><em>Use a new rate instead of rewriting historical invoices.</em></span>
+                        </div>
+                    </section>
+
+                    <section class="settings-table-card" aria-labelledby="tax-list-title">
+                        <div class="table-card-heading">
+                            <div>
+                                <h2 id="tax-list-title">Configured tax rates</h2>
+                                <p>Review tax identity, percentage, ordering and current status.</p>
+                            </div>
+                            
+                        </div>
+
+                        <div class="table-toolbar" data-table-toolbar="tax-table">
+                            <label class="search-control">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+                                <input type="search" placeholder="Search tax name, code or rate" data-table-search>
+                            </label>
+                            <div class="toolbar-actions">
+                                <label class="rows-control">
+                                    <span>Rows</span>
+                                    <select data-page-size>
+                                        <option value="10" th:selected="${defaultRecordsPerPage == 10}">10</option>
+                                        <option value="25" th:selected="${defaultRecordsPerPage == 25}">25</option>
+                                        <option value="50" th:selected="${defaultRecordsPerPage == 50}">50</option>
+                                        <option value="100" th:selected="${defaultRecordsPerPage == 100}">100</option>
+                                    </select>
+                                </label>
+                                <div class="export-group">
+                                    <button class="toolbar-button" type="button" data-table-print>Print</button>
+                                    <a class="toolbar-button" th:href="@{/owner/settings/taxes/export(format='xlsx')}">Excel</a>
+                                    <a class="toolbar-button" th:href="@{/owner/settings/taxes/export(format='csv')}">CSV</a>
+                                    <a class="toolbar-button" th:href="@{/owner/settings/taxes/export(format='pdf')}">PDF</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-wrap">
+                            <table class="settings-table" id="tax-table" data-managed-table data-export-name="tax-rates">
+                                <thead>
+                                <tr>
+                                    <th data-sort-index="0">ID <span><svg viewBox="0 0 24 24"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg></span></th>
+                                    <th data-sort-index="1">Tax rate <span><svg viewBox="0 0 24 24"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg></span></th>
+                                    <th data-sort-index="2">Code <span><svg viewBox="0 0 24 24"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg></span></th>
+                                    <th data-sort-index="3">Rate <span><svg viewBox="0 0 24 24"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg></span></th>
+                                    <th data-sort-index="4">Order <span><svg viewBox="0 0 24 24"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg></span></th>
+                                    <th data-sort-index="5">Status <span><svg viewBox="0 0 24 24"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg></span></th>
+                                    <th class="action-column">Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="tax : ${taxRates}" th:attr="data-search-text=${tax.id() + ' ' + tax.name() + ' ' + tax.code() + ' ' + tax.rate() + ' ' + tax.status()}">
+                                    <td class="muted-cell" th:text="${tax.id()}">1</td>
+                                    <td>
+                                        <div class="table-primary">
+                                            <span class="record-avatar record-avatar-tax" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="2.1"/><circle cx="17" cy="17" r="2.1"/><path d="m18 6-12 12"/></svg>
+                                            </span>
+                                            <span><strong th:text="${tax.name()}">VAT 5%</strong><small>Tax configuration</small></span>
+                                        </div>
+                                    </td>
+                                    <td><code class="code-pill" th:text="${tax.code()}">VAT5</code></td>
+                                    <td><strong class="rate-value"><span th:text="${tax.rate()}">5.0000</span>%</strong></td>
+                                    <td th:text="${tax.displayOrder()}">0</td>
+                                    <td>
+                                        <span class="status-badge" th:classappend="${tax.status().name() == 'ACTIVE' ? ' status-active' : ' status-inactive'}" th:text="${tax.status()}">ACTIVE</span>
+                                    </td>
+                                    <td>
+                                        <div class="row-actions">
+                                            <button class="row-action row-action-primary" type="button" data-edit-tax
+                                                    th:attr="data-id=${tax.id()},data-name=${tax.name()},data-code=${tax.code()},data-rate=${tax.rate()},data-display-order=${tax.displayOrder()},data-status=${tax.status()}">Edit</button>
+                                            <form th:action="@{'/owner/settings/taxes/' + ${tax.id()} + '/status'}" method="post">
+                                                <input type="hidden" name="status" th:value="${tax.status().name() == 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'}">
+                                                <button class="row-action" type="submit" th:text="${tax.status().name() == 'ACTIVE' ? 'Deactivate' : 'Activate'}">Deactivate</button>
+                                            </form>
+                                            <form th:action="@{'/owner/settings/taxes/' + ${tax.id()} + '/archive'}" method="post" data-confirm="Archive this tax rate? Historical invoice references will remain preserved.">
+                                                <button class="row-action row-action-danger" type="submit">Archive</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="empty-table-row" th:if="${#lists.isEmpty(taxRates)}">
+                                    <td colspan="7">
+                                        <div class="table-empty">
+                                            <span class="empty-state-mark">+</span>
+                                            <strong>No tax rates yet</strong>
+                                            <p>Add the first tax rate for taxable or exempt items.</p>
+                                            <button class="settings-secondary-button" type="button" data-drawer-open="tax-create">Add tax rate</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="table-footer">
+                            <span data-result-summary>Showing configured tax rates</span>
+                            <div class="pagination" data-pagination></div>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="drawer-shell" data-drawer="tax-create" hidden>
+    <button class="drawer-backdrop" type="button" data-drawer-close aria-label="Close add tax rate"></button>
+    <aside class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="tax-create-title">
+        <div class="drawer-heading">
+            <div>
+                <span class="section-kicker">New tax rate</span>
+                <h2 id="tax-create-title">Add tax rate</h2>
+                <p>Create a unique tax configuration for future selections.</p>
+            </div>
+            <button class="drawer-close" type="button" data-drawer-close aria-label="Close">×</button>
+        </div>
+        <form class="drawer-form" th:action="@{/owner/settings/taxes}" th:object="${taxRateRequest}" method="post" novalidate>
+            <span data-drawer-auto-open th:if="${#fields.hasAnyErrors()}" hidden></span>
+            <div class="drawer-body">
+                <div class="settings-form-grid">
+                    <div class="form-field" th:classappend="${#fields.hasErrors('name')} ? ' has-error'">
+                        <label for="taxName">Tax name *</label>
+                        <input id="taxName" th:field="*{name}" maxlength="120" placeholder="VAT 5%" required>
+                        <small class="field-error" th:errors="*{name}"></small>
+                    </div>
+                    <div class="form-field" th:classappend="${#fields.hasErrors('code')} ? ' has-error'">
+                        <label for="taxCode">Unique code *</label>
+                        <input id="taxCode" th:field="*{code}" maxlength="40" data-uppercase placeholder="VAT5" required>
+                        <small class="field-error" th:errors="*{code}"></small>
+                    </div>
+                    <div class="form-field" th:classappend="${#fields.hasErrors('rate')} ? ' has-error'">
+                        <label for="taxRate">Percentage rate *</label>
+                        <div class="suffix-input">
+                            <input id="taxRate" type="number" min="0" max="100" step="0.0001" th:field="*{rate}" placeholder="5.0000" required>
+                            <span>%</span>
+                        </div>
+                        <small class="field-error" th:errors="*{rate}"></small>
+                    </div>
+                    <div class="form-field">
+                        <label for="taxDisplayOrder">Display order</label>
+                        <input id="taxDisplayOrder" type="number" min="0" th:field="*{displayOrder}">
+                        <small class="field-error" th:errors="*{displayOrder}"></small>
+                    </div>
+                    <div class="form-field" th:classappend="${#fields.hasErrors('status')} ? ' has-error' : ''">
+                        <label for="taxStatus">Status</label>
+                        <select id="taxStatus" th:field="*{status}"><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select>
+                        <small class="field-error" th:errors="*{status}"></small>
+                    </div>
+                </div>
+                <div class="tax-example-grid">
+                    <div><span class="tax-preview">5%</span><span><strong>Taxable item</strong><small>Example: VAT 5%</small></span></div>
+                    <div><span class="tax-preview tax-preview-zero">0%</span><span><strong>Exempt item</strong><small>Example: No Tax</small></span></div>
+                </div>
+                <div class="policy-note">
+                    <span class="policy-note-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg></span>
+                    <p>Once used in historical invoices, a tax rate should be made inactive and replaced with a new rate instead of changing old transaction meaning.</p>
+                </div>
+            </div>
+            <div class="drawer-actions">
+                <button class="settings-secondary-button" type="button" data-drawer-close>Cancel</button>
+                <button class="settings-secondary-button" type="reset">Reset</button>
+                <button class="settings-primary-button" type="submit">Save tax rate</button>
+            </div>
+        </form>
+    </aside>
+</div>
+
+<div class="drawer-shell" data-drawer="tax-edit" hidden>
+    <button class="drawer-backdrop" type="button" data-drawer-close aria-label="Close edit tax rate"></button>
+    <aside class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="tax-edit-title">
+        <div class="drawer-heading">
+            <div>
+                <span class="section-kicker">Edit tax rate</span>
+                <h2 id="tax-edit-title">Update tax configuration</h2>
+                <p>Only change a rate where doing so does not alter historical transaction meaning.</p>
+            </div>
+            <button class="drawer-close" type="button" data-drawer-close aria-label="Close">×</button>
+        </div>
+        <form class="drawer-form" method="post" data-tax-edit-form>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="hidden" name="status" value="ACTIVE" data-edit-field="status">
+            <div class="drawer-body">
+                <div class="settings-form-grid">
+                    <div class="form-field">
+                        <label>Name *</label>
+                        <input name="name" maxlength="120" required data-edit-field="name">
+                    </div>
+                    <div class="form-field">
+                        <label>Code *</label>
+                        <input name="code" maxlength="40" required data-uppercase data-edit-field="code">
+                    </div>
+                    <div class="form-field">
+                        <label>Percentage rate *</label>
+                        <div class="suffix-input">
+                            <input type="number" min="0" max="100" step="0.0001" name="rate" required data-edit-field="rate">
+                            <span>%</span>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label>Display order</label>
+                        <input type="number" min="0" name="displayOrder" data-edit-field="displayOrder">
+                    </div>
+                </div>
+            </div>
+            <div class="drawer-actions">
+                <button class="settings-secondary-button" type="button" data-drawer-close>Cancel</button>
+                <button class="settings-primary-button" type="submit">Update tax rate</button>
+            </div>
+        </form>
+    </aside>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script>
+<script th:src="@{/js/pages/settings.js}" defer></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav class="user-module-tabs" aria-label="Users and roles navigation" th:fragment="userNav(activeTab)">
+    <a class="user-module-tab"
+       th:classappend="${activeTab == 'users' ? ' is-active' : ''}"
+       th:href="@{/owner/users}"
+       th:attr="aria-current=${activeTab == 'users' ? 'page' : null}">
+        Staff Directory
+    </a>
+    <a class="user-module-tab"
+       th:classappend="${activeTab == 'add-user' ? ' is-active' : ''}"
+       th:href="@{/owner/users/new}"
+       th:attr="aria-current=${activeTab == 'add-user' ? 'page' : null}">
+        Add User
+    </a>
+    <a class="user-module-tab"
+       th:classappend="${activeTab == 'groups' ? ' is-active' : ''}"
+       th:href="@{/owner/user-groups}"
+       th:attr="aria-current=${activeTab == 'groups' ? 'page' : null}">
+        User Groups
+    </a>
+    <a class="user-module-tab"
+       th:classappend="${activeTab == 'add-group' ? ' is-active' : ''}"
+       th:href="@{/owner/user-groups/new}"
+       th:attr="aria-current=${activeTab == 'add-group' ? 'page' : null}">
+        Add User Group
+    </a>
+</nav>
+</body>
+</html>

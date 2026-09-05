@@ -1,0 +1,10 @@
+package com.spark.falcon.payment.entity;
+
+public enum PaymentFinancialPurpose {
+    SUPPLIER_DUE_SETTLEMENT,
+    SUPPLIER_DUE_SETTLEMENT_REVERSAL,
+    CUSTOMER_DUE_COLLECTION,
+    CUSTOMER_DUE_COLLECTION_REVERSAL,
+    CUSTOMER_REFUND,
+    CUSTOMER_REFUND_REVERSAL
+}

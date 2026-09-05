@@ -1,0 +1,2 @@
+package com.spark.falcon.inventory.dto;import com.spark.falcon.inventory.entity.*;import java.math.BigDecimal;
+public record CreateStockAdjustmentCommand(Long ownerId,Long branchId,Long productVariantId,Long productBatchId,AdjustmentType type,BigDecimal enteredQuantity,Long enteredUnitId,BigDecimal conversionFactor,String reason,String notes,String attachmentReference,AdjustmentSourceType sourceType,Long sourceCountId,String idempotencyKey){}

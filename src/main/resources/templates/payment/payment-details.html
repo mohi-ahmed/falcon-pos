@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Payment Details | Falcon POS</title>
+<link rel="stylesheet" th:href="@{/css/base.css}">
+<link rel="stylesheet" th:href="@{/css/components.css}">
+<link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+<link rel="stylesheet" th:href="@{/css/pages/customer-payment-sell.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+<aside th:replace="~{fragments/settings-shell :: sidebar('payments')}">
+</aside>
+<button class="sidebar-scrim" type="button" data-sidebar-close>
+</button>
+<div class="workspace">
+<header th:replace="~{fragments/settings-shell :: topbar('Payment Details')}">
+</header>
+<main class="module-page">
+<nav class="module-breadcrumb">
+<a th:href="@{/owner/payments/history(branchId=${branchId},customerId=${payment.customerId},supplierId=${payment.supplierId})}">Payment History</a>
+<span>/</span>
+<strong th:text="|Payment #${payment.id}|">Payment</strong>
+</nav>
+<section class="module-hero">
+<div>
+<span class="module-eyebrow">Part I · Payment Details</span>
+<h1 th:text="|Payment #${payment.id}|">Payment</h1>
+<p>Immutable payment snapshot with invoice allocations, cash/reconciliation references and audit timeline.</p>
+</div>
+<div class="module-actions">
+<button class="module-btn" type="button" data-print>Print</button>
+</div>
+</section>
+<section class="metric-grid">
+<article class="metric-card">
+<small>Amount</small>
+<strong th:text="${payment.amount}">0</strong>
+<span th:text="${payment.currency}">Currency</span>
+</article>
+<article class="metric-card">
+<small>Status</small>
+<strong style="font-size:16px" th:text="${payment.status}">CONFIRMED</strong>
+<span>Payment lifecycle</span>
+</article>
+<article class="metric-card">
+<small>Method</small>
+<strong style="font-size:16px" th:text="${payment.paymentMethodName}">Cash</strong>
+<span th:text="${payment.cashPayment ? 'Physical cash' : 'Non-cash'}">Type</span>
+</article>
+<article class="metric-card">
+<small>Source</small>
+<strong style="font-size:16px" th:text="${payment.sourceModule}">SALE</strong>
+<span th:text="${payment.financialPurpose}">Purpose</span>
+</article>
+</section>
+<div class="module-grid">
+<div class="module-stack">
+<section class="module-card">
+<div class="module-card-head">
+<div>
+<h2>Payment snapshot</h2>
+<p>Historical method and reference values are read-only.</p>
+</div>
+<span class="module-status" th:text="${payment.status}">
+</span>
+</div>
+<div class="detail-grid">
+<div class="detail-item">
+<small>Business ID</small>
+<span th:text="${payment.businessId}">
+</span>
+</div>
+<div class="detail-item">
+<small>Branch ID</small>
+<span th:text="${payment.branchId}">
+</span>
+</div>
+<div class="detail-item">
+<small>Party</small>
+<span th:text="${payment.customerId != null ? 'Customer #' + payment.customerId : (payment.supplierId != null ? 'Supplier #' + payment.supplierId : payment.partyType)}">
+</span>
+</div>
+<div class="detail-item">
+<small>Direction</small>
+<span th:text="${payment.direction}">
+</span>
+</div>
+<div class="detail-item">
+<small>Transaction Reference</small>
+<span th:text="${canViewPaymentReference ? (#strings.isEmpty(payment.transactionReference) ? '—' : payment.transactionReference) : 'Restricted'}">
+</span>
+</div>
+<div class="detail-item">
+<small>Account Reference</small>
+<span th:text="${canViewPaymentReference ? (#strings.isEmpty(payment.accountReference) ? '—' : payment.accountReference) : 'Restricted'}">
+</span>
+</div>
+<div class="detail-item">
+<small>Cash Location</small>
+<span th:text="${payment.cashLocationId == null ? '—' : payment.cashLocationId}">
+</span>
+</div>
+<div class="detail-item">
+<small>Register</small>
+<span th:text="${payment.registerId == null ? '—' : payment.registerId}">
+</span>
+</div>
+<div class="detail-item">
+<small>Cashier Shift</small>
+<span th:text="${payment.cashierShiftId == null ? '—' : payment.cashierShiftId}">
+</span>
+</div>
+<div class="detail-item">
+<small>Cash Movement</small>
+<span th:text="${payment.cashMovementId == null ? '—' : payment.cashMovementId}">
+</span>
+</div>
+<div class="detail-item">
+<small>Created By</small>
+<span th:text="${payment.createdByActorId}">
+</span>
+</div>
+<div class="detail-item">
+<small>Confirmed By</small>
+<span th:text="${payment.confirmedByActorId == null ? '—' : payment.confirmedByActorId}">
+</span>
+</div>
+<div class="detail-item">
+<small>Created At</small>
+<span th:text="${payment.createdAt}">
+</span>
+</div>
+<div class="detail-item">
+<small>Confirmed At</small>
+<span th:text="${payment.confirmedAt == null ? '—' : payment.confirmedAt}">
+</span>
+</div>
+<div class="detail-item"><small>Allocated Amount</small><span th:text="${payment.allocatedAmount}">0</span></div>
+<div class="detail-item"><small>Excess Settlement</small><span th:text="${payment.customerSettlementType == null ? '—' : payment.customerSettlementType}">—</span></div>
+<div class="detail-item"><small>Customer Credit</small><span th:text="${payment.customerCreditAmount}">0</span></div>
+<div class="detail-item"><small>Change Returned</small><span th:text="${payment.changeAmount}">0</span></div>
+<div class="detail-item">
+<small>Attachment</small>
+<span th:text="${canViewPaymentReference ? (#strings.isEmpty(payment.attachmentReference) ? '—' : payment.attachmentReference) : 'Restricted'}">
+</span>
+</div>
+</div>
+</section>
+<section class="module-card">
+<div class="module-card-head">
+<div>
+<h3>Invoice allocations</h3>
+<p>Due Before and Due After snapshots are preserved on each allocation.</p>
+</div>
+</div>
+<div class="table-wrap">
+<table class="module-table">
+<thead>
+<tr>
+<th>Allocation ID</th>
+<th>Invoice Type</th>
+<th>Invoice ID</th>
+<th>Effect</th>
+<th>Amount</th>
+<th>Due Before</th>
+<th>Due After</th>
+</tr>
+</thead>
+<tbody>
+<tr th:each="a:${payment.allocations}">
+<td th:text="${a.id}">
+</td>
+<td th:text="${a.invoiceType}">
+</td>
+<td th:text="${a.invoiceId}">
+</td>
+<td th:text="${a.effect}">
+</td>
+<td th:text="${a.amount}">
+</td>
+<td th:text="${a.dueBefore}">
+</td>
+<td th:text="${a.dueAfter}">
+</td>
+</tr>
+<tr th:if="${#lists.isEmpty(payment.allocations)}">
+<td colspan="7">
+<div class="empty-state">
+<strong>No invoice allocations on this payment</strong>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section class="module-card">
+<div class="module-card-head">
+<div>
+<h3>Audit timeline</h3>
+</div>
+</div>
+<div class="module-card-body">
+<div class="timeline">
+<div class="timeline-item" th:each="a:${payment.auditTimeline}">
+<span class="timeline-dot">
+</span>
+<div class="timeline-copy">
+<strong th:text="${a.action}">Action</strong>
+<span th:text="|${a.createdAt} · Actor #${a.actorId}|">Time</span>
+<span th:text="${a.details}">Details</span>
+</div>
+</div>
+<div class="empty-state" th:if="${#lists.isEmpty(payment.auditTimeline)}">
+<strong>No audit entries available</strong>
+</div>
+</div>
+</div>
+</section>
+</div>
+<aside class="module-stack">
+<section class="module-card">
+<div class="module-card-head">
+<div>
+<h3>Reversal state</h3>
+</div>
+</div>
+<div class="module-card-body">
+<div class="summary-list">
+<div class="summary-row">
+<span>Reversal of</span>
+<strong th:text="${payment.reversalOfPaymentId == null ? '—' : '#' + payment.reversalOfPaymentId}">
+</strong>
+</div>
+<div class="summary-row">
+<span>Reversed by</span>
+<strong th:text="${payment.reversedByPaymentId == null ? '—' : '#' + payment.reversedByPaymentId}">
+</strong>
+</div>
+<div class="summary-row">
+<span>Reversed at</span>
+<strong th:text="${payment.reversedAt == null ? '—' : payment.reversedAt}">
+</strong>
+</div>
+<div class="summary-row">
+<span>Reason</span>
+<strong th:text="${#strings.isEmpty(payment.reversalReason) ? '—' : payment.reversalReason}">
+</strong>
+</div>
+</div>
+</div>
+</section>
+<section class="module-card danger-zone" th:if="${canReversePayment and payment.status.toString() == 'CONFIRMED' and payment.reversedByPaymentId == null}">
+<div class="module-card-head">
+<div>
+<h3>Reverse Payment</h3>
+<p>Creates a linked opposite payment and financial effect. Original record remains unchanged.</p>
+</div>
+</div>
+<div class="module-card-body">
+<form th:action="@{/owner/payments/{id}/reverse(id=${payment.id},branchId=${branchId},supplierId=${payment.supplierId},customerId=${payment.customerId})}" th:object="${paymentReversalRequest}" method="post" data-confirm-message="Reverse this confirmed payment? This action creates a linked opposite financial effect.">
+<div class="field">
+<label>Reversal Reason</label>
+<textarea th:field="*{reason}" maxlength="500" required>
+</textarea>
+</div>
+<input th:field="*{idempotencyKey}" type="hidden">
+<button class="module-btn danger" type="submit" style="width:100%;margin-top:12px">Confirm Payment Reversal</button>
+</form>
+</div>
+</section>
+</aside>
+</div>
+</main>
+</div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer>
+</script>
+<script th:src="@{/js/pages/customer-payment-sell.js}" defer>
+</script>
+</body>
+</html>

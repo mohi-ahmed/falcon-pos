@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav class="purchase-subnav no-print" aria-label="Purchase module" th:fragment="subnav(active)">
+    <a class="purchase-subnav-link" th:classappend="${active == 'list'} ? ' is-active' : ''" th:href="@{/owner/purchases}">Purchase List</a>
+    <a class="purchase-subnav-link" th:classappend="${active == 'new'} ? ' is-active' : ''" th:href="@{/owner/purchases/new}">New Purchase</a>
+    <a class="purchase-subnav-link" th:classappend="${active == 'returns'} ? ' is-active' : ''" th:href="@{/owner/purchases/returns}">Returns</a>
+    <a class="purchase-subnav-link" th:classappend="${active == 'logs'} ? ' is-active' : ''" th:href="@{/owner/purchases/logs}">Purchase Log</a>
+    <a class="purchase-subnav-link" th:classappend="${active == 'stock-import'} ? ' is-active' : ''" th:href="@{/owner/purchases/stock-import}">Stock Import</a>
+    <a class="purchase-subnav-link" th:classappend="${active == 'import-history'} ? ' is-active' : ''" th:href="@{/owner/purchases/stock-import/history}">Import History</a>
+</nav>
+</body>
+</html>

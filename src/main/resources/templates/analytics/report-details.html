@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title th:text="${reportType.title() + ' | Falcon POS'}">Report | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/operations.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/analytics.css}">
+    <link rel="stylesheet" th:href="@{/css/print.css}" media="print">
+</head>
+<body class="dashboard-body analytics-ui">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('analytics')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Analytics & Reports')}"></header>
+        <main class="operations-page analytics-page analytics-report-detail-page">
+            <nav class="ops-breadcrumb" aria-label="Breadcrumb">
+                <a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span>
+                <a th:href="@{/owner/analytics}">Analytics</a><span>/</span>
+                <a th:href="@{/owner/analytics/reports}">Reports</a><span>/</span>
+                <strong th:text="${reportType.title()}">Report</strong>
+            </nav>
+
+            <section class="ops-heading analytics-page-heading analytics-report-heading">
+                <div class="analytics-heading-copy">
+                    <span class="eyebrow" th:text="${reportType.category()}">Reporting</span>
+                    <h1 th:text="${reportType.title()}">Report</h1>
+                    <div class="analytics-report-scope">
+                        <span class="analytics-scope-dot" aria-hidden="true"></span>
+                        <span th:if="${reportType.supportsDateRange()}" th:text="|${reportScopeName} · ${#temporals.format(filter.from,'dd MMM yyyy')} – ${#temporals.format(filter.to,'dd MMM yyyy')}|">Scope</span>
+                        <span th:unless="${reportType.supportsDateRange()}" th:text="|${reportScopeName} · Current position|">Current position</span>
+                    </div>
+                </div>
+                <div class="ops-actions no-print analytics-report-actions">
+                    <a class="ops-btn analytics-back-btn" th:href="@{/owner/analytics/reports}"><span aria-hidden="true">←</span><span>All reports</span></a>
+                    <div class="analytics-export-menu">
+                        <button class="ops-btn" type="button" data-analytics-export-toggle>Export <span aria-hidden="true">⌄</span></button>
+                        <div class="analytics-export-panel" data-analytics-export-panel>
+                            <span class="analytics-export-label">Export format</span>
+                            <a th:href="@{/owner/analytics/reports/{key}/export(key=${reportType.path()},format='xlsx',branchId=${reportBranch.branchId},allBranches=${filter.allBranches},from=${filter.from},to=${filter.to},productId=${filter.productId},categoryId=${filter.categoryId},supplierId=${filter.supplierId},customerId=${filter.customerId},paymentMethodId=${filter.paymentMethodId},batchNumber=${filter.batchNumber},expiryStatus=${filter.expiryStatus},q=${filter.query},sort=${filter.sort})}"><span class="analytics-file-type">XLSX</span><span>Excel workbook</span></a>
+                            <a th:href="@{/owner/analytics/reports/{key}/export(key=${reportType.path()},format='csv',branchId=${reportBranch.branchId},allBranches=${filter.allBranches},from=${filter.from},to=${filter.to},productId=${filter.productId},categoryId=${filter.categoryId},supplierId=${filter.supplierId},customerId=${filter.customerId},paymentMethodId=${filter.paymentMethodId},batchNumber=${filter.batchNumber},expiryStatus=${filter.expiryStatus},q=${filter.query},sort=${filter.sort})}"><span class="analytics-file-type">CSV</span><span>CSV file</span></a>
+                            <a th:href="@{/owner/analytics/reports/{key}/export(key=${reportType.path()},format='pdf',branchId=${reportBranch.branchId},allBranches=${filter.allBranches},from=${filter.from},to=${filter.to},productId=${filter.productId},categoryId=${filter.categoryId},supplierId=${filter.supplierId},customerId=${filter.customerId},paymentMethodId=${filter.paymentMethodId},batchNumber=${filter.batchNumber},expiryStatus=${filter.expiryStatus},q=${filter.query},sort=${filter.sort})}"><span class="analytics-file-type">PDF</span><span>PDF document</span></a>
+                        </div>
+                    </div>
+                    <button class="ops-btn" type="button" onclick="window.print()">Print</button>
+                </div>
+            </section>
+
+            <div class="ops-banner danger" th:if="${errorMessage != null}" th:text="${errorMessage}">Invalid report filter.</div>
+
+            <section class="ops-card analytics-report-filter no-print">
+                <div class="analytics-filter-head">
+                    <div><h2>Filters</h2><p>Refine the report without changing its underlying records.</p></div>
+                    <span class="analytics-filter-status">Current view</span>
+                </div>
+                <form method="get" th:action="|/owner/analytics/reports/${reportType.path()}|">
+                    <div class="analytics-report-filter-grid">
+                        <div class="ops-field"><label>Branch</label><select name="branchId"><option th:each="branch:${accessibleBranches}" th:value="${branch.branchId}" th:text="${branch.branchName}" th:selected="${branch.branchId == reportBranch.branchId}">Branch</option></select></div>
+                        <div class="ops-field" th:if="${reportType.supportsDateRange()}"><label>From</label><input type="date" name="from" th:value="${filter.from}"></div>
+                        <div class="ops-field" th:if="${reportType.supportsDateRange()}"><label>To</label><input type="date" name="to" th:value="${filter.to}"></div>
+                        <div class="ops-field" th:if="${reportType.supportsProduct()}"><label>Product</label><select name="productId"><option value="">All products</option><option th:each="o:${filterOptions.products}" th:value="${o.id}" th:text="${o.label}" th:selected="${o.id == filter.productId}">Product</option></select></div>
+                        <div class="ops-field" th:if="${reportType.supportsCategory()}"><label>Category</label><select name="categoryId"><option value="">All categories</option><option th:each="o:${filterOptions.categories}" th:value="${o.id}" th:text="${o.label}" th:selected="${o.id == filter.categoryId}">Category</option></select></div>
+                        <div class="ops-field" th:if="${reportType.supportsSupplier()}"><label>Supplier</label><select name="supplierId"><option value="">All suppliers</option><option th:each="o:${filterOptions.suppliers}" th:value="${o.id}" th:text="${o.label}" th:selected="${o.id == filter.supplierId}">Supplier</option></select></div>
+                        <div class="ops-field" th:if="${reportType.supportsCustomer()}"><label>Customer</label><select name="customerId"><option value="">All customers</option><option th:each="o:${filterOptions.customers}" th:value="${o.id}" th:text="${o.label}" th:selected="${o.id == filter.customerId}">Customer</option></select></div>
+                        <div class="ops-field" th:if="${reportType.supportsPaymentMethod()}"><label>Payment method</label><select name="paymentMethodId"><option value="">All methods</option><option th:each="o:${filterOptions.paymentMethods}" th:value="${o.id}" th:text="${o.label}" th:selected="${o.id == filter.paymentMethodId}">Method</option></select></div>
+                        <div class="ops-field" th:if="${reportType.supportsBatch()}"><label>Batch</label><input name="batchNumber" th:value="${filter.batchNumber}" placeholder="Batch number"></div>
+                        <div class="ops-field" th:if="${reportType.supportsExpiryStatus()}"><label>Expiry status</label><select name="expiryStatus"><option value="">All expiry states</option><option value="EXPIRED" th:selected="${filter.expiryStatus == 'EXPIRED'}">Expired</option><option value="TODAY" th:selected="${filter.expiryStatus == 'TODAY'}">Expiring today</option><option value="7" th:selected="${filter.expiryStatus == '7'}">Within 7 days</option><option value="15" th:selected="${filter.expiryStatus == '15'}">Within 15 days</option><option value="30" th:selected="${filter.expiryStatus == '30'}">Within 30 days</option><option value="60" th:selected="${filter.expiryStatus == '60'}">Within 60 days</option><option value="90" th:selected="${filter.expiryStatus == '90'}">Within 90 days</option><option value="MISSING" th:selected="${filter.expiryStatus == 'MISSING'}">Missing expiry information</option></select></div>
+                        <div class="ops-field analytics-search-field" th:if="${reportType.supportsSearch()}"><label>Search</label><input name="q" th:value="${filter.query}" placeholder="Search this report"></div>
+                        <div class="ops-field"><label>Sort by</label><select name="sort"><option th:if="${reportType.supportsChronologicalSort()}" value="date_desc" th:selected="${filter.sort == 'date_desc'}">Newest first</option><option th:if="${reportType.supportsChronologicalSort()}" value="date_asc" th:selected="${filter.sort == 'date_asc'}">Oldest first</option><option value="amount_desc" th:selected="${filter.sort == 'amount_desc'}">Highest amount</option><option value="amount_asc" th:selected="${filter.sort == 'amount_asc'}">Lowest amount</option><option value="name_asc" th:selected="${filter.sort == 'name_asc'}">Name A–Z</option><option value="name_desc" th:selected="${filter.sort == 'name_desc'}">Name Z–A</option></select></div>
+                        <div class="ops-field"><label>Rows per page</label><select name="size"><option value="10" th:selected="${filter.size == 10}">10</option><option value="25" th:selected="${filter.size == 25}">25</option><option value="50" th:selected="${filter.size == 50}">50</option><option value="100" th:selected="${filter.size == 100}">100</option></select></div>
+                        <label class="analytics-all-branch" th:if="${allowAllBranches}"><input type="checkbox" name="allBranches" value="true" th:checked="${filter.allBranches}"><span><strong>All accessible branches</strong><small>Combine only branches you are allowed to view.</small></span></label>
+                    </div>
+                    <div class="analytics-filter-actions"><button class="ops-btn primary" type="submit">Apply filters</button><a class="ops-btn" th:href="|/owner/analytics/reports/${reportType.path()}|">Reset</a></div>
+                </form>
+            </section>
+
+            <section class="ops-card analytics-report-table-card">
+                <div class="analytics-results-head">
+                    <div>
+                        <span class="analytics-results-kicker">Report results</span>
+                        <div class="analytics-results-title"><h2>Results</h2><span class="analytics-record-count" th:text="|${reportPage.totalElements} records|">0 records</span></div>
+                        <p th:text="${reportScopeName}">Report scope</p>
+                    </div>
+                    <span class="ops-status neutral">Read-only</span>
+                </div>
+                <div class="ops-table-wrap">
+                    <table class="ops-table analytics-report-table">
+                        <thead><tr><th th:each="column:${reportPage.columns}" th:text="${column.heading}" th:classappend="${column.valueType.name() == 'MONEY' or column.valueType.name() == 'NUMBER'} ? ' numeric' : ''">Column</th></tr></thead>
+                        <tbody>
+                        <tr th:each="row:${reportPage.rows}">
+                            <td th:each="column:${reportPage.columns}" th:with="value=${row[column.key]}" th:classappend="${column.valueType.name() == 'MONEY' or column.valueType.name() == 'NUMBER'} ? ' numeric' : ''">
+                                <span th:if="${value == null}" class="analytics-null-value">—</span>
+                                <span th:if="${value != null and column.valueType.name() == 'MONEY'}" th:text="|${row['currency'] != null ? row['currency'] : currency} ${#numbers.formatDecimal(value,1,'COMMA',2,'POINT')}|">0.00</span>
+                                <span th:if="${value != null and column.valueType.name() == 'DATE'}" th:text="${#temporals.format(value,'dd/MM/yyyy')}">Date</span>
+                                <span th:if="${value != null and column.valueType.name() == 'DATE_TIME'}" th:text="${#temporals.format(value.atZone(branchZone),'dd/MM/yyyy · hh:mm a')}">Date</span>
+                                <span th:if="${value != null and column.valueType.name() == 'NUMBER'}" th:text="${#numbers.formatDecimal(value,1,'COMMA',2,'POINT')}">0</span>
+                                <span th:if="${value != null and column.valueType.name() == 'TEXT'}" th:text="${#strings.capitalizeWords(#strings.toLowerCase(#strings.replace(value.toString(),'_',' ')))}">Text</span>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(reportPage.rows)}"><td th:colspan="${#lists.size(reportPage.columns)}" class="ops-empty"><strong>No records found</strong><span>Try changing the selected filters or reporting period.</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="analytics-pagination no-print">
+                    <div class="analytics-page-summary"><strong th:text="|Page ${reportPage.totalPages() == 0 ? 0 : reportPage.page + 1}|">Page 1</strong><span th:text="|of ${reportPage.totalPages()}|">of 1</span></div>
+                    <div class="analytics-page-actions">
+                        <a class="ops-btn sm" th:if="${reportPage.hasPrevious()}" th:href="@{/owner/analytics/reports/{key}(key=${reportType.path()},branchId=${reportBranch.branchId},allBranches=${filter.allBranches},from=${filter.from},to=${filter.to},productId=${filter.productId},categoryId=${filter.categoryId},supplierId=${filter.supplierId},customerId=${filter.customerId},paymentMethodId=${filter.paymentMethodId},batchNumber=${filter.batchNumber},expiryStatus=${filter.expiryStatus},q=${filter.query},sort=${filter.sort},size=${filter.size},page=${reportPage.page - 1})}">← Previous</a>
+                        <a class="ops-btn sm" th:if="${reportPage.hasNext()}" th:href="@{/owner/analytics/reports/{key}(key=${reportType.path()},branchId=${reportBranch.branchId},allBranches=${filter.allBranches},from=${filter.from},to=${filter.to},productId=${filter.productId},categoryId=${filter.categoryId},supplierId=${filter.supplierId},customerId=${filter.customerId},paymentMethodId=${filter.paymentMethodId},batchNumber=${filter.batchNumber},expiryStatus=${filter.expiryStatus},q=${filter.query},sort=${filter.sort},size=${filter.size},page=${reportPage.page + 1})}">Next →</a>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}"></script>
+<script th:src="@{/js/pages/analytics.js}"></script>
+</body>
+</html>

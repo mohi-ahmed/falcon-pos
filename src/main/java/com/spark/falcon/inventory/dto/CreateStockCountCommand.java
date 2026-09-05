@@ -1,0 +1,2 @@
+package com.spark.falcon.inventory.dto;import com.spark.falcon.inventory.entity.StockCountScope;import java.time.LocalDate;import java.util.List;
+public record CreateStockCountCommand(Long ownerId,Long branchId,LocalDate countDate,StockCountScope scope,Long assignedCounterId,String notes,String attachmentReference,String idempotencyKey,List<StockCountSelection> selections){public record StockCountSelection(Long productVariantId,Long productBatchId){}}

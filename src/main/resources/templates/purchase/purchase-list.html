@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Purchase List | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/operations.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/purchase.css}">
+</head>
+<body class="dashboard-body purchase-module" data-purchase-page="list">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('purchases')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Purchase List')}"></header>
+        <main class="operations-page">
+            <nav class="ops-breadcrumb" aria-label="Breadcrumb">
+                <a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><strong>Purchase List</strong>
+            </nav>
+            <div th:replace="~{fragments/purchase-ui :: subnav('list')}"></div>
+
+            <section class="ops-heading">
+                <div>
+                    <span class="eyebrow">Purchase Management</span>
+                    <h1>Purchase List</h1>
+                    <p>Review purchase invoices, payment status and outstanding supplier dues.</p>
+                </div>
+                <div class="ops-actions">
+                    <button class="ops-btn" data-print-page type="button">Print</button>
+                    <a class="ops-btn primary" th:href="@{/owner/purchases/new}">Add Purchase</a>
+                </div>
+            </section>
+
+            <div class="flash-message" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="flash-message error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+            <section class="ops-card">
+                <div class="ops-card-head">
+                    <div>
+                        <h2>Search and filters</h2>
+                    </div>
+                </div>
+                <div class="ops-card-body">
+                    <form class="ops-filter-form" method="get" th:action="@{/owner/purchases}" data-purchase-filter-primary="4">
+                        <div class="ops-field wide">
+                            <label for="purchaseQuery">Search invoice / supplier reference</label>
+                            <input id="purchaseQuery" name="q" type="search" th:value="${query}" placeholder="Invoice ID or supplier reference">
+                        </div>
+                        <div class="ops-field">
+                            <label for="purchaseSupplier">Supplier</label>
+                            <select id="purchaseSupplier" name="supplierId">
+                                <option value="">All suppliers</option>
+                                <option th:each="s:${suppliers}" th:value="${s.id}" th:text="${s.name}" th:selected="${selectedSupplierId == s.id}">Supplier</option>
+                            </select>
+                        </div>
+                        <div class="ops-field">
+                            <label for="purchaseStatus">Purchase status</label>
+                            <select id="purchaseStatus" name="status">
+                                <option value="">All statuses</option>
+                                <option th:each="s:${T(com.spark.falcon.purchase.entity.enumtype.PurchaseStatus).values()}"
+                                        th:value="${s}" th:text="${#strings.replace(s.name(),'_',' ')}" th:selected="${selectedStatus == s}">Status</option>
+                            </select>
+                        </div>
+                        <div class="ops-field">
+                            <label for="paymentStatus">Payment status</label>
+                            <select id="paymentStatus" name="paymentStatus">
+                                <option value="">All payment statuses</option>
+                                <option th:each="s:${T(com.spark.falcon.purchase.entity.enumtype.PurchasePaymentStatus).values()}"
+                                        th:value="${s}" th:text="${#strings.replace(s.name(),'_',' ')}" th:selected="${selectedPaymentStatus == s}">Status</option>
+                            </select>
+                        </div>
+                        <div class="ops-field">
+                            <label for="purchaseFrom">From date</label>
+                            <input id="purchaseFrom" name="fromDate" type="date" th:value="${fromDate}">
+                        </div>
+                        <div class="ops-field">
+                            <label for="purchaseTo">To date</label>
+                            <input id="purchaseTo" name="toDate" type="date" th:value="${toDate}">
+                        </div>
+                        <div class="ops-field">
+                            <label for="purchaseSize">Rows per page</label>
+                            <select id="purchaseSize" name="size">
+                                <option value="10" th:selected="${selectedSize == 10}">10</option><option value="25" th:selected="${selectedSize == 25}">25</option><option value="50" th:selected="${selectedSize == 50}">50</option><option value="100" th:selected="${selectedSize == 100}">100</option>
+                            </select>
+                        </div>
+                        <div class="ops-field"><label for="purchaseSort">Sort by</label><select id="purchaseSort" name="sortBy"><option value="purchaseDate" th:selected="${sortBy == 'purchaseDate'}">Purchase date</option><option value="createdAt" th:selected="${sortBy == 'createdAt'}">Created time</option><option value="totalPayable" th:selected="${sortBy == 'totalPayable'}">Total amount</option><option value="paidAmount" th:selected="${sortBy == 'paidAmount'}">Paid amount</option><option value="dueAmount" th:selected="${sortBy == 'dueAmount'}">Outstanding due</option><option value="paymentStatus" th:selected="${sortBy == 'paymentStatus'}">Payment status</option></select></div>
+                        <div class="ops-field"><label for="purchaseDirection">Direction</label><select id="purchaseDirection" name="sortDir"><option value="desc" th:selected="${sortDir == 'desc'}">Descending</option><option value="asc" th:selected="${sortDir == 'asc'}">Ascending</option></select></div>
+                        <div class="ops-filter-actions">
+                            <a class="ops-btn" th:href="@{/owner/purchases}">Reset</a>
+                            <button class="ops-btn primary" type="submit">Apply filters</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="ops-card">
+                <div class="ops-card-head">
+                    <div>
+                        <h2>Purchase invoices</h2>
+                        <p th:text="|${purchases.totalElements} invoice(s) · page ${purchases.number + 1} of ${purchases.totalPages == 0 ? 1 : purchases.totalPages}|">Results</p>
+                    </div>
+                    <div class="ops-pending-actions no-print">
+                        <div class="ops-pending-actions no-print" aria-label="Purchase export actions">
+                            <a class="ops-btn" th:href="@{/owner/purchases/export(branchId=${setup.branchId},supplierId=${selectedSupplierId},status=${selectedStatus},paymentStatus=${selectedPaymentStatus},fromDate=${fromDate},toDate=${toDate},keyword=${query},format='xlsx')}">Excel</a>
+                            <a class="ops-btn" th:href="@{/owner/purchases/export(branchId=${setup.branchId},supplierId=${selectedSupplierId},status=${selectedStatus},paymentStatus=${selectedPaymentStatus},fromDate=${fromDate},toDate=${toDate},keyword=${query},format='csv')}">CSV</a>
+                            <a class="ops-btn" th:href="@{/owner/purchases/export(branchId=${setup.branchId},supplierId=${selectedSupplierId},status=${selectedStatus},paymentStatus=${selectedPaymentStatus},fromDate=${fromDate},toDate=${toDate},keyword=${query},format='pdf')}">PDF</a>
+                        </div>
+                        <button class="ops-btn" type="submit" form="purchasePayAllForm" data-pay-all disabled>Pay All</button>
+                    </div>
+                </div>
+                <form id="purchasePayAllForm" method="get" th:action="@{/owner/payments/supplier}" data-pay-all-form><input type="hidden" name="branchId" th:value="${setup.branchId}"><input type="hidden" name="supplierId" data-pay-all-supplier></form>
+                <div class="ops-table-wrap">
+                    <table class="ops-table">
+                        <thead><tr>
+                            <th class="no-print"><input type="checkbox" data-pay-all-toggle aria-label="Select all eligible purchases on this page"></th><th>Date &amp; Time</th><th>Invoice ID</th><th>Supplier</th><th>Creator</th>
+                            <th class="numeric">Total Amount</th><th class="numeric">Paid</th><th class="numeric">Outstanding Due</th>
+                            <th>Payment Status</th><th>Status</th><th>Actions</th>
+                        </tr></thead>
+                        <tbody>
+                        <tr th:each="p:${purchases.content}">
+                            <td class="no-print"><input th:if="${p.dueAmount != null and p.dueAmount.signum() > 0 and p.status.name() != 'VOIDED' and p.status.name() != 'REVERSED'}" type="checkbox" form="purchasePayAllForm" name="selectedPurchaseIds" th:value="${p.id}" th:attr="data-pay-all-item='',data-supplier-id=${p.supplierId}" aria-label="Select purchase for Pay All"></td>
+                            <td class="purchase-date-cell"><span th:text="${#temporals.format(p.createdAt,'dd/MM/yyyy')}">—</span><small th:text="${#temporals.format(p.createdAt,'hh:mm a')}">—</small></td>
+                            <td class="ops-mono" th:text="${p.id}">—</td>
+                            <td th:text="${supplierMap[p.supplierId] != null ? supplierMap[p.supplierId].name : 'Supplier #' + p.supplierId}">—</td>
+                            <td th:text="${p.createdByActorId}">—</td>
+                            <td class="numeric" th:text="${#numbers.formatDecimal(p.totalPayable,1,2)}">0.00</td>
+                            <td class="numeric" th:text="${#numbers.formatDecimal(p.paidAmount,1,2)}">0.00</td>
+                            <td class="numeric" th:text="${#numbers.formatDecimal(p.dueAmount,1,2)}">0.00</td>
+                            <td><span class="ops-status" th:text="${#strings.replace(p.paymentStatus.name(),'_',' ')}">—</span></td>
+                            <td><span class="ops-status" th:text="${#strings.replace(p.status.name(),'_',' ')}">—</span></td>
+                            <td>
+                                <div class="ops-actions">
+                                    <a class="ops-btn" th:href="@{/owner/purchases/{id}(id=${p.id})}">View</a>
+                                    <a class="ops-btn" th:if="${p.status.name() == 'DRAFT'}" th:href="@{/owner/purchases/{id}/edit(id=${p.id})}">Edit</a>
+                                    <form th:if="${p.status.name() == 'DRAFT'}" method="post" th:action="@{/owner/purchases/{id}/confirm(id=${p.id})}" onsubmit="return confirm('Confirm this Draft Purchase? Stock, costing and supplier due effects will be posted.');">
+                                        <input type="hidden" name="paidAmount" value="0">
+                                        <button class="ops-btn primary" type="submit">Confirm</button>
+                                    </form>
+                                    <form th:if="${p.status.name() == 'DRAFT'}" method="post" th:action="@{/owner/purchases/{id}/delete(id=${p.id})}" onsubmit="return confirm('Delete this Draft Purchase? This action is available only before confirmation.');">
+                                        <button class="ops-btn danger" type="submit">Delete</button>
+                                    </form>
+                                    <a class="ops-btn" th:if="${p.dueAmount != null and p.dueAmount.signum() > 0 and p.status.name() != 'VOIDED' and p.status.name() != 'REVERSED'}"
+                                       th:href="@{/owner/payments/supplier(branchId=${setup.branchId},supplierId=${p.supplierId})}">Pay Due</a>
+                                    <a class="ops-btn" th:if="${p.status.name() == 'CONFIRMED' or p.status.name() == 'PARTIALLY_RETURNED'}"
+                                       th:href="@{/owner/purchases/returns/new(purchaseId=${p.id})}">Return</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${purchases.empty}"><td colspan="11">
+                            <div class="ops-empty"><strong>No purchases match the current filters</strong><span>Adjust the filters or create a purchase for the active branch.</span></div>
+                        </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="ops-pagination" th:if="${purchases.totalPages > 1}">
+                    <small th:text="|Showing ${purchases.number * purchases.size + 1}–${purchases.number * purchases.size + purchases.numberOfElements} of ${purchases.totalElements}|">Rows</small>
+                    <nav aria-label="Purchase list pagination">
+                        <a class="ops-page-link" th:classappend="${purchases.first ? ' disabled' : ''}"
+                           th:href="@{/owner/purchases(page=${purchases.number-1},size=${selectedSize},supplierId=${selectedSupplierId},status=${selectedStatus},paymentStatus=${selectedPaymentStatus},fromDate=${fromDate},toDate=${toDate},q=${query},sortBy=${sortBy},sortDir=${sortDir})}" aria-label="Previous page">‹</a>
+                        <span class="ops-page-link active" th:text="${purchases.number+1}">1</span>
+                        <a class="ops-page-link" th:classappend="${purchases.last ? ' disabled' : ''}"
+                           th:href="@{/owner/purchases(page=${purchases.number+1},size=${selectedSize},supplierId=${selectedSupplierId},status=${selectedStatus},paymentStatus=${selectedPaymentStatus},fromDate=${fromDate},toDate=${toDate},q=${query},sortBy=${sortBy},sortDir=${sortDir})}" aria-label="Next page">›</a>
+                    </nav>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script>
+<script th:src="@{/js/pages/operations.js}" defer></script>
+<script th:src="@{/js/pages/purchase-ui.js}" defer></script>
+</body>
+</html>

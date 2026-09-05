@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>User Group List | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/settings.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/user-management.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('users')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Users & Roles')}"></header>
+        <main class="settings-main" id="main-content">
+            <nav class="settings-breadcrumb" aria-label="Breadcrumb">
+                <a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span>
+                <a th:href="@{/owner/users}">Users &amp; Roles</a><span>/</span><strong>User Groups</strong>
+            </nav>
+            <div class="settings-page-shell">
+                <aside th:replace="~{fragments/user-shell :: userNav(${userSection})}"></aside>
+                <div class="settings-page-content">
+                    <header class="settings-page-header settings-page-header-action">
+                        <div><span class="eyebrow">Role management</span><h1>User groups</h1><p>Create staff roles and control which pages and actions their members can access.</p></div>
+                        <a class="settings-primary-button settings-add-button" th:href="@{/owner/user-groups/new}"><span>+</span>Add user group</a>
+                    </header>
+
+                    <div class="alert alert-success" th:if="${successMessage}" role="status"><span>✓</span><div><strong>Completed</strong><span th:text="${successMessage}">Saved.</span></div></div>
+                    <div class="alert alert-danger" th:if="${errorMessage}" role="alert"><span>!</span><div><strong>Action failed</strong><span th:text="${errorMessage}">Please review the action.</span></div></div>
+
+                    <section class="user-summary-strip" aria-label="User group summary">
+                        <div><small>Total groups</small><strong th:text="${#lists.size(groups)}">0</strong></div>
+                        <div><small>Permission options</small><strong th:text="${#lists.size(permissions)}">0</strong></div>
+                        <div><small>Protected roles</small><strong>Owner / Primary Admin</strong></div>
+                    </section>
+
+                    <section class="create-panel" data-create-panel th:attr="data-open-initially=${openCreatePanel == true ? 'true' : 'false'}">
+                        <button class="create-panel-toggle" type="button" data-create-toggle aria-expanded="false">
+                            <span><span class="plus-icon">+</span><span><strong>Add new user group</strong><small>Create a role here, then configure its permissions.</small></span></span><span class="chevron">⌄</span>
+                        </button>
+                        <div class="create-panel-body" data-create-body hidden>
+                            <form th:action="@{/owner/user-groups}" th:object="${userGroupRequest}" method="post" novalidate>
+                                <input type="hidden" name="source" value="list">
+                                <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}" role="alert"><span>!</span><div><strong>Please review the form</strong><span th:each="error : ${#fields.globalErrors()}" th:text="${error}">Validation error</span></div></div>
+                                <div class="compact-create-grid">
+                                    <div class="form-field" th:classappend="${#fields.hasErrors('name')} ? ' has-error'"><label for="quickGroupName">Group name *</label><input id="quickGroupName" th:field="*{name}" data-slug-source maxlength="120" placeholder="Cashier" required><small class="field-error" th:errors="*{name}"></small></div>
+                                    <div class="form-field" th:classappend="${#fields.hasErrors('slug')} ? ' has-error'"><label for="quickGroupSlug">Slug</label><input id="quickGroupSlug" th:field="*{slug}" data-slug-input maxlength="140" placeholder="cashier"><small class="field-error" th:errors="*{slug}"></small></div>
+                                    <div class="form-field form-field-span-all"><div class="slug-preview">Slug preview: <code data-slug-preview>group-slug</code></div></div>
+                                </div>
+                                <div class="compact-create-actions"><a class="settings-secondary-button" th:href="@{/owner/user-groups/new}">Open full form</a><button class="settings-primary-button" type="submit">Create group</button></div>
+                            </form>
+                        </div>
+                    </section>
+
+                    <section class="settings-table-card" aria-labelledby="group-list-title">
+                        <div class="table-card-heading"><div><h2 id="group-list-title">Staff groups and roles</h2><p>Groups define role permissions. Branch access is assigned separately to each staff member.</p></div></div>
+                        <div class="table-toolbar">
+                            <label class="client-search-box"><span class="sr-only">Search groups</span><input type="search" data-client-search placeholder="Search group name or slug"></label>
+                            <div class="toolbar-actions">
+                                <label class="rows-control"><span>Rows</span><select data-client-size><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></label>
+                                <div class="export-group">
+                                    <button class="toolbar-button" type="button" data-export-target="group-table" data-export-type="excel">Excel</button>
+                                    <button class="toolbar-button" type="button" data-export-target="group-table" data-export-type="csv">CSV</button>
+                                    <button class="toolbar-button" type="button" data-export-target="group-table" data-export-type="pdf">PDF</button>
+                                    <button class="toolbar-button" type="button" data-export-target="group-table" data-export-type="print">Print</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-wrap">
+                            <table class="settings-table group-list-table" id="group-table" data-export-name="falcon-user-groups" data-client-table>
+                                <thead><tr><th data-client-sort="0">Group ID <span>↕</span></th><th data-client-sort="1">Group name <span>↕</span></th><th data-client-sort="2">Total users <span>↕</span></th><th data-client-sort="3">Permissions <span>↕</span></th><th class="action-column">Actions</th></tr></thead>
+                                <tbody>
+                                <tr th:each="group : ${groups}">
+                                    <td class="muted-cell" th:text="${group.id()}">1</td>
+                                    <td><div class="table-primary"><span class="group-avatar" th:text="${#strings.substring(group.name(),0,1)}">C</span><span><strong th:text="${group.name()}">Cashier</strong><small><code th:text="${group.slug()}">cashier</code><span th:if="${group.protectedGroup()}"> · Protected role</span></small></span></div></td>
+                                    <td><span class="permission-count" th:text="${group.userCount()}">0</span></td>
+                                    <td><span th:text="${#sets.size(group.permissionIds())}">0</span></td>
+                                    <td><div class="row-actions"><a class="row-action row-action-primary" th:href="@{/owner/user-groups/{id}/permissions(id=${group.id()})}" th:text="${group.protectedGroup() ? 'View permissions' : 'Permissions'}">Permissions</a><a class="row-action" th:if="${!group.protectedGroup()}" th:href="@{/owner/user-groups/{id}/edit(id=${group.id()})}">Edit</a><form th:if="${!group.protectedGroup()}" th:action="@{/owner/user-groups/{id}/archive(id=${group.id()})}" method="post" data-confirm="Archive this user group? This is allowed only when no active users remain assigned."><button class="row-action row-action-danger" type="submit">Archive</button></form><span class="row-action protected-action" th:if="${group.protectedGroup()}" aria-disabled="true">Protected</span></div></td>
+                                </tr>
+                                <tr class="empty-table-row" th:if="${#lists.isEmpty(groups)}"><td colspan="5"><div class="table-empty"><span class="empty-state-mark">+</span><strong>No user groups yet</strong><p>Create a role such as Manager, Cashier, Salesperson, Stock Staff or Accountant.</p><a class="settings-secondary-button" th:href="@{/owner/user-groups/new}">Add group</a></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="table-footer"><span data-client-summary th:text="${#lists.isEmpty(groups) ? 'No groups to show' : #lists.size(groups) + ' group' + (#lists.size(groups) == 1 ? '' : 's')}">Groups</span><nav class="server-pagination" data-client-pagination aria-label="User group pagination"></nav></div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script>
+<script th:src="@{/js/pages/user-management.js}" defer></script>
+</body>
+</html>

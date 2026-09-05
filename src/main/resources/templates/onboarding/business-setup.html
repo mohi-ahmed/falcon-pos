@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" data-preview="true">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Create your retail business and first store branch in Falcon POS.">
+    <title>Business setup | Falcon POS</title>
+    <link rel="stylesheet" href="../../static/css/base.css" th:href="@{/css/base.css}">
+    <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+    <link rel="stylesheet" href="../../static/css/pages/business-setup.css" th:href="@{/css/pages/business-setup.css}">
+</head>
+<body class="business-setup-body">
+<a class="skip-link" href="#setupForm">Skip to business setup</a>
+
+<header class="setup-topbar">
+    <a class="brand" href="../public/index.html" th:href="@{/}" aria-label="Falcon POS home">
+        <img class="brand-logo" src="../../static/images/brand/falcon-mark.svg" th:src="@{/images/brand/falcon-mark.svg}" alt="">
+        <span><strong>Falcon POS</strong><small>Retail operations</small></span>
+    </a>
+    <div class="topbar-meta">
+        <span class="secure-chip"><span aria-hidden="true">✓</span> Verified owner</span>
+        <span class="topbar-divider" aria-hidden="true"></span>
+        <a class="support-link" href="mailto:support@falconpos.com">Need help?</a>
+    </div>
+</header>
+
+<main class="setup-main">
+    <header class="setup-hero">
+        <div>
+            <span class="eyebrow">Business setup</span>
+            <h1>Let’s set up your retail business</h1>
+            <p>Add the essential business, branch and operating details. You can review advanced settings before going live.</p>
+        </div>
+        <div class="completion-card" aria-label="Setup progress">
+            <div class="completion-ring" aria-hidden="true"><span>1</span></div>
+            <div><strong>One guided form</strong><small>Usually takes 4–6 minutes</small></div>
+        </div>
+    </header>
+
+    <form id="setupForm" class="setup-form" method="post" action="#" th:action="@{/owner/setup/business}" th:object="${setupRequest}" novalidate>
+        <input type="hidden" name="idempotencyKey" th:value="*{idempotencyKey}">
+        <div class="form-status" data-form-status role="alert" aria-live="polite"
+             th:if="${#fields.hasGlobalErrors()}" th:each="error : ${#fields.globalErrors()}" th:text="${error}"></div>
+
+        <section class="form-card" aria-labelledby="businessHeading">
+            <div class="section-heading">
+                <span class="section-number">01</span>
+                <div><h2 id="businessHeading">Business information</h2><p>Your public business identity and primary contact details.</p></div>
+            </div>
+            <div class="form-grid two-columns">
+                <div class="form-field"><label for="businessName">Business name <span>*</span></label><input id="businessName" name="businessName" th:field="*{businessName}" type="text" maxlength="120" autocomplete="organization" placeholder="e.g. Falcon Mini Mart" required><small class="field-error" aria-live="polite"></small></div>
+                <div class="form-field"><label for="businessCode">Business code <span>*</span></label><div class="input-prefix"><span aria-hidden="true">#</span><input id="businessCode" name="businessCode" th:field="*{businessCode}" type="text" maxlength="20" pattern="[A-Za-z0-9-]+" autocomplete="off" placeholder="FALCON-MART" required></div><small class="field-hint">Unique code for reports and internal reference.</small><small class="field-error" aria-live="polite"></small></div>
+                <div class="form-field"><label for="businessType">Business type <span>*</span></label><select id="businessType" name="businessType" th:field="*{businessType}" required><option value="">Select business type</option><option value="MINI_MART">Mini Mart</option><option value="GROCERY_STORE">Grocery Store</option><option value="GENERAL_STORE">General Store</option><option value="SUPER_SHOP">Super Shop</option><option value="CONVENIENCE_STORE">Convenience Store</option><option value="OTHER_RETAIL">Other Retail Business</option></select><small class="field-error" aria-live="polite"></small></div>
+                <div class="form-field"><label for="businessEmail">Business email <span>*</span></label><input id="businessEmail" th:field="*{businessEmail}" type="email" maxlength="160" autocomplete="email" placeholder="hello@falconmart.com" required><small class="field-error" aria-live="polite" th:errors="*{businessEmail}"></small></div>
+                <div class="form-field full-width"><label for="businessPhone">Business phone <span>*</span></label><input id="businessPhone" th:field="*{businessPhone}" type="tel" inputmode="tel" maxlength="32" autocomplete="tel" placeholder="+880 1712 345678" required><small class="field-error" aria-live="polite" th:errors="*{businessPhone}"></small></div>
+            </div>
+        </section>
+
+        <section class="form-card" aria-labelledby="branchHeading">
+            <div class="section-heading"><span class="section-number branch">02</span><div><h2 id="branchHeading">First branch</h2><p>Set the location and regional defaults for your first outlet.</p></div></div>
+            <div class="form-grid two-columns">
+                <div class="form-field"><label for="branchName">Branch name <span>*</span></label><input id="branchName" name="branchName" th:field="*{branchName}" type="text" maxlength="120" autocomplete="organization-title" placeholder="e.g. Gulshan Outlet" required><small class="field-error" aria-live="polite"></small></div>
+                <div class="form-field"><label for="branchCode">Branch code <span>*</span></label><div class="input-prefix"><span aria-hidden="true">#</span><input id="branchCode" name="branchCode" th:field="*{branchCode}" type="text" maxlength="20" pattern="[A-Za-z0-9-]+" placeholder="GULSHAN-01" required></div><small class="field-error" aria-live="polite"></small></div>
+                <div class="form-field"><label for="branchEmail">Branch email <span>*</span></label><input id="branchEmail" th:field="*{branchEmail}" type="email" maxlength="160" autocomplete="email" placeholder="gulshan@falconmart.com" required><small class="field-error" aria-live="polite" th:errors="*{branchEmail}"></small></div>
+                <div class="form-field"><label for="branchPhone">Branch phone <span>*</span></label><input id="branchPhone" th:field="*{branchPhone}" type="tel" maxlength="32" autocomplete="tel" placeholder="+880 1712 345678" required><small class="field-error" aria-live="polite" th:errors="*{branchPhone}"></small></div>
+                <div class="form-field"><label for="country">Country <span>*</span></label><select id="country" name="country" th:field="*{country}" required><option value="BD">Bangladesh</option><option value="AE">United Arab Emirates</option><option value="SA">Saudi Arabia</option><option value="TR">Turkey</option><option value="GB">United Kingdom</option><option value="US">United States</option></select><small class="field-error" aria-live="polite"></small></div>
+                <div class="form-field"><label for="timezone">Time zone <span>*</span></label><select id="timezone" name="timezone" th:field="*{timezone}" required><option value="Asia/Dhaka">Asia/Dhaka (GMT+6)</option><option value="Asia/Dubai">Asia/Dubai (GMT+4)</option><option value="Asia/Riyadh">Asia/Riyadh (GMT+3)</option><option value="Europe/Istanbul">Europe/Istanbul (GMT+3)</option><option value="Europe/London">Europe/London</option><option value="America/New_York">America/New_York</option></select><small class="field-error" aria-live="polite"></small></div>
+                <div class="form-field"><label for="currency">Currency <span>*</span></label><select id="currency" name="currency" th:field="*{currency}" required><option value="BDT">BDT — Bangladesh Taka</option><option value="AED">AED — UAE Dirham</option><option value="SAR">SAR — Saudi Riyal</option><option value="TRY">TRY — Turkish Lira</option><option value="GBP">GBP — Pound Sterling</option><option value="USD">USD — US Dollar</option></select><small class="field-error" aria-live="polite"></small></div>
+                <div class="form-field full-width"><label for="address">Address <span>*</span></label><input id="address" name="address" th:field="*{address}" type="text" maxlength="240" autocomplete="street-address" placeholder="House, road and area" required><small class="field-error" aria-live="polite"></small></div>
+                <div class="form-field"><label for="city">City <span>*</span></label><input id="city" name="city" th:field="*{city}" type="text" maxlength="80" autocomplete="address-level2" placeholder="e.g. Dhaka" required><small class="field-error" aria-live="polite"></small></div>
+                <div class="form-field"><label for="stateDivision">State / Division <span class="optional">Optional</span></label><input id="stateDivision" name="stateDivision" th:field="*{stateDivision}" type="text" maxlength="80" autocomplete="address-level1" placeholder="e.g. Dhaka Division"></div>
+                <div class="form-field"><label for="postalCode">Postal code <span class="optional">Optional</span></label><input id="postalCode" name="postalCode" th:field="*{postalCode}" type="text" maxlength="16" autocomplete="postal-code" placeholder="e.g. 1212"></div>
+            </div>
+        </section>
+
+        <section class="form-card" aria-labelledby="defaultsHeading">
+            <div class="section-heading"><span class="section-number defaults">03</span><div><h2 id="defaultsHeading">Tax and defaults</h2><p>Starting values for daily operations. These can be changed later.</p></div></div>
+            <div class="configuration-note"><span aria-hidden="true">i</span><p><strong>Flexible by design.</strong> Tax rules and payment settings can be configured in more detail after your business is created.</p></div>
+            <div class="form-grid two-columns">
+                <div class="form-field"><label for="vatBinNumber">VAT / BIN number <span class="optional">Optional</span></label><input id="vatBinNumber" name="vatBinNumber" th:field="*{vatBinNumber}" type="text" maxlength="40" placeholder="e.g. 001234567-0101"></div>
+                <div class="form-field"><label for="defaultTaxRate">Default tax rate <span class="optional">Optional</span></label><div class="input-suffix"><input id="defaultTaxRate" name="defaultTaxRate" th:field="*{defaultTaxRate}" type="number" inputmode="decimal" min="0" max="100" step="0.01" placeholder="0.00"><span>%</span></div></div>
+                <div class="form-field"><label for="lowStockAlertQuantity">Low-stock alert quantity</label><input id="lowStockAlertQuantity" name="lowStockAlertQuantity" th:field="*{lowStockAlertQuantity}" type="number" inputmode="numeric" min="0" max="999999" value="10"></div>
+                <div class="form-field"><label for="recordsPerPage">Records per page</label><select id="recordsPerPage" name="recordsPerPage" th:field="*{recordsPerPage}"><option value="10">10 records</option><option value="25" selected>25 records</option><option value="50">50 records</option><option value="100">100 records</option></select></div>
+                <div class="form-field full-width"><label for="receiptFooter">Receipt footer <span class="optional">Optional</span></label><textarea id="receiptFooter" name="receiptFooter" th:field="*{receiptFooter}" maxlength="240" rows="3" placeholder="Thank you for shopping with us!"></textarea><small class="character-count"><span data-character-count>0</span>/240</small></div>
+            </div>
+        </section>
+
+        <section class="form-card confirmation-card" aria-labelledby="confirmationHeading">
+            <div class="section-heading"><span class="section-number confirm">04</span><div><h2 id="confirmationHeading">Confirmation</h2><p>Review the verified owner and confirm that the information is correct.</p></div></div>
+            <div class="owner-summary">
+                <div class="owner-avatar" aria-hidden="true" th:text="${#strings.substring(ownerName,0,1)}">M</div>
+                <div class="owner-details"><span>Verified business owner</span><strong th:text="${ownerName}">Mostofa Mohi Uddin Ahmed</strong><small th:text="${ownerEmail}">owner@yourbusiness.com</small></div>
+                <span class="verified-badge"><span aria-hidden="true">✓</span> Identity verified</span>
+            </div>
+            <label class="confirmation-control"><input id="confirmation" name="confirmation" th:field="*{confirmation}" type="checkbox" required><span><strong>I confirm these details are accurate.</strong><small>I understand that Falcon POS will use them to create my business workspace and first branch.</small></span></label>
+            <small class="field-error confirmation-error" aria-live="polite"></small>
+        </section>
+
+        <footer class="form-actions">
+            <div class="security-copy"><span aria-hidden="true">⌑</span><p><strong>Secure workspace creation</strong><small>Your business data stays isolated and protected.</small></p></div>
+            <button class="primary-button create-button" type="submit"><span>Create business</span><span aria-hidden="true">→</span></button>
+        </footer>
+    </form>
+</main>
+
+<script src="../../static/js/pages/business-setup.js" th:src="@{/js/pages/business-setup.js}" defer></script>
+</body>
+</html>

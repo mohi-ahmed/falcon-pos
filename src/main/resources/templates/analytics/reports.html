@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Reports | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/operations.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/analytics.css}">
+</head>
+<body class="dashboard-body analytics-ui">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('analytics')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Analytics & Reports')}"></header>
+        <main class="operations-page analytics-page analytics-reports-page">
+            <nav class="ops-breadcrumb" aria-label="Breadcrumb">
+                <a th:href="@{/owner/dashboard}">Dashboard</a>
+                <span>/</span>
+                <a th:href="@{/owner/analytics}">Analytics</a>
+                <span>/</span>
+                <strong>Reports</strong>
+            </nav>
+
+            <section class="ops-heading analytics-page-heading">
+                <div class="analytics-heading-copy">
+                    <span class="eyebrow">Reporting</span>
+                    <h1>Reports</h1>
+                    <p>Open the report you need, refine the scope, then print or export the result.</p>
+                </div>
+                <div class="ops-actions no-print">
+                    <a class="ops-btn analytics-back-btn" th:href="@{/owner/analytics}">
+                        <span aria-hidden="true">←</span>
+                        <span>Back to analytics</span>
+                    </a>
+                </div>
+            </section>
+
+            <section class="analytics-directory-summary" aria-label="Report directory summary">
+                <div>
+                    <span class="analytics-summary-icon" aria-hidden="true">▦</span>
+                    <div><strong>Report directory</strong><small>Customer, payment, expense, cashflow and expiry reporting</small></div>
+                </div>
+                <span class="analytics-directory-badge">PDF · Excel · CSV · Print</span>
+            </section>
+
+            <section class="analytics-report-groups" aria-label="Available reports">
+                <article class="ops-card analytics-report-group customer-payment">
+                    <div class="analytics-report-group-head">
+                        <div class="analytics-group-icon" aria-hidden="true">CP</div>
+                        <div class="analytics-group-copy">
+                            <span class="analytics-group-kicker">Receivables & collections</span>
+                            <h2>Customer &amp; Payment</h2>
+                            <p>Dues, collections, statements, payment channels and reversals.</p>
+                        </div>
+                        <span class="analytics-count-badge" th:text="|${#lists.size(customerPaymentReports)} reports|">10 reports</span>
+                    </div>
+                    <div class="analytics-report-links">
+                        <a th:each="report:${customerPaymentReports}" th:href="|/owner/analytics/reports/${report.path()}|">
+                            <span class="analytics-report-link-copy">
+                                <strong th:text="${report.title()}">Report</strong>
+                                <small>View report</small>
+                            </span>
+                            <span class="analytics-report-arrow" aria-hidden="true">→</span>
+                        </a>
+                    </div>
+                </article>
+
+                <article class="ops-card analytics-report-group expense-cashflow">
+                    <div class="analytics-report-group-head">
+                        <div class="analytics-group-icon" aria-hidden="true">CF</div>
+                        <div class="analytics-group-copy">
+                            <span class="analytics-group-kicker">Spend & cash movement</span>
+                            <h2>Expense &amp; Cashflow</h2>
+                            <p>Operating expense, cash outflow, refunds and inventory loss remain separate.</p>
+                        </div>
+                        <span class="analytics-count-badge" th:text="|${#lists.size(expenseCashflowReports)} reports|">7 reports</span>
+                    </div>
+                    <div class="analytics-report-links">
+                        <a th:each="report:${expenseCashflowReports}" th:href="|/owner/analytics/reports/${report.path()}|">
+                            <span class="analytics-report-link-copy">
+                                <strong th:text="${report.title()}">Report</strong>
+                                <small>View report</small>
+                            </span>
+                            <span class="analytics-report-arrow" aria-hidden="true">→</span>
+                        </a>
+                    </div>
+                </article>
+
+                <article class="ops-card analytics-report-group expiry">
+                    <div class="analytics-report-group-head">
+                        <div class="analytics-group-icon" aria-hidden="true">EX</div>
+                        <div class="analytics-group-copy">
+                            <span class="analytics-group-kicker">Expiry & stock risk</span>
+                            <h2>Expiry</h2>
+                            <p>Near-expiry stock, expired valuation, expiry loss and purchase returns.</p>
+                        </div>
+                        <span class="analytics-count-badge" th:text="|${#lists.size(expiryReports)} reports|">7 reports</span>
+                    </div>
+                    <div class="analytics-report-links">
+                        <a th:each="report:${expiryReports}" th:href="|/owner/analytics/reports/${report.path()}|">
+                            <span class="analytics-report-link-copy">
+                                <strong th:text="${report.title()}">Report</strong>
+                                <small>View report</small>
+                            </span>
+                            <span class="analytics-report-arrow" aria-hidden="true">→</span>
+                        </a>
+                    </div>
+                </article>
+            </section>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}"></script>
+</body>
+</html>

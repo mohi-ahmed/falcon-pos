@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Create Branch | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/create-branch.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('branches')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+    <div class="workspace">
+        <header class="topbar">
+            <button class="icon-button menu-button" type="button" data-sidebar-open aria-controls="dashboard-sidebar" aria-expanded="false">☰</button>
+            <div class="topbar-context"><small th:text="${setup.businessName}">Business</small><strong>Branch management</strong></div>
+            <div class="topbar-actions">
+                <a class="branch-switcher" th:href="@{/owner/branches/change}"><span class="branch-avatar branch-avatar-small" th:text="${#strings.length(setup.branchCode) > 3 ? #strings.substring(setup.branchCode, 0, 3) : setup.branchCode}">BR</span><span><small>Working in</small><strong th:text="${setup.branchName}">Main Branch</strong></span></a>
+                <div class="profile-menu">
+                    <button class="profile-trigger" type="button" data-profile-trigger aria-expanded="false" aria-controls="profile-dropdown"><span class="profile-avatar" th:text="${#strings.substring(setup.ownerName,0,1)}">O</span><span class="profile-copy"><strong th:text="${setup.ownerName}">Owner</strong><small>Owner</small></span><span>⌄</span></button>
+                    <div class="profile-dropdown" id="profile-dropdown" data-profile-dropdown hidden><div class="profile-summary"><strong th:text="${setup.ownerName}">Owner</strong><small>Primary owner account</small></div><form th:action="@{/sign-out}" method="post"><button class="dropdown-item sign-out" type="submit">Sign out</button></form></div>
+                </div>
+            </div>
+        </header>
+        <main class="branch-page">
+            <nav class="breadcrumb"><a th:href="@{/owner/branches}">Branches</a><span>/</span><strong>Create branch</strong></nav>
+            <section class="branch-page-heading"><div><span class="eyebrow">Branch management</span><h1>Create a new branch</h1><p>Add an authorized retail location under <strong th:text="${setup.businessName}">your business</strong>.</p></div></section>
+            <div class="success-banner" th:if="${successMessage}" role="status"><span>✓</span><strong th:text="${successMessage}">Branch created successfully</strong></div>
+            <div class="branch-create-layout">
+                <form class="branch-form-card" th:action="@{/owner/branches}" th:object="${branchRequest}" method="post" data-branch-form novalidate>
+                    <input type="hidden" th:field="*{idempotencyKey}">
+                    <section class="branch-form-section">
+                    <div class="form-card-heading"><div><span class="form-step">01</span><div><h2>General information</h2><p>Branch identity and contact information.</p></div></div><span class="required-note">* Required</span></div>
+                    <div class="form-grid">
+                        <div class="form-field" th:classappend="${#fields.hasErrors('name')} ? 'has-error'"><label for="name">Branch name *</label><input id="name" th:field="*{name}" maxlength="120" placeholder="Gulshan Branch" required><small class="field-error" th:errors="*{name}"></small></div>
+                        <div class="form-field" th:classappend="${#fields.hasErrors('code')} ? 'has-error'"><label for="code">Branch code *</label><input id="code" th:field="*{code}" maxlength="20" placeholder="GUL-01" data-uppercase required><small class="field-error" th:errors="*{code}"></small></div>
+                        <div class="form-field" th:classappend="${#fields.hasErrors('email')} ? 'has-error'"><label for="email">Branch email *</label><input id="email" type="email" th:field="*{email}" maxlength="160" placeholder="gulshan@falconmart.com" required><small class="field-error" th:errors="*{email}"></small></div>
+                        <div class="form-field" th:classappend="${#fields.hasErrors('phone')} ? 'has-error'"><label for="phone">Mobile number *</label><input id="phone" type="tel" th:field="*{phone}" maxlength="32" placeholder="+880 1XXXXXXXXX" required><small class="field-error" th:errors="*{phone}"></small></div>
+                    </div>
+                    </section>
+                    <section class="branch-form-section">
+                    <div class="form-card-heading compact"><div><span class="form-step">02</span><div><h2>Location</h2><p>Branch address and local operating context.</p></div></div></div>
+                    <div class="form-grid">
+                        <div class="form-field"><label for="country">Country *</label><select id="country" th:field="*{country}" data-country required><option value="">Select country</option><option value="BD">Bangladesh</option><option value="AE">United Arab Emirates</option><option value="SA">Saudi Arabia</option><option value="TR">Türkiye</option><option value="GB">United Kingdom</option><option value="US">United States</option></select><small class="field-error" th:errors="*{country}"></small></div>
+                        <div class="form-field"><label for="timeZone">Time zone *</label><select id="timeZone" th:field="*{timeZone}" data-timezone required><option value="">Select time zone</option><option value="Asia/Dhaka">Asia/Dhaka</option><option value="Asia/Dubai">Asia/Dubai</option><option value="Asia/Riyadh">Asia/Riyadh</option><option value="Europe/Istanbul">Europe/Istanbul</option><option value="Europe/London">Europe/London</option><option value="America/New_York">America/New York</option></select><small class="field-error" th:errors="*{timeZone}"></small></div>
+                        <div class="form-field form-field-full"><label for="address">Street address *</label><textarea id="address" th:field="*{address}" maxlength="240" rows="3" required></textarea><small class="field-error" th:errors="*{address}"></small></div>
+                        <div class="form-field"><label for="city">City *</label><input id="city" th:field="*{city}" maxlength="80" required><small class="field-error" th:errors="*{city}"></small></div>
+                        <div class="form-field"><label for="stateDivision">State or division</label><input id="stateDivision" th:field="*{stateDivision}" maxlength="80"><small class="field-error" th:errors="*{stateDivision}"></small></div>
+                        <div class="form-field"><label for="postalCode">Postal code</label><input id="postalCode" th:field="*{postalCode}" maxlength="16"><small class="field-error" th:errors="*{postalCode}"></small></div>
+                        <div class="form-field"><label for="vatBinNumber">VAT or BIN number</label><input id="vatBinNumber" th:field="*{vatBinNumber}" maxlength="40"><small class="field-error" th:errors="*{vatBinNumber}"></small></div>
+                    </div>
+                    </section>
+                    <section class="branch-form-section">
+                    <div class="form-card-heading compact"><div><span class="form-step">03</span><div><h2>Operational defaults</h2><p>Default values for this branch.</p></div></div></div>
+                    <div class="form-grid">
+                        <div class="form-field"><label for="currency">Currency *</label><select id="currency" th:field="*{currency}" data-currency required><option value="">Select currency</option><option value="BDT">BDT — Taka</option><option value="AED">AED — Dirham</option><option value="SAR">SAR — Riyal</option><option value="TRY">TRY — Lira</option><option value="GBP">GBP — Pound</option><option value="USD">USD — Dollar</option></select><small class="field-error" th:errors="*{currency}"></small></div>
+                        <div class="form-field"><label for="defaultTaxRate">Default tax rate</label><input id="defaultTaxRate" type="number" th:field="*{defaultTaxRate}" min="0" max="100" step="0.01" placeholder="0.00"><small class="field-error" th:errors="*{defaultTaxRate}"></small></div>
+                        <div class="form-field"><label for="lowStockAlertQuantity">Low-stock alert *</label><input id="lowStockAlertQuantity" type="number" th:field="*{lowStockAlertQuantity}" min="0" max="999999" required><small class="field-error" th:errors="*{lowStockAlertQuantity}"></small></div>
+                        <div class="form-field"><label for="recordsPerPage">Records per page *</label><select id="recordsPerPage" th:field="*{recordsPerPage}" required><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select><small class="field-error" th:errors="*{recordsPerPage}"></small></div>
+                        <div class="form-field form-field-full"><label for="receiptFooter">Receipt footer</label><textarea id="receiptFooter" th:field="*{receiptFooter}" maxlength="240" rows="3" data-character-source></textarea><div class="textarea-meta"><small>Appears on branch receipts.</small><small><span data-character-count>0</span>/240</small></div><small class="field-error" th:errors="*{receiptFooter}"></small></div>
+                    </div>
+                    </section>
+                    <section class="branch-form-section post-create-section" aria-labelledby="post-create-settings-title">
+                    <div class="form-card-heading compact"><div><span class="form-step">04</span><div><h2 id="post-create-settings-title">Configure after branch creation</h2><p>These operational settings become available after the branch is created and selected as the active branch.</p></div></div><span class="post-create-badge">Set up later</span></div>
+                    <div class="post-create-summary" aria-label="Settings available after branch creation">
+                        <div class="post-create-item"><span class="post-create-icon" aria-hidden="true">01</span><div><strong>POS &amp; cashier</strong><p>Default cashier, Draft / Held edit window, page after sale and POS sound effects.</p></div></div>
+                        <div class="post-create-item"><span class="post-create-icon" aria-hidden="true">02</span><div><strong>Receipt &amp; printing</strong><p>Receipt printer and automatic receipt printing.</p></div></div>
+                        <div class="post-create-item"><span class="post-create-icon" aria-hidden="true">03</span><div><strong>Branch operations</strong><p>Payment methods, printers, registers and cash locations.</p></div></div>
+                    </div>
+                    <div class="post-create-note"><span class="post-create-note-icon" aria-hidden="true">✓</span><p><strong>Next step:</strong> create the branch, open its Details page, choose <strong>Use this branch</strong>, then configure the remaining options from Branch Settings.</p></div>
+                    </section>
+                    <div class="form-actions branch-action-card"><a class="cancel-button" th:href="@{/owner/branches}">Cancel</a><button class="create-button" type="submit" data-submit-button><span data-submit-label>Create branch</span><span>→</span></button></div>
+                </form>
+                <aside class="branch-side-panel" aria-labelledby="branch-context-title"><div class="side-panel-icon" aria-hidden="true">◆</div><span class="eyebrow">Branch context</span><h2 id="branch-context-title">This location has its own operational context.</h2><p>New inventory, transactions and cash activity use the selected active branch.</p><ul class="branch-rule-list"><li><span>✓</span><span>Unique code within this business</span></li><li><span>✓</span><span>Owner and business context protected</span></li><li><span>✓</span><span>Duplicate submission prevented</span></li><li><span>✓</span><span>Creation recorded in audit history</span></li></ul></aside>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script>
+<script th:src="@{/js/pages/create-branch.js}" defer></script>
+</body>
+</html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-overview.css}">
+</head>
+<body class="dashboard-body dashboard-overview-ui">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('dashboard')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Dashboard')}"></header>
+
+        <main class="dashboard-overview" id="main-content"
+              th:with="currency=${dashboard.context.activeBranch.currency}">
+            <section class="dashboard-hero" aria-labelledby="dashboard-title">
+                <div class="dashboard-hero-copy">
+                    <div class="dashboard-hero-eyebrow">
+                        <span class="live-dot" aria-hidden="true"></span>
+                        <span th:text="${dashboard.context.activeBranch.branchName}">Main Branch</span>
+                        <span class="hero-separator">·</span>
+                        <span th:text="${dashboard.context.currentRole}">Primary Owner</span>
+                    </div>
+                    <h1 id="dashboard-title">Good to see you, <span th:text="${dashboard.context.currentUser}">User</span>.</h1>
+                    <p>Here is your business snapshot for <strong th:text="${dashboard.reportingPeriod.label}">Today</strong>.</p>
+                </div>
+                <div class="dashboard-refresh-meta" title="Dashboard values are loaded from the current branch">
+                    <span class="refresh-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 5v6h-6"/></svg>
+                    </span>
+                    <span><small>Last refreshed</small><time data-refreshed-at th:attr="datetime=${dashboard.refreshedAt}" th:text="${dashboard.refreshedAt}">Now</time></span>
+                </div>
+            </section>
+
+            <section class="period-bar" aria-label="Dashboard reporting period">
+                <form method="get" th:action="@{/owner/dashboard}" class="period-form">
+                    <div class="period-presets" role="group" aria-label="Preset reporting periods">
+                        <button type="submit" name="period" value="TODAY" th:classappend="${dashboard.reportingPeriod.period.name() == 'TODAY' ? ' is-active' : ''}">Today</button>
+                        <button type="submit" name="period" value="YESTERDAY" th:classappend="${dashboard.reportingPeriod.period.name() == 'YESTERDAY' ? ' is-active' : ''}">Yesterday</button>
+                        <button type="submit" name="period" value="LAST_7_DAYS" th:classappend="${dashboard.reportingPeriod.period.name() == 'LAST_7_DAYS' ? ' is-active' : ''}">7 days</button>
+                        <button type="submit" name="period" value="LAST_30_DAYS" th:classappend="${dashboard.reportingPeriod.period.name() == 'LAST_30_DAYS' ? ' is-active' : ''}">30 days</button>
+                    </div>
+                    <div class="month-control" th:classappend="${dashboard.reportingPeriod.period.name() == 'MONTH' ? ' is-active' : ''}">
+                        <label for="dashboardMonth">Month</label>
+                        <input id="dashboardMonth" name="month" type="month" th:value="${dashboard.reportingPeriod.selectedMonth}">
+                        <button class="month-apply" type="submit" name="period" value="MONTH">View</button>
+                    </div>
+                </form>
+                <div class="period-context">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z"/></svg>
+                    <span th:text="|${#temporals.format(dashboard.reportingPeriod.from,'dd MMM yyyy')} – ${#temporals.format(dashboard.reportingPeriod.to,'dd MMM yyyy')}|">Date range</span>
+                </div>
+            </section>
+
+            <section class="dashboard-kpi-grid" th:if="${dashboard.access.financial and dashboard.financial != null}" aria-label="Financial overview">
+                <article class="dashboard-kpi kpi-primary">
+                    <div class="kpi-heading"><span>Net sales</span><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 17 9 12l4 3 7-8M16 7h4v4"/></svg></span></div>
+                    <strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.financial.netSales,1,'COMMA',2,'POINT')}|">BDT 0.00</strong>
+                    <div class="kpi-foot" th:if="${dashboard.sales != null}">
+                        <span th:classappend="${dashboard.sales.todayVsYesterdayPercent.signum() >= 0} ? ' is-positive' : ' is-negative'">
+                            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 12l6-6 6 6"/></svg>
+                            <span th:text="|${#numbers.formatDecimal(dashboard.sales.todayVsYesterdayPercent.abs(),1,'COMMA',1,'POINT')}%|">0%</span>
+                        </span>
+                        <small>today vs yesterday</small>
+                    </div>
+                    <div class="kpi-foot" th:unless="${dashboard.sales != null}"><small>After returns and discounts</small></div>
+                </article>
+
+                <article class="dashboard-kpi">
+                    <div class="kpi-heading"><span>Gross profit</span><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M5 19V9M12 19V5M19 19v-7"/></svg></span></div>
+                    <strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.financial.grossProfit,1,'COMMA',2,'POINT')}|">BDT 0.00</strong>
+                    <div class="kpi-foot"><small>Net sales less COGS</small></div>
+                </article>
+
+                <article class="dashboard-kpi" th:classappend="${dashboard.financial.netProfit.signum() < 0} ? ' is-loss' : ''">
+                    <div class="kpi-heading"><span>Net profit</span><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19h16M6 15l4-4 3 2 5-6"/></svg></span></div>
+                    <strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.financial.netProfit,1,'COMMA',2,'POINT')}|">BDT 0.00</strong>
+                    <div class="kpi-foot"><small>After expense and inventory loss</small></div>
+                </article>
+
+                <article class="dashboard-kpi">
+                    <div class="kpi-heading"><span>Cash in hand</span><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M7 10h10M8 15h3"/></svg></span></div>
+                    <strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.financial.availableCashBalance,1,'COMMA',2,'POINT')}|">BDT 0.00</strong>
+                    <div class="kpi-foot"><small>Current branch cash balance</small></div>
+                </article>
+            </section>
+
+            <section class="dashboard-kpi-grid compact" th:unless="${dashboard.access.financial and dashboard.financial != null}" aria-label="Operational overview">
+                <article class="dashboard-kpi kpi-primary" th:if="${dashboard.sales != null}">
+                    <div class="kpi-heading"><span>Today net sales</span><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 17 9 12l4 3 7-8M16 7h4v4"/></svg></span></div>
+                    <strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.sales.todayNetSales,1,'COMMA',2,'POINT')}|">BDT 0.00</strong>
+                    <div class="kpi-foot"><small th:text="|${dashboard.sales.confirmedInvoices} confirmed invoices|">0 confirmed invoices</small></div>
+                </article>
+                <article class="dashboard-kpi" th:if="${dashboard.inventory != null}">
+                    <div class="kpi-heading"><span>Stock value</span><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none"><path d="m4 7 8-4 8 4-8 4-8-4Zm0 0v10l8 4 8-4V7M12 11v10"/></svg></span></div>
+                    <strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.inventory.currentStockValue,1,'COMMA',2,'POINT')}|">BDT 0.00</strong>
+                    <div class="kpi-foot"><small th:text="|${dashboard.inventory.lowStockProducts} low-stock products|">0 low-stock products</small></div>
+                </article>
+                <article class="dashboard-kpi" th:if="${dashboard.customer != null}">
+                    <div class="kpi-heading"><span>Customer due</span><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM17 8h4M19 6v4"/></svg></span></div>
+                    <strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.customer.outstandingDue,1,'COMMA',2,'POINT')}|">BDT 0.00</strong>
+                    <div class="kpi-foot"><small th:text="|${dashboard.customer.overdueInvoiceCount} overdue invoices|">0 overdue</small></div>
+                </article>
+                <article class="dashboard-kpi" th:if="${dashboard.cash != null}">
+                    <div class="kpi-heading"><span>Cashbook balance</span><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h4M15 13h2"/></svg></span></div>
+                    <strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.cash.cashbookClosingBalance,1,'COMMA',2,'POINT')}|">BDT 0.00</strong>
+                    <div class="kpi-foot"><small th:text="|${dashboard.cash.activeShifts} active shifts|">0 active shifts</small></div>
+                </article>
+            </section>
+
+            <div class="dashboard-priority-grid">
+                <section class="dashboard-card sales-overview-card" th:if="${dashboard.access.sales or dashboard.access.expense}" aria-labelledby="sales-overview-title">
+                    <header class="dashboard-card-header">
+                        <div><span class="section-kicker">Performance</span><h2 id="sales-overview-title">Sales overview</h2><p>Net sales and operating expense across the selected period.</p></div>
+                        <a th:if="${dashboard.access.analytics}" th:href="@{/owner/analytics}" class="text-link">Full analytics <span class="link-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M14 7l5 5-5 5"/></svg></span></a>
+                    </header>
+                    <div class="sales-chart-wrap" th:attr="data-chart-currency=${currency}">
+                        <canvas id="dashboardSalesChart" height="280" aria-label="Sales and operating expense trend chart"></canvas>
+                        <div class="chart-empty" data-chart-empty hidden>
+                            <span class="empty-chart-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 18V9M10 18V5M16 18v-7M22 18H2"/></svg></span>
+                            <strong>No activity in this period</strong><small>Sales and expense activity will appear here after transactions are posted.</small>
+                        </div>
+                        <div class="chart-tooltip" data-chart-tooltip hidden></div>
+                    </div>
+                    <footer class="chart-footer">
+                        <div class="chart-legend">
+                            <span th:if="${dashboard.access.sales}"><i class="legend-sales"></i>Net sales</span>
+                            <span th:if="${dashboard.access.expense}"><i class="legend-expense"></i>Operating expense</span>
+                        </div>
+                        <div class="chart-footer-meta"><span data-chart-mode>Trend</span><span class="chart-currency" th:text="${currency}">BDT</span></div>
+                    </footer>
+                    <div data-dashboard-series hidden>
+                        <span th:each="point : ${dashboard.chart}"
+                              th:attr="data-date=${point.date},data-sales=${point.netSales},data-expense=${point.operatingExpense}"></span>
+                    </div>
+                </section>
+
+                <aside class="dashboard-card attention-card" aria-labelledby="attention-title">
+                    <header class="dashboard-card-header compact-header">
+                        <div><span class="section-kicker">Needs attention</span><h2 id="attention-title">Operational alerts</h2></div>
+                        <span class="alert-total" th:if="${!#lists.isEmpty(dashboard.alerts)}" th:text="${#lists.size(dashboard.alerts)}">0</span>
+                    </header>
+                    <div class="alert-list" th:if="${!#lists.isEmpty(dashboard.alerts)}">
+                        <a class="alert-row" th:each="alert : ${dashboard.alerts}" th:href="${alert.targetUrl}" th:classappend="${' severity-' + alert.severity + (alert.targetUrl == null ? ' is-static' : '')}" th:attr="aria-disabled=${alert.targetUrl == null}">
+                            <span class="alert-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 8v5M12 17h.01M10.3 4.8 2.7 18a1.4 1.4 0 0 0 1.2 2h16.2a1.4 1.4 0 0 0 1.2-2L13.7 4.8a2 2 0 0 0-3.4 0Z"/></svg></span>
+                            <span class="alert-copy"><strong th:text="${alert.label}">Alert</strong><small th:text="${alert.targetUrl != null ? 'Open details' : 'View access required'}">Open details</small></span>
+                            <span class="alert-count" th:text="${alert.count}">0</span>
+                            <span class="row-arrow" th:if="${alert.targetUrl != null}" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M14 7l5 5-5 5"/></svg></span>
+                        </a>
+                    </div>
+                    <div class="all-clear" th:if="${#lists.isEmpty(dashboard.alerts)}">
+                        <span><svg viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4L19 6"/></svg></span>
+                        <strong>Everything looks clear</strong>
+                        <p>No operational alerts need your attention right now.</p>
+                    </div>
+                </aside>
+            </div>
+
+            <section class="dashboard-card quick-access-card" th:if="${!#lists.isEmpty(dashboard.quickAccess)}" aria-labelledby="quick-access-title">
+                <header class="dashboard-card-header quick-header">
+                    <div><span class="section-kicker">Shortcuts</span><h2 id="quick-access-title">Quick access</h2></div>
+                    <p>Jump into frequent tasks.</p>
+                </header>
+                <div class="quick-access-grid">
+                    <a class="quick-action" th:each="item : ${dashboard.quickAccess}" th:href="${item.targetUrl}" th:attr="data-quick-code=${item.code}">
+                        <span class="quick-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14"/></svg>
+                        </span>
+                        <span><strong th:text="${item.label}">Action</strong><small>Open</small></span>
+                        <span class="quick-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M9 7h8v8"/></svg></span>
+                    </a>
+                </div>
+            </section>
+
+            <section class="dashboard-section" th:if="${dashboard.sales != null or dashboard.inventory != null or dashboard.purchase != null or dashboard.customer != null or dashboard.cash != null}">
+                <div class="section-heading-row">
+                    <div><span class="section-kicker">Live operations</span><h2>Business health</h2></div>
+                    <span class="branch-chip"><span class="live-dot"></span><span th:text="${dashboard.context.activeBranch.branchName}">Branch</span></span>
+                </div>
+
+                <div class="operations-card-grid">
+                    <article class="dashboard-card metric-panel" th:if="${dashboard.sales != null}">
+                        <header class="panel-heading"><span class="panel-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 17 9 12l4 3 7-8M16 7h4v4"/></svg></span><div><h3>Sales pulse</h3><p>Current selling activity</p></div><a sec:authorize="hasRole('OWNER') or hasAuthority('SELL_ACCESS')" th:href="@{/owner/sales(branchId=${setup.branchId})}">View</a></header>
+                        <div class="metric-list">
+                            <div><span>Confirmed invoices</span><strong th:text="${dashboard.sales.confirmedInvoices}">0</strong></div>
+                            <div><span>Items sold</span><strong th:text="${#numbers.formatDecimal(dashboard.sales.totalItemsSold,1,'COMMA',2,'POINT')}">0</strong></div>
+                            <div><span>Average invoice</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.sales.averageInvoiceValue,1,'COMMA',2,'POINT')}|">0</strong></div>
+                            <div><span>Held sales</span><strong th:text="${dashboard.sales.heldSales}">0</strong></div>
+                            <div><span>Sales returns</span><strong th:text="${dashboard.sales.confirmedSalesReturns}">0</strong></div>
+                            <div><span>Voided / reversed</span><strong th:text="${dashboard.sales.voidedOrReversedTransactions}">0</strong></div>
+                        </div>
+                    </article>
+
+                    <article class="dashboard-card metric-panel" th:if="${dashboard.inventory != null}">
+                        <header class="panel-heading"><span class="panel-icon"><svg viewBox="0 0 24 24" fill="none"><path d="m4 7 8-4 8 4-8 4-8-4Zm0 0v10l8 4 8-4V7M12 11v10"/></svg></span><div><h3>Inventory health</h3><p>Stock, expiry and movements</p></div><a sec:authorize="hasRole('OWNER') or hasAuthority('INVENTORY_VIEW')" th:href="@{/owner/inventory}">View</a></header>
+                        <div class="metric-list">
+                            <div><span>Sellable quantity</span><strong th:text="${#numbers.formatDecimal(dashboard.inventory.sellableStockQuantity,1,'COMMA',2,'POINT')}">0</strong></div>
+                            <div><span>Low stock products</span><strong th:classappend="${dashboard.inventory.lowStockProducts > 0} ? ' warning-text' : ''" th:text="${dashboard.inventory.lowStockProducts}">0</strong></div>
+                            <div><span>Out of stock</span><strong th:classappend="${dashboard.inventory.outOfStockProducts > 0} ? ' danger-text' : ''" th:text="${dashboard.inventory.outOfStockProducts}">0</strong></div>
+                            <div><span>Expiring in 7 days</span><strong th:classappend="${dashboard.inventory.expiringWithin7Days > 0} ? ' warning-text' : ''" th:text="${dashboard.inventory.expiringWithin7Days}">0</strong></div>
+                            <div><span>Expired quantity</span><strong th:classappend="${dashboard.inventory.expiredStockQuantity.signum() > 0} ? ' danger-text' : ''" th:text="${#numbers.formatDecimal(dashboard.inventory.expiredStockQuantity,1,'COMMA',2,'POINT')}">0</strong></div>
+                            <div><span>Pending transfers</span><strong th:text="${dashboard.inventory.pendingBranchTransfers}">0</strong></div>
+                        </div>
+                    </article>
+
+                    <article class="dashboard-card metric-panel" th:if="${dashboard.purchase != null}">
+                        <header class="panel-heading"><span class="panel-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6h2l2 10h10l2-7H7M9 20h.01M17 20h.01"/></svg></span><div><h3>Purchases &amp; suppliers</h3><p>Procurement and payable status</p></div><a sec:authorize="hasRole('OWNER') or hasAuthority('PURCHASE_ACCESS')" th:href="@{/owner/purchases}">View</a></header>
+                        <div class="metric-list">
+                            <div><span>Today purchases</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.purchase.todayConfirmedPurchases,1,'COMMA',2,'POINT')}|">0</strong></div>
+                            <div><span>Period purchases</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.purchase.periodConfirmedPurchases,1,'COMMA',2,'POINT')}|">0</strong></div>
+                            <div><span>Supplier outstanding</span><strong th:classappend="${dashboard.purchase.supplierOutstandingDue.signum() > 0} ? ' warning-text' : ''" th:text="|${currency} ${#numbers.formatDecimal(dashboard.purchase.supplierOutstandingDue,1,'COMMA',2,'POINT')}|">0</strong></div>
+                            <div><span>Due invoices</span><strong th:text="${dashboard.purchase.duePurchaseInvoices}">0</strong></div>
+                            <div><span>Pending returns</span><strong th:text="${dashboard.purchase.pendingPurchaseReturns}">0</strong></div>
+                            <div><span>Refund / credit pending</span><strong th:text="${dashboard.purchase.pendingSupplierRefundOrCredits}">0</strong></div>
+                        </div>
+                    </article>
+
+                    <article class="dashboard-card metric-panel" th:if="${dashboard.customer != null}">
+                        <header class="panel-heading"><span class="panel-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM17 8h4M19 6v4"/></svg></span><div><h3>Customer receivables</h3><p>Due collection and overdue balance</p></div><a sec:authorize="hasRole('OWNER') or hasAuthority('CUSTOMER_ACCESS')" th:href="@{/owner/customers/due-invoices}">View</a></header>
+                        <div class="metric-list">
+                            <div><span>Outstanding due</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.customer.outstandingDue,1,'COMMA',2,'POINT')}|">0</strong></div>
+                            <div><span>Received due payments</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.customer.receivedDuePayments,1,'COMMA',2,'POINT')}|">0</strong></div>
+                            <div><span>Overdue amount</span><strong th:classappend="${dashboard.customer.overdueAmount.signum() > 0} ? ' danger-text' : ''" th:text="|${currency} ${#numbers.formatDecimal(dashboard.customer.overdueAmount,1,'COMMA',2,'POINT')}|">0</strong></div>
+                            <div><span>Overdue invoices</span><strong th:text="${dashboard.customer.overdueInvoiceCount}">0</strong></div>
+                        </div>
+                    </article>
+
+                    <article class="dashboard-card metric-panel cash-panel" th:if="${dashboard.cash != null}">
+                        <header class="panel-heading"><span class="panel-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h4M15 13h2"/></svg></span><div><h3>Cash &amp; shifts</h3><p>Register and branch cash position</p></div><a sec:authorize="hasRole('OWNER') or hasAuthority('CASH_MANAGEMENT_ACCESS')" th:href="@{/owner/cash-management}">View</a></header>
+                        <div class="metric-list">
+                            <div><span>Branch consolidated cash</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.cash.branchConsolidatedCash,1,'COMMA',2,'POINT')}|">0</strong></div>
+                            <div><span>Cashbook closing balance</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.cash.cashbookClosingBalance,1,'COMMA',2,'POINT')}|">0</strong></div>
+                            <div><span>Active shifts</span><strong th:text="${dashboard.cash.activeShifts}">0</strong></div>
+                            <div><span>Awaiting closure</span><strong th:text="${dashboard.cash.shiftsAwaitingClosure}">0</strong></div>
+                            <div><span>Unresolved variance</span><strong th:classappend="${dashboard.cash.unresolvedShortageOrExcess > 0} ? ' danger-text' : ''" th:text="${dashboard.cash.unresolvedShortageOrExcess}">0</strong></div>
+                        </div>
+                    </article>
+
+                    <article class="dashboard-card metric-panel" th:if="${dashboard.payment != null}">
+                        <header class="panel-heading"><span class="panel-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/></svg></span><div><h3>Payments</h3><p>Collection and payment status</p></div><a sec:authorize="hasRole('OWNER') or hasAnyAuthority('PAYMENT_VIEW','PAYMENT_VIEW_CONSOLIDATED')" th:href="@{/owner/payments}">View</a></header>
+                        <div class="metric-list">
+                            <div><span>Customer due collected</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.payment.customerDueCollected,1,'COMMA',2,'POINT')}|">0</strong></div>
+                            <div><span>Supplier due paid</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.payment.supplierDuePaid,1,'COMMA',2,'POINT')}|">0</strong></div>
+                            <div><span>Cash receipts</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.payment.cashReceipts,1,'COMMA',2,'POINT')}|">0</strong></div>
+                            <div><span>Card collections</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.payment.cardCollections,1,'COMMA',2,'POINT')}|">0</strong></div>
+                            <div><span>Mobile banking</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.payment.mobileBankingCollections,1,'COMMA',2,'POINT')}|">0</strong></div>
+                            <div><span>Failed payments</span><strong th:classappend="${dashboard.payment.failedPayments > 0} ? ' danger-text' : ''" th:text="${dashboard.payment.failedPayments}">0</strong></div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="dashboard-section analytics-rankings" th:if="${dashboard.access.analytics}">
+                <div class="section-heading-row">
+                    <div><span class="section-kicker">Business insights</span><h2>What is driving your business</h2></div>
+                    <a class="text-link" th:href="@{/owner/analytics}">Explore analytics <span class="link-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M14 7l5 5-5 5"/></svg></span></a>
+                </div>
+                <div class="rankings-grid">
+                    <article class="dashboard-card ranking-card">
+                        <header><div><h3>Top products</h3><p>Best sellers in this period</p></div><span class="rank-badge">Top 5</span></header>
+                        <div class="ranking-list" th:if="${!#lists.isEmpty(dashboard.topProducts)}">
+                            <div class="ranking-row" th:each="item,stat : ${dashboard.topProducts}">
+                                <span class="rank-number" th:text="${stat.count}">1</span>
+                                <span class="rank-copy"><strong th:text="${item.label}">Product</strong><small th:text="${item.secondaryLabel}">Variant</small></span>
+                                <span class="rank-value"><strong th:text="|${currency} ${#numbers.formatDecimal(item.value,1,'COMMA',2,'POINT')}|">0</strong><small th:text="|${#numbers.formatDecimal(item.quantity,1,'COMMA',2,'POINT')} sold|">0 sold</small></span>
+                            </div>
+                        </div>
+                        <div class="mini-empty" th:if="${#lists.isEmpty(dashboard.topProducts)}">No product sales for this period.</div>
+                    </article>
+
+                    <article class="dashboard-card ranking-card">
+                        <header><div><h3>Top customers</h3><p>Highest-value customers</p></div><span class="rank-badge">Top 5</span></header>
+                        <div class="ranking-list" th:if="${!#lists.isEmpty(dashboard.topCustomers)}">
+                            <div class="ranking-row" th:each="item,stat : ${dashboard.topCustomers}">
+                                <span class="rank-number" th:text="${stat.count}">1</span>
+                                <span class="rank-copy"><strong th:text="${item.label}">Customer</strong><small th:text="${item.secondaryLabel}">Customer</small></span>
+                                <span class="rank-value"><strong th:text="|${currency} ${#numbers.formatDecimal(item.value,1,'COMMA',2,'POINT')}|">0</strong><small>net sales</small></span>
+                            </div>
+                        </div>
+                        <div class="mini-empty" th:if="${#lists.isEmpty(dashboard.topCustomers)}">No customer ranking data for this period.</div>
+                    </article>
+
+                    <article class="dashboard-card ranking-card">
+                        <header><div><h3>Leading suppliers</h3><p>Purchase value by supplier</p></div><span class="rank-badge">Top 5</span></header>
+                        <div class="ranking-list" th:if="${!#lists.isEmpty(dashboard.leadingSuppliers)}">
+                            <div class="ranking-row" th:each="item,stat : ${dashboard.leadingSuppliers}">
+                                <span class="rank-number" th:text="${stat.count}">1</span>
+                                <span class="rank-copy"><strong th:text="${item.label}">Supplier</strong><small th:text="${item.secondaryLabel}">Supplier</small></span>
+                                <span class="rank-value"><strong th:text="|${currency} ${#numbers.formatDecimal(item.value,1,'COMMA',2,'POINT')}|">0</strong><small>purchases</small></span>
+                            </div>
+                        </div>
+                        <div class="mini-empty" th:if="${#lists.isEmpty(dashboard.leadingSuppliers)}">No supplier ranking data for this period.</div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="dashboard-bottom-grid" th:if="${dashboard.access.financial or !#lists.isEmpty(dashboard.paymentMix) or (dashboard.cash != null and !#lists.isEmpty(dashboard.cash.registerExpectedCash))}">
+                <article class="dashboard-card financial-breakdown" th:if="${dashboard.access.financial and dashboard.financial != null}">
+                    <header class="dashboard-card-header compact-header"><div><span class="section-kicker">Breakdown</span><h2>Financial details</h2></div></header>
+                    <div class="financial-grid">
+                        <div><span>Gross sales</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.financial.grossSales,1,'COMMA',2,'POINT')}|">0</strong></div>
+                        <div><span>Sales returns</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.financial.salesReturns,1,'COMMA',2,'POINT')}|">0</strong></div>
+                        <div><span>Discounts</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.financial.discounts,1,'COMMA',2,'POINT')}|">0</strong></div>
+                        <div><span>COGS</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.financial.cogs,1,'COMMA',2,'POINT')}|">0</strong></div>
+                        <div><span>Operating expense</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.financial.operatingExpense,1,'COMMA',2,'POINT')}|">0</strong></div>
+                        <div><span>Inventory loss</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.financial.inventoryLoss,1,'COMMA',2,'POINT')}|">0</strong></div>
+                        <div><span>Customer due</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.financial.customerDue,1,'COMMA',2,'POINT')}|">0</strong></div>
+                        <div><span>Supplier due</span><strong th:text="|${currency} ${#numbers.formatDecimal(dashboard.financial.supplierDue,1,'COMMA',2,'POINT')}|">0</strong></div>
+                    </div>
+                </article>
+
+                <article class="dashboard-card payment-mix-card" th:if="${!#lists.isEmpty(dashboard.paymentMix)}">
+                    <header class="dashboard-card-header compact-header"><div><span class="section-kicker">Collections</span><h2>Payment mix</h2></div></header>
+                    <div class="payment-mix-layout">
+                        <div class="payment-donut" data-payment-donut><div><strong data-payment-total>0</strong><small>Total</small></div></div>
+                        <div class="payment-mix-list" data-payment-mix>
+                            <div th:each="item : ${dashboard.paymentMix}" th:attr="data-label=${item.label},data-amount=${item.amount},data-cash=${item.cash}">
+                                <span><i></i><span th:text="${item.label}">Cash</span></span><strong th:text="|${currency} ${#numbers.formatDecimal(item.amount,1,'COMMA',2,'POINT')}|">0</strong>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="dashboard-card shifts-card" th:if="${dashboard.cash != null and !#lists.isEmpty(dashboard.cash.registerExpectedCash)}">
+                    <header class="dashboard-card-header compact-header"><div><span class="section-kicker">Registers</span><h2>Active shift cash</h2></div><a class="text-link" th:href="@{/owner/cash-management/shifts}">View shifts</a></header>
+                    <div class="shift-list">
+                        <div class="shift-row" th:each="shift : ${dashboard.cash.registerExpectedCash}">
+                            <span class="shift-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h4"/></svg></span>
+                            <span class="shift-copy"><strong th:text="${shift.shiftCode}">Shift</strong><small th:text="|Register #${shift.registerId}|">Register</small></span>
+                            <strong class="shift-cash" th:text="|${currency} ${#numbers.formatDecimal(shift.expectedCash,1,'COMMA',2,'POINT')}|">0</strong>
+                        </div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="dashboard-no-access dashboard-card"
+                     th:if="${!dashboard.access.financial and !dashboard.access.sales and !dashboard.access.purchase and !dashboard.access.inventory and !dashboard.access.payment and !dashboard.access.expense and !dashboard.access.cash and !dashboard.access.customer and #lists.isEmpty(dashboard.quickAccess)}">
+                <span class="no-access-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>
+                <div><h2>No dashboard data is assigned to this role</h2><p>Your account is active, but your user group does not currently include access to dashboard modules or shortcuts. Ask the owner to review your permissions.</p></div>
+            </section>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script>
+<script th:src="@{/js/pages/dashboard-overview.js}" defer></script>
+</body>
+</html>

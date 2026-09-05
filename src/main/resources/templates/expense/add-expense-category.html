@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${editMode ? 'Edit Expense Category | Falcon POS' : 'Add Expense Category | Falcon POS'}">Expense Category | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}"><link rel="stylesheet" th:href="@{/css/components.css}"><link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}"><link rel="stylesheet" th:href="@{/css/pages/customer-payment-sell.css}"><link rel="stylesheet" th:href="@{/css/pages/expense-management.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('expenses')}"></aside><button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+    <div class="workspace"><header th:replace="~{fragments/settings-shell :: topbar('Expenses')}"></header>
+        <main class="module-page expense-page">
+            <nav class="module-breadcrumb"><a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><a th:href="@{/owner/expense-categories}">Expense Categories</a><span>/</span><strong th:text="${editMode ? 'Edit Category' : 'Add Category'}">Add Category</strong></nav>
+            <section class="module-hero"><div><span class="module-eyebrow">Expense Categories</span><h1 th:text="${editMode ? 'Edit expense category' : 'Create expense category'}">Create expense category</h1><p>Use categories to organize Operating Expenses. Recoverable deposits, purchases, payments, sales returns, inventory changes and cash transfers are recorded separately.</p></div><div class="module-actions"><a class="module-btn" th:href="@{/owner/expense-categories}">Category List</a><a class="module-btn" th:href="@{/owner/expenses/add}">Add Expense</a></div></section>
+            <div class="module-alert" th:if="${successMessage}"><span>✓</span><span th:text="${successMessage}">Success</span></div><div class="module-alert error" th:if="${errorMessage}"><span>!</span><span th:text="${errorMessage}">Error</span></div>
+
+            <div class="category-form-layout">
+                <section class="module-card">
+                    <div class="module-card-head"><div><h2 th:text="${editMode ? 'Category information' : 'New category'}">New category</h2><p>Build a clean hierarchy such as Utilities → Electricity, Gas and Internet.</p></div><span class="module-status active" th:if="${editMode and category.active}">Active</span><span class="module-status archived" th:if="${editMode and !category.active}">Inactive</span></div>
+                    <div class="module-card-body">
+                        <form th:action="${editMode ? '/owner/expense-categories/' + category.id : '/owner/expense-categories'}" th:object="${categoryRequest}" method="post" data-category-form>
+                            <div class="form-grid">
+                                <div class="field"><label>Name *</label><input th:field="*{name}" maxlength="120" placeholder="e.g. Electricity & Utilities" required data-category-name><small class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Enter a category name</small></div>
+                                <div class="field"><label>Slug</label><input th:field="*{slug}" maxlength="140" placeholder="electricity-utilities" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" data-category-slug><small class="field-error" th:if="${#fields.hasErrors('slug')}" th:errors="*{slug}">Use lowercase letters, numbers, and hyphens only</small><small>Leave blank to generate the slug automatically from the category name.</small></div>
+                                <div class="field"><label>Parent category</label><select th:field="*{parentCategoryId}"><option value="">No parent · Top level</option><option th:each="parent : ${categories}" th:if="${!editMode or parent.id != category.id}" th:value="${parent.id}" th:text="${parent.parentCategory != null ? parent.parentCategory + ' / ' + parent.name : parent.name}">Parent</option></select></div>
+                                <div class="field"><label>Display order</label><input type="number" min="0" th:field="*{displayOrder}" placeholder="0"><small class="field-error" th:if="${#fields.hasErrors('displayOrder')}" th:errors="*{displayOrder}">Display order must be zero or greater</small></div>
+                                <div class="field span-2"><label>Description</label><textarea th:field="*{description}" maxlength="1000" placeholder="What kinds of genuine operating costs belong in this category?"></textarea></div>
+                                <div class="field span-2"><label>Status</label><div class="segmented-status"><label><input type="radio" th:field="*{active}" value="true"><span>Active</span></label><label><input type="radio" th:field="*{active}" value="false"><span>Inactive</span></label></div><small>Inactive categories remain visible on historical expenses but cannot be selected for new Operating Expense entries.</small></div>
+                            </div>
+                            <div class="expense-form-actions"><a class="module-btn" th:href="@{/owner/expense-categories}">Cancel</a><button class="module-btn primary" type="submit" th:text="${editMode ? 'Update Category' : 'Save Category'}">Save Category</button></div>
+                        </form>
+                    </div>
+                </section>
+
+                <aside class="module-stack">
+                    <section class="module-card"><div class="module-card-head"><div><h3>Good category examples</h3><p>Operational cost groups that belong in Expense.</p></div></div><div class="module-card-body"><div class="example-list"><span>Employee Salary</span><span>Store Rent</span><span>Electricity & Utilities</span><span>Transportation</span><span>Cleaning Supplies</span><span>Equipment Repair</span><span>Maintenance</span><span>Advertisement</span><span>Office Supplies</span><span>Professional Fees</span><span>Bank Charges</span><span>Other Operating Expense</span></div></div></section>
+                    <section class="module-card danger-zone"><div class="module-card-head"><div><h3>Do not create categories for</h3><p>These transactions are recorded in their own areas.</p></div></div><div class="module-card-body"><div class="rule-pill-grid prohibited"><span>Product Purchase</span><span>Supplier Payment</span><span>Customer Refund</span><span>Sales Return</span><span>Inventory Loss</span><span>Stock Adjustment</span><span>Branch Transfer</span><span>Cash Withdrawal</span><span>Recoverable Deposit/Advance</span></div></div></section>
+                </aside>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script><script th:src="@{/js/pages/expense-management.js}" defer></script>
+</body>
+</html>

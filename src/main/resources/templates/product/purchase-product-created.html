@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Product Created | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/product-ui.css}">
+</head>
+<body class="product-callback-page">
+<section class="product-callback-card" id="purchaseProductCallback"
+         th:attr="data-product-id=${product.id},
+                  data-product-name=${product.name},
+                  data-variant-id=${variant.id},
+                  data-variant-name=${variant.variantName},
+                  data-sku=${variant.sku},
+                  data-base-unit-id=${variant.baseInventoryUnitId},
+                  data-base-unit-name=${baseUnitName},
+                  data-purchase-unit-id=${purchaseUnitId},
+                  data-purchase-unit-name=${purchaseUnitName},
+                  data-selling-price=${variant.sellingPrice},
+                  data-track-expiry=${product.trackExpiry},
+                  data-batch-required=${product.batchTrackingRequired},
+                  data-product-status=${product.status},
+                  data-variant-status=${variant.status},
+                  data-return-branch-assigned=${returnBranchAssigned}">
+    <div class="product-callback-icon" aria-hidden="true">✓</div>
+    <span class="eyebrow">Purchase</span>
+    <h1>Product created</h1>
+    <p>The new product is ready to use in the purchase already in progress.</p>
+    <div class="product-callback-status" data-callback-status role="status" aria-live="polite">Adding product to purchase…</div>
+</section>
+<script>
+(() => {
+    'use strict';
+    const card = document.querySelector('#purchaseProductCallback');
+    const status = document.querySelector('[data-callback-status]');
+    if (!card) return;
+    const payload = {
+        type: 'falcon:purchase-product-created',
+        productId: card.dataset.productId,
+        productName: card.dataset.productName,
+        variantId: card.dataset.variantId,
+        variantName: card.dataset.variantName,
+        sku: card.dataset.sku,
+        baseUnitId: card.dataset.baseUnitId,
+        baseUnitName: card.dataset.baseUnitName,
+        purchaseUnitId: card.dataset.purchaseUnitId,
+        purchaseUnitName: card.dataset.purchaseUnitName,
+        sellingPrice: card.dataset.sellingPrice,
+        trackExpiry: card.dataset.trackExpiry === 'true',
+        batchRequired: card.dataset.batchRequired === 'true',
+        selectable: card.dataset.productStatus === 'ACTIVE' && card.dataset.variantStatus === 'ACTIVE' && card.dataset.returnBranchAssigned === 'true'
+    };
+    if (window.opener && !window.opener.closed) {
+        window.opener.postMessage(payload, window.location.origin);
+        status.textContent = payload.selectable
+            ? 'Product added to the purchase. This window can close.'
+            : 'Product was created, but it is not available for this branch.';
+        window.setTimeout(() => window.close(), 500);
+    } else {
+        status.textContent = 'Product was created. Return to the purchase and select it from the product list.';
+    }
+})();
+</script>
+</body>
+</html>

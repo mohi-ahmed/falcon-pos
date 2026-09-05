@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Add User | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}"><link rel="stylesheet" th:href="@{/css/components.css}"><link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}"><link rel="stylesheet" th:href="@{/css/pages/settings.css}"><link rel="stylesheet" th:href="@{/css/pages/user-management.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('users')}"></aside><button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Users & Roles')}"></header>
+        <main class="settings-main" id="main-content">
+            <nav class="settings-breadcrumb" aria-label="Breadcrumb"><a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><a th:href="@{/owner/users}">Users &amp; Roles</a><span>/</span><strong>Add User</strong></nav>
+            <div class="settings-page-shell">
+                <aside th:replace="~{fragments/user-shell :: userNav(${userSection})}"></aside>
+                <div class="settings-page-content">
+                    <header class="settings-page-header"><div><span class="eyebrow">Staff access</span><h1>Add user</h1><p>Create a staff account, assign a role and branch access, and choose whether the account is active.</p></div></header>
+
+                    <div class="alert alert-success" th:if="${successMessage}" role="status"><span>✓</span><div><strong>User saved</strong><span th:text="${successMessage}">Saved.</span></div></div>
+                    <div class="alert alert-danger" th:if="${errorMessage}" role="alert"><span>!</span><div><strong>Action failed</strong><span th:text="${errorMessage}">Please review the form.</span></div></div>
+                    <div class="alert alert-danger" th:if="${#lists.isEmpty(userGroups)}" role="alert"><span>!</span><div><strong>Create a user group first</strong><span>Every staff account needs a user group or role. <a th:href="@{/owner/user-groups/new}">Create a user group</a> before saving this account.</span></div></div>
+
+                    <form class="user-form-stack" th:action="@{/owner/users}" th:object="${createUserRequest}" method="post" enctype="multipart/form-data" novalidate>
+                        <input type="hidden" name="source" value="add">
+                        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}" role="alert"><span>!</span><div><strong>Please review the form</strong><span th:each="error : ${#fields.globalErrors()}" th:text="${error}">Validation error</span></div></div>
+
+                        <section class="user-section-card user-identity-card">
+                            <div class="user-card-head"><div><span class="section-kicker">Identity</span><h2>Personal information</h2><p>Basic identity, contact details and an optional profile photo.</p></div></div>
+                            <div class="user-card-body identity-card-layout">
+                                <div class="profile-photo-card compact-photo-card">
+                                    <div class="profile-photo-preview" id="new-user-photo-preview" aria-label="Profile photo preview"><span th:text="${#strings.isEmpty(createUserRequest.fullName) ? 'U' : #strings.substring(createUserRequest.fullName,0,1)}">U</span></div>
+                                    <div class="photo-copy"><strong>Profile photo</strong><p>JPG, PNG or WebP.</p><label class="photo-upload-button">Choose photo<input type="file" name="profilePhoto" accept="image/png,image/jpeg,image/webp" data-photo-input data-photo-target="#new-user-photo-preview"></label></div>
+                                    <input type="hidden" th:field="*{profilePhotoReference}">
+                                </div>
+                                <div class="user-grid">
+                                    <div class="form-field" th:classappend="${#fields.hasErrors('fullName')} ? ' has-error'"><label for="fullName">Employee name *</label><input id="fullName" th:field="*{fullName}" maxlength="120" autocomplete="name" placeholder="e.g. Amina Rahman" required><small class="field-error" th:errors="*{fullName}"></small></div>
+                                    <div class="form-field" th:classappend="${#fields.hasErrors('email')} ? ' has-error'"><label for="email">Email address *</label><input id="email" type="email" th:field="*{email}" maxlength="254" autocomplete="email" placeholder="amina@example.com" required><small class="field-error" th:errors="*{email}"></small></div>
+                                    <div class="form-field" th:classappend="${#fields.hasErrors('mobileNumber')} ? ' has-error'"><label for="mobileNumber">Mobile number</label><input id="mobileNumber" th:field="*{mobileNumber}" autocomplete="tel" placeholder="+8801XXXXXXXXX"><small class="field-hint">Use international format when provided.</small><small class="field-error" th:errors="*{mobileNumber}"></small></div>
+                                    <div class="form-field" th:classappend="${#fields.hasErrors('dateOfBirth')} ? ' has-error'"><label for="dateOfBirth">Date of birth</label><input id="dateOfBirth" type="date" th:field="*{dateOfBirth}"><small class="field-error" th:errors="*{dateOfBirth}"></small></div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <div class="user-card-grid user-card-grid-two">
+                            <section class="user-section-card">
+                                <div class="user-card-head"><div><span class="section-kicker">Security</span><h2>Sign-in credentials</h2><p>Create the initial password for this staff account.</p></div></div>
+                                <div class="user-card-body single-column-fields">
+                                    <div class="form-field" th:classappend="${#fields.hasErrors('password')} ? ' has-error'"><label for="password">Password *</label><div class="password-input-shell"><input id="password" type="password" th:field="*{password}" minlength="8" maxlength="72" autocomplete="new-password" data-password-meter-input required><button class="password-toggle" type="button" data-password-toggle aria-pressed="false">Show</button></div><div class="password-meter" data-password-meter data-strength="0"><span></span><span></span><span></span><span></span></div><small class="field-hint">8–72 characters with uppercase, lowercase and number.</small><small class="field-error" th:errors="*{password}"></small></div>
+                                    <div class="form-field" th:classappend="${#fields.hasErrors('passwordConfirmation')} ? ' has-error'"><label for="passwordConfirmation">Confirm password *</label><div class="password-input-shell"><input id="passwordConfirmation" type="password" th:field="*{passwordConfirmation}" autocomplete="new-password" required><button class="password-toggle" type="button" data-password-toggle aria-pressed="false">Show</button></div><small class="field-hint">Must match the password exactly.</small><small class="field-error" th:errors="*{passwordConfirmation}"></small></div>
+                                </div>
+                            </section>
+
+                            <section class="user-section-card">
+                                <div class="user-card-head"><div><span class="section-kicker">Account</span><h2>Account status</h2><p>Choose whether this staff account can be used.</p></div></div>
+                                <div class="user-card-body">
+                                    <div class="status-choice-grid status-choice-grid-stack">
+                                        <label class="status-choice"><input type="radio" th:field="*{status}" value="ACTIVE"><span><strong>Active</strong><small>Ready for permitted staff access.</small></span></label>
+                                        <label class="status-choice is-inactive"><input type="radio" th:field="*{status}" value="INACTIVE"><span><strong>Inactive</strong><small>Keep the record while disabling access.</small></span></label>
+                                    </div>
+                                    <small class="field-error" th:errors="*{status}"></small>
+                                </div>
+                            </section>
+                        </div>
+
+                        <section class="user-section-card">
+                            <div class="user-card-head"><div><span class="section-kicker">Role & access</span><h2>Role and access</h2><p>Assign a User Group and review the access provided by that role.</p></div></div>
+                            <div class="user-card-body">
+                                <div class="form-field" th:classappend="${#fields.hasErrors('userGroupId')} ? ' has-error'">
+                                    <label for="userGroupId">User group / role *</label>
+                                    <div class="role-card"><span><strong>Role-based access</strong><small>Access is inherited from the selected User Group.</small></span><select id="userGroupId" th:field="*{userGroupId}" data-role-select required><option value="">Select a user group</option><option th:each="group : ${userGroups}" th:value="${group.id()}" th:text="${group.name()}" th:attr="data-permission-ids=${#strings.listJoin(group.permissionIds(), ',')}">Cashier</option></select></div>
+                                    <small class="field-error" th:errors="*{userGroupId}"></small>
+                                </div>
+                                <div class="permission-preview"><div class="permission-preview-head"><span><strong>Access preview</strong><small data-role-permission-summary>Select a group to preview access</small></span><span class="soft-badge">Group controlled</span></div><div class="permission-preview-grid"><div class="permission-preview-item" th:each="permission : ${permissions}" th:attr="data-permission-preview-item='',data-permission-id=${permission.id()}"><i>–</i><span th:text="${permission.name()}">Open POS</span></div></div></div>
+                            </div>
+                        </section>
+
+                        <section class="user-section-card">
+                            <div class="user-card-head"><div><span class="section-kicker">Branch access</span><h2>Branch assignment</h2><p>Choose every branch where this staff member is allowed to work.</p></div></div>
+                            <div class="user-card-body"><div class="branch-assignment-grid"><label class="branch-assignment-card" th:each="branch : ${availableBranches}"><input type="checkbox" th:field="*{branchIds}" th:value="${branch.branchId()}"><span class="branch-avatar branch-avatar-small" th:text="${branch.branchCode()}">BR</span><span><strong th:text="${branch.branchName()}">Branch</strong><small th:text="${branch.branchId() == setup.branchId ? 'Current branch' : 'Available branch'}">Available branch</small></span><span class="check-mark">✓</span></label></div><small class="field-error" th:errors="*{branchIds}"></small></div>
+                        </section>
+
+                        <div class="user-form-submit-bar"><span>Role, branches and account status are applied when the staff account is saved.</span><div><a class="settings-secondary-button" th:href="@{/owner/users}">Cancel</a><button class="settings-primary-button" type="submit" th:disabled="${#lists.isEmpty(userGroups)}">Save user</button></div></div>
+                    </form>
+
+                    <section class="settings-table-card user-table-card" style="margin-top:18px" aria-labelledby="recent-users-title">
+                        <div class="table-card-heading"><div><h2 id="recent-users-title">Staff directory</h2><p>Recently created users for the current branch appear here after saving.</p></div><a class="settings-secondary-button" th:href="@{/owner/users}">Open full list</a></div>
+                        <div class="table-wrap"><table class="settings-table user-table" id="recent-user-table" data-export-name="falcon-users"><thead><tr><th>ID</th><th>Name</th><th>Email address</th><th>Mobile number</th><th>Group / role</th><th>Created</th><th>Status</th><th class="action-column">Action</th></tr></thead><tbody>
+                            <tr th:each="user : ${recentUsers}"><td class="muted-cell" th:text="${user.id()}">1</td><td><div class="table-primary"><span class="user-avatar"><img th:if="${user.profilePhotoReference() != null}" th:src="${user.profilePhotoReference()}" alt=""><span th:unless="${user.profilePhotoReference() != null}" th:text="${#strings.substring(user.fullName(),0,1)}">A</span></span><span><strong th:text="${user.fullName()}">Amina Rahman</strong><small th:text="${#sets.size(user.branchIds()) + ' assigned branch' + (#sets.size(user.branchIds()) == 1 ? '' : 'es')}">1 assigned branch</small></span></div></td><td><strong class="table-email" th:text="${user.email()}">email</strong></td><td><span th:text="${user.mobileNumber() ?: 'Not provided'}">mobile</span></td><td><span class="type-pill" th:text="${user.userGroupName()}">Cashier</span></td><td class="muted-cell"><time data-format-instant th:datetime="${user.createdAt()}" th:text="${user.createdAt()}">27 Aug 2026</time></td><td><span class="status-badge" th:classappend="${user.status().name() == 'ACTIVE' ? ' status-active' : ' status-inactive'}" th:text="${user.status()}">ACTIVE</span></td><td class="action-column"><a class="row-action row-action-primary" th:href="@{/owner/users/{id}(id=${user.id()})}">Profile</a></td></tr>
+                            <tr class="empty-table-row" th:if="${#lists.isEmpty(recentUsers)}"><td colspan="8"><div class="table-empty"><span class="empty-state-mark">+</span><strong>No staff users yet</strong><p>Complete the form above to create the first staff account for this branch.</p></div></td></tr>
+                        </tbody></table></div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script><script th:src="@{/js/pages/user-management.js}" defer></script>
+</body>
+</html>

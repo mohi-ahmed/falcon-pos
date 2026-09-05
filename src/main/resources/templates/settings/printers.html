@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Printers | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/settings.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('settings')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Printers')}"></header>
+
+        <main class="settings-main" id="main-content">
+
+            <nav class="settings-breadcrumb" aria-label="Breadcrumb">
+                <a th:href="@{/owner/dashboard}">Dashboard</a>
+                <span>/</span>
+                <a th:href="@{/owner/settings/general}">Settings</a>
+                <span>/</span>
+                <strong>Printers</strong>
+            </nav>
+
+            <div class="settings-page-shell">
+                
+
+                <div class="settings-page-content">
+
+                    <header class="settings-page-header settings-page-header-action">
+                        <div>
+                            <span class="eyebrow">Device configuration</span>
+                            <h1>Printers</h1>
+                            <p>Prepare receipt and operational printer configuration for the selected branch.</p>
+                        </div>
+                        <button class="settings-primary-button settings-add-button" type="button" data-drawer-open="printer-create">
+                            <span aria-hidden="true">+</span>Add printer
+                        </button>
+                    </header>
+
+                    <div class="alert alert-success" th:if="${successMessage}"><strong th:text="${successMessage}">Printer saved.</strong></div>
+                    <div class="alert alert-danger" th:if="${errorMessage}"><strong th:text="${errorMessage}">Printer action failed.</strong></div>
+                    <section class="settings-overview-row" aria-label="Printer summary">
+                        <div class="overview-card">
+                            <span class="overview-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V4h12v5M6 18H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-2M6 14h12v6H6z"/></svg>
+                            </span>
+                            <span><small>Configured printers</small><strong th:text="${#lists.size(printers)}">0</strong></span>
+                        </div>
+                        <div class="overview-card">
+                            <span class="overview-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V9l6-5 6 5v12M10 21v-6h4v6"/></svg>
+                            </span>
+                            <span><small>Current branch</small><strong th:text="${setup.branchCode}">MAIN</strong></span>
+                        </div>
+                        <div class="overview-card overview-card-note">
+                            <span class="overview-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4M18 12h4M12 2v4M12 18v4"/><circle cx="12" cy="12" r="4"/></svg>
+                            </span>
+                            <span><small>Common network port</small><strong>9100</strong><em>Shown as the documented default example.</em></span>
+                        </div>
+                    </section>
+
+                    <section class="settings-table-card" aria-labelledby="printer-list-title">
+                        <div class="table-card-heading">
+                            <div>
+                                <h2 id="printer-list-title">Configured printers</h2>
+                                <p>Manage branch-assigned receipt and operational printers.</p>
+                            </div>
+                            
+                        </div>
+
+                        <div class="table-toolbar" data-table-toolbar="printer-table">
+                            <label class="search-control">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+                                <input type="search" placeholder="Search title, type or connection" data-table-search>
+                            </label>
+                            <div class="toolbar-actions">
+                                <label class="rows-control">
+                                    <span>Rows</span>
+                                    <select data-page-size>
+                                        <option value="10" th:selected="${defaultRecordsPerPage == 10}">10</option>
+                                        <option value="25" th:selected="${defaultRecordsPerPage == 25}">25</option>
+                                        <option value="50" th:selected="${defaultRecordsPerPage == 50}">50</option>
+                                        <option value="100" th:selected="${defaultRecordsPerPage == 100}">100</option>
+                                    </select>
+                                </label>
+                                <div class="export-group">
+                                    <button class="toolbar-button" type="button" data-table-print>Print</button>
+                                    <a class="toolbar-button" th:href="@{/owner/settings/printers/export(format='xlsx')}">Excel</a>
+                                    <a class="toolbar-button" th:href="@{/owner/settings/printers/export(format='csv')}">CSV</a>
+                                    <a class="toolbar-button" th:href="@{/owner/settings/printers/export(format='pdf')}">PDF</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-wrap">
+                            <table class="settings-table" id="printer-table" data-managed-table>
+                                <thead>
+                                <tr>
+                                    <th data-sort-index="0">Serial</th>
+                                    <th data-sort-index="1">Printer</th>
+                                    <th data-sort-index="2">Connection</th>
+                                    <th>Path</th>
+                                    <th>IP address</th>
+                                    <th>Port</th>
+                                    <th data-sort-index="6">Status</th>
+                                    <th class="action-column">Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="printer, row : ${printers}"
+                                    th:attr="data-search-text=${printer.title() + ' ' + printer.printerType() + ' ' + printer.connectionType() + ' ' + printer.status()}">
+                                    <td th:text="${row.count}">1</td>
+                                    <td><div class="table-primary"><span class="record-avatar" th:text="${#strings.substring(printer.title(),0,1)}">P</span><span><strong th:text="${printer.title()}">Printer</strong><small th:text="${printer.printerType()}">CASHIER_RECEIPT</small></span></div></td>
+                                    <td th:text="${printer.connectionType()}">NETWORK</td>
+                                    <td th:text="${printer.printerPath() ?: '—'}">—</td>
+                                    <td th:text="${printer.ipAddress() ?: '—'}">—</td>
+                                    <td th:text="${printer.port() ?: '—'}">—</td>
+                                    <td><span class="status-badge" th:classappend="${printer.status().name() == 'ACTIVE' ? ' status-active' : ' status-inactive'}" th:text="${printer.status()}">ACTIVE</span></td>
+                                    <td class="action-column"><div class="row-actions">
+                                        <button class="row-action row-action-primary" type="button" data-edit-printer
+                                                th:attr="data-id=${printer.id()},data-title=${printer.title()},data-printer-type=${printer.printerType()},data-connection-type=${printer.connectionType()},data-characters-per-line=${printer.charactersPerLine()},data-printer-path=${printer.printerPath()},data-ip-address=${printer.ipAddress()},data-port=${printer.port()},data-display-order=${printer.displayOrder()},data-branch-ids=${printer.branchIds()},data-status=${printer.status()}">Edit</button>
+                                        <form th:action="@{|/owner/settings/printers/${printer.id()}/test|}" method="post"><button class="row-action" type="submit" th:disabled="${printer.status().name() != 'ACTIVE'}" th:title="${printer.status().name() == 'ACTIVE' ? 'Send a test print' : 'Activate this printer before testing'}">Test print</button></form>
+                                        <form th:action="@{|/owner/settings/printers/${printer.id()}/status|}" method="post"><input type="hidden" name="status" th:value="${printer.status().name() == 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'}"><button class="row-action" type="submit" th:text="${printer.status().name() == 'ACTIVE' ? 'Deactivate' : 'Activate'}">Status</button></form>
+                                        <form th:action="@{|/owner/settings/printers/${printer.id()}/archive|}" method="post" data-confirm="Archive this printer? Historical print-routing records will remain preserved."><button class="row-action row-action-danger" type="submit">Archive</button></form>
+                                    </div></td>
+                                </tr>
+                                <tr class="empty-table-row" th:if="${#lists.isEmpty(printers)}">
+                                    <td colspan="8">
+                                        <div class="table-empty">
+                                            <span class="empty-state-mark" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V4h12v5M6 18H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-2M6 14h12v6H6z"/></svg>
+                                            </span>
+                                            <strong>No printer records yet</strong>
+                                            <p>Add a printer to begin configuring branch print routing.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="table-footer">
+                            <span data-result-summary>Showing configured printers</span>
+                            <div class="pagination" data-pagination></div>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="drawer-shell" data-drawer="printer-create" hidden>
+    <button class="drawer-backdrop" type="button" data-drawer-close aria-label="Close printer configuration"></button>
+    <aside class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="printer-create-title">
+        <div class="drawer-heading">
+            <div>
+                <span class="section-kicker">New printer</span>
+                <h2 id="printer-create-title">Add printer</h2>
+                <p>Define printer identity, connection and branch assignment.</p>
+            </div>
+            <button class="drawer-close" type="button" data-drawer-close aria-label="Close">×</button>
+        </div>
+        <form class="drawer-form" th:action="@{/owner/settings/printers}" th:object="${printerRequest}" method="post" novalidate>
+            <span data-drawer-auto-open th:if="${#fields.hasAnyErrors()}" hidden></span>
+            <div class="drawer-body">
+                <fieldset class="deferred-fieldset">
+                    <div class="settings-form-grid">
+                        <div class="form-field" th:classappend="${#fields.hasErrors('title')} ? ' has-error'">
+                            <label for="printerTitle">Printer title *</label>
+                            <input id="printerTitle" th:field="*{title}" maxlength="120" placeholder="Front Counter Receipt Printer" required>
+                            <small class="field-error" th:errors="*{title}"></small>
+                        </div>
+                        <div class="form-field" th:classappend="${#fields.hasErrors('printerType')} ? ' has-error'">
+                            <label for="printerType">Printer type *</label>
+                            <select id="printerType" th:field="*{printerType}" required>
+                                <option th:each="type : ${printerTypes}" th:value="${type}" th:text="${type}">Cashier receipt printer</option>
+                            </select>
+                            <small class="field-error" th:errors="*{printerType}"></small>
+                        </div>
+                        <div class="form-field" th:classappend="${#fields.hasErrors('connectionType')} ? ' has-error'">
+                            <label for="connectionType">Connection type *</label>
+                            <select id="connectionType" th:field="*{connectionType}" required>
+                                <option th:each="type : ${connectionTypes}" th:value="${type}" th:text="${type}">Network</option>
+                            </select>
+                            <small class="field-error" th:errors="*{connectionType}"></small>
+                        </div>
+                        <div class="form-field" th:classappend="${#fields.hasErrors('charactersPerLine')} ? ' has-error'">
+                            <label for="charactersPerLine">Characters per line *</label>
+                            <input id="charactersPerLine" type="number" min="1" max="512" th:field="*{charactersPerLine}" required>
+                            <small class="field-error" th:errors="*{charactersPerLine}"></small>
+                        </div>
+                        <div class="form-field" th:classappend="${#fields.hasErrors('printerPath')} ? ' has-error'">
+                            <label for="printerPath">Printer path</label>
+                            <input id="printerPath" th:field="*{printerPath}" maxlength="240" placeholder="System printer path / name">
+                            <small class="field-error" th:errors="*{printerPath}"></small>
+                        </div>
+                        <div class="form-field" th:classappend="${#fields.hasErrors('ipAddress')} ? ' has-error'">
+                            <label for="ipAddress">IP address</label>
+                            <input id="ipAddress" th:field="*{ipAddress}" maxlength="64" placeholder="192.168.1.50">
+                            <small class="field-error" th:errors="*{ipAddress}"></small>
+                        </div>
+                        <div class="form-field" th:classappend="${#fields.hasErrors('port')} ? ' has-error'">
+                            <label for="printerPort">Port</label>
+                            <input id="printerPort" type="number" min="1" max="65535" th:field="*{port}">
+                            <small class="field-error" th:errors="*{port}"></small>
+                        </div>
+                        <div class="form-field" th:classappend="${#fields.hasErrors('displayOrder')} ? ' has-error'">
+                            <label for="printerDisplayOrder">Display order</label>
+                            <input id="printerDisplayOrder" type="number" min="0" th:field="*{displayOrder}">
+                            <small class="field-error" th:errors="*{displayOrder}"></small>
+                        </div>
+                        <div class="form-field" th:classappend="${#fields.hasErrors('status')} ? ' has-error' : ''">
+                            <label for="printerStatus">Status</label>
+                            <select id="printerStatus" th:field="*{status}"><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select>
+                            <small class="field-error" th:errors="*{status}"></small>
+                        </div>
+                        <div class="form-field form-field-span-2" th:classappend="${#fields.hasErrors('branchIds')} ? ' has-error'">
+                            <label>Branch assignment *</label>
+                            <div class="branch-assignment-grid">
+                                <label class="branch-check-card" th:each="branch : ${availableBranches}">
+                                    <input type="checkbox" th:field="*{branchIds}" th:value="${branch.branchId}">
+                                    <span class="branch-avatar branch-avatar-small" th:text="${branch.branchCode}">BR</span>
+                                    <span>
+                                        <strong th:text="${branch.branchName}">Branch</strong>
+                                        <small th:text="${branch.branchId == setup.branchId ? 'Current working branch' : 'Available branch'}">Available branch</small>
+                                    </span>
+                                    <span class="check-mark">✓</span>
+                                </label>
+                            </div>
+                            <small class="field-error" th:errors="*{branchIds}"></small>
+                        </div>
+                    </div>
+                    <div class="policy-note"><p>Printer status and branch assignment apply to future print routing. Historical records remain preserved when a printer is deactivated or archived.</p></div>
+                </fieldset>
+            </div>
+            <div class="drawer-actions">
+                <button class="settings-secondary-button" type="button" data-drawer-close>Cancel</button>
+                <button class="settings-secondary-button" type="reset">Reset</button>
+                <button class="settings-primary-button" type="submit">Save printer</button>
+            </div>
+        </form>
+    </aside>
+</div>
+
+<div class="drawer-shell" data-drawer="printer-edit" hidden>
+    <button class="drawer-backdrop" type="button" data-drawer-close aria-label="Close edit printer"></button>
+    <aside class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="printer-edit-title">
+        <div class="drawer-heading"><div><span class="section-kicker">Edit printer</span><h2 id="printer-edit-title">Update printer</h2><p>Update the selected printer without changing its route or historical records.</p></div><button class="drawer-close" type="button" data-drawer-close aria-label="Close">×</button></div>
+        <form class="drawer-form" method="post" data-printer-edit-form>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="hidden" name="status" value="ACTIVE" data-edit-field="status">
+            <div class="drawer-body"><div class="settings-form-grid">
+                <div class="form-field"><label for="editPrinterTitle">Printer title *</label><input id="editPrinterTitle" name="title" maxlength="120" required data-edit-field="title"></div>
+                <div class="form-field"><label for="editPrinterType">Printer type *</label><select id="editPrinterType" name="printerType" required data-edit-field="printerType"><option th:each="type : ${printerTypes}" th:value="${type}" th:text="${type}">Type</option></select></div>
+                <div class="form-field"><label for="editConnectionType">Connection type *</label><select id="editConnectionType" name="connectionType" required data-edit-field="connectionType"><option th:each="type : ${connectionTypes}" th:value="${type}" th:text="${type}">Connection</option></select></div>
+                <div class="form-field"><label for="editCharactersPerLine">Characters per line *</label><input id="editCharactersPerLine" type="number" min="1" max="512" name="charactersPerLine" required data-edit-field="charactersPerLine"></div>
+                <div class="form-field"><label for="editPrinterPath">Printer path</label><input id="editPrinterPath" name="printerPath" maxlength="240" data-edit-field="printerPath"></div>
+                <div class="form-field"><label for="editIpAddress">IP address</label><input id="editIpAddress" name="ipAddress" maxlength="64" data-edit-field="ipAddress"></div>
+                <div class="form-field"><label for="editPort">Port</label><input id="editPort" type="number" min="1" max="65535" name="port" data-edit-field="port"></div>
+                <div class="form-field"><label for="editPrinterDisplayOrder">Display order</label><input id="editPrinterDisplayOrder" type="number" min="0" name="displayOrder" data-edit-field="displayOrder"></div>
+                <div class="form-field form-field-span-2">
+                    <label>Branch assignment *</label>
+                    <div class="branch-assignment-grid">
+                        <label class="branch-check-card" th:each="branch : ${availableBranches}">
+                            <input type="checkbox" name="branchIds" th:value="${branch.branchId}" data-edit-branch-field>
+                            <span class="branch-avatar branch-avatar-small" th:text="${branch.branchCode}">BR</span>
+                            <span>
+                                <strong th:text="${branch.branchName}">Branch</strong>
+                                <small th:text="${branch.branchId == setup.branchId ? 'Current working branch' : 'Available branch'}">Available branch</small>
+                            </span>
+                            <span class="check-mark">✓</span>
+                        </label>
+                    </div>
+                </div>
+            </div></div>
+            <div class="drawer-actions"><button class="settings-secondary-button" type="button" data-drawer-close>Cancel</button><button class="settings-primary-button" type="submit">Update printer</button></div>
+        </form>
+    </aside>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script>
+<script th:src="@{/js/pages/settings.js}" defer></script>
+</body>
+</html>

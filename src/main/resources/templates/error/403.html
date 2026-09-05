@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Access restricted | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}" href="../../static/css/base.css">
+    <link rel="stylesheet" th:href="@{/css/pages/access-denied.css}" href="../../static/css/pages/access-denied.css">
+</head>
+<body class="access-denied-body">
+<main class="access-denied-page" aria-labelledby="errorTitle">
+    <section class="access-denied-card">
+        <div class="access-denied-brand" aria-label="Falcon POS">
+            <span class="access-denied-brand-mark" aria-hidden="true">F</span>
+            <span class="access-denied-brand-copy">
+                <strong>Falcon POS</strong>
+                <small>Retail operations</small>
+            </span>
+        </div>
+
+        <div class="access-denied-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 3.75 19.25 7v5.1c0 4.55-2.94 7.34-7.25 8.65-4.31-1.31-7.25-4.1-7.25-8.65V7L12 3.75Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                <path d="M9.75 12h4.5M12 9.75v4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" transform="rotate(45 12 12)"/>
+            </svg>
+        </div>
+
+        <span class="access-denied-eyebrow">Access restricted</span>
+        <h1 id="errorTitle">You don’t have permission to view this page.</h1>
+        <p class="access-denied-copy">Your current role does not include access to this area. You can return to your workspace or ask the business owner to review your permissions.</p>
+
+        <div class="access-denied-actions">
+            <a class="access-denied-button primary"
+               sec:authorize="hasRole('OWNER') or hasAuthority('POS_OPEN')"
+               th:href="@{/owner/pos}" href="/owner/pos">Back to POS</a>
+            <a class="access-denied-button primary"
+               sec:authorize="!hasRole('OWNER') and !hasAuthority('POS_OPEN')"
+               th:href="@{/owner/dashboard}" href="/owner/dashboard">Go to dashboard</a>
+            <button class="access-denied-button secondary" type="button" id="goBackButton">Go back</button>
+        </div>
+
+        <p class="access-denied-help">If you believe you should have access, contact the business owner or an authorized administrator.</p>
+    </section>
+</main>
+<script>
+    document.getElementById('goBackButton')?.addEventListener('click', function () {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+        window.location.assign('/');
+    });
+</script>
+</body>
+</html>

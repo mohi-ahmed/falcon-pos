@@ -1,0 +1,2 @@
+package com.spark.falcon.inventory.dto;import java.math.BigDecimal;import java.time.LocalDate;import java.util.List;
+public record CreateBranchTransferCommand(Long ownerId,Long sourceBranchId,Long destinationBranchId,LocalDate requestDate,LocalDate expectedDispatchDate,String notes,String attachmentReference,String idempotencyKey,List<Item> items){public record Item(Long productVariantId,Long productBatchId,BigDecimal enteredQuantity,Long enteredUnitId,BigDecimal conversionFactor){}}

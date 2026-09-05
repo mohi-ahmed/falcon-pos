@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="pendingExports" class="ops-pending-actions no-print" aria-label="Document export actions">
+    <button class="ops-btn" type="button" disabled>Excel</button>
+    <button class="ops-btn" type="button" disabled>CSV</button>
+    <button class="ops-btn" type="button" disabled>PDF</button>
+</div>
+
+<div th:fragment="flashMessages" aria-live="polite" aria-atomic="true">
+    <div class="flash-message" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
+    <div class="flash-message error" role="alert" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+</div>
+</body>
+</html>

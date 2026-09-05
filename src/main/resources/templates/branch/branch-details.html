@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Branch Details | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}"><link rel="stylesheet" th:href="@{/css/components.css}"><link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}"><link rel="stylesheet" th:href="@{/css/pages/branch-management.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('branches')}"></aside><button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+    <div class="workspace">
+        <header class="topbar"><button class="icon-button menu-button" type="button" data-sidebar-open>☰</button><div class="topbar-context"><small th:text="${setup.businessName}">Business</small><strong>Branch details</strong></div><div class="topbar-actions"><a class="branch-switcher" sec:authorize="hasRole('OWNER') or hasAuthority('BRANCH_CHANGE')" th:href="@{/owner/branches/change}"><span class="branch-avatar branch-avatar-small" th:text="${setup.branchCode}">BR</span><span><small>Working in</small><strong th:text="${setup.branchName}">Main Branch</strong></span></a></div></header>
+        <main class="branch-page">
+            <nav class="breadcrumb"><a th:href="@{/owner/branches}">Branches</a><span>/</span><strong th:text="${branch.name}">Branch</strong></nav>
+            <section class="branch-page-heading"><div><span class="eyebrow">Branch details</span><h1 th:text="${branch.name}">Gulshan Branch</h1><p><span th:text="${branch.code}">GUL-01</span> · <span th:text="${branch.country}">BD</span></p></div><div class="branch-actions"><a class="branch-button" th:href="@{/owner/branches/{id}/edit(id=${branch.id})}">Edit profile</a><a class="branch-button primary" sec:authorize="hasRole('OWNER') or hasAuthority('SETTINGS_ACCESS')" th:if="${isCurrentBranch and branch.status.name() == 'ACTIVE'}" th:href="@{/owner/settings/general}">Configure branch settings</a><form sec:authorize="hasRole('OWNER') or hasAuthority('BRANCH_CHANGE')" th:if="${branch.status.name() == 'ACTIVE' and !isCurrentBranch}" method="post" th:action="@{/owner/branches/change}" data-branch-switch-form th:data-current-branch="${setup.branchName}" th:data-target-branch="${branch.name}"><input type="hidden" name="branchId" th:value="${branch.id}"><button class="branch-button primary" type="submit">Use this branch</button></form></div></section>
+            <div class="success-banner" th:if="${successMessage}" role="status"><span>✓</span><strong th:text="${successMessage}">Updated</strong></div>
+            <div class="readonly-note" th:if="${!isCurrentBranch and branch.status.name() == 'ACTIVE'}">Operational settings are managed by Part N for the active branch. Use this branch first, then open Branch Settings so another branch's configuration is never edited by mistake.</div>
+            <div class="detail-grid">
+                <div class="detail-card"><div class="detail-card-head"><h2>Branch profile</h2><span class="branch-status" th:classappend="${branch.status.name() == 'ACTIVE'} ? ' active' : ' inactive'" th:text="${branch.status}">ACTIVE</span></div><div class="detail-card-body"><div class="detail-fields">
+                    <div class="detail-item"><small>Email</small><strong th:text="${branch.email}">mail</strong></div><div class="detail-item"><small>Mobile</small><strong th:text="${branch.phone}">phone</strong></div>
+                    <div class="detail-item"><small>Country</small><strong th:text="${branch.country}">BD</strong></div><div class="detail-item"><small>Time zone</small><strong th:text="${branch.timeZone}">Asia/Dhaka</strong></div>
+                    <div class="detail-item"><small>Currency</small><strong th:text="${branch.currency}">BDT</strong></div><div class="detail-item"><small>Postal code</small><strong th:text="${branch.postalCode ?: '—'}">—</strong></div>
+                    <div class="detail-item full"><small>Address</small><strong th:text="${branch.address}">Address</strong></div><div class="detail-item"><small>City</small><strong th:text="${branch.city}">Dhaka</strong></div><div class="detail-item"><small>State / Division</small><strong th:text="${branch.stateDivision ?: '—'}">—</strong></div>
+                    <div class="detail-item"><small>VAT / BIN</small><strong th:text="${branch.vatBinNumber ?: '—'}">—</strong></div><div class="detail-item"><small>Default tax rate</small><strong th:text="${branch.defaultTaxRate != null ? branch.defaultTaxRate + '%' : '—'}">—</strong></div>
+                    <div class="detail-item"><small>Low-stock alert</small><strong th:text="${branch.lowStockAlertQuantity}">10</strong></div><div class="detail-item"><small>Records per page</small><strong th:text="${branch.recordsPerPage}">25</strong></div>
+                    <div class="detail-item full"><small>Receipt footer</small><strong th:text="${branch.receiptFooter ?: '—'}">—</strong></div><div class="detail-item"><small>Created</small><strong th:text="${branch.createdAt}">Date</strong></div>
+                </div></div></div>
+                <aside class="detail-card"><div class="detail-card-head"><h2>Status</h2></div><div class="detail-card-body"><div class="status-actions"><div class="readonly-note" th:if="${isCurrentBranch and branch.status.name() == 'ACTIVE'}">This is the active working branch. Deactivation clears the current branch context; another active branch must be selected before operational work continues.</div><form th:if="${branch.status.name() == 'ACTIVE'}" method="post" th:action="@{/owner/branches/{id}/deactivate(id=${branch.id})}" onsubmit="return confirm('Deactivate this branch? It will be preserved and can be restored later.');"><button class="branch-button danger" type="submit">Deactivate branch</button></form><form th:if="${branch.status.name() == 'INACTIVE'}" method="post" th:action="@{/owner/branches/{id}/activate(id=${branch.id})}"><button class="branch-button success" type="submit">Restore / Activate branch</button></form></div></div></aside>
+            </div>
+            <section class="detail-card" style="margin-top:22px"><div class="detail-card-head"><h2>Branch audit history</h2><small>Before / after snapshots are preserved for profile and status changes.</small></div><div class="detail-card-body"><div class="audit-list" th:if="${!#lists.isEmpty(auditEvents)}"><article class="audit-item" th:each="event : ${auditEvents}"><div class="audit-meta"><strong th:text="${event.action}">CREATED</strong><time th:text="${event.occurredAt}">Date</time></div><small th:text="|Actor owner ID: ${event.actorOwnerId}|">Actor</small><pre class="audit-snapshot" th:if="${event.beforeSnapshot != null}" th:text="|Before: ${event.beforeSnapshot}|">Before</pre><pre class="audit-snapshot" th:if="${event.afterSnapshot != null}" th:text="|After: ${event.afterSnapshot}|">After</pre></article></div><div class="empty-state" th:if="${#lists.isEmpty(auditEvents)}"><strong>No audit event yet</strong></div></div></section>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script>
+<script th:src="@{/js/pages/branch-management.js}" defer></script>
+</body>
+</html>

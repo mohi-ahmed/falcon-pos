@@ -1,0 +1,56 @@
+@font-face {
+    font-family: "Inter";
+    src: url("../fonts/inter/Inter-Regular.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Inter";
+    src: url("../fonts/inter/Inter-Medium.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Inter";
+    src: url("../fonts/inter/Inter-SemiBold.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Inter";
+    src: url("../fonts/inter/Inter-Bold.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 700 900;
+    font-display: swap;
+}
+
+:root {
+    --font-sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --ink-950: #101c18;
+    --ink-800: #25332d;
+    --ink-600: #5e6d66;
+    --ink-500: #75837d;
+    --line: #dce5e1;
+    --surface: #ffffff;
+    --canvas: #f5f8f6;
+    --brand-800: #075d48;
+    --brand-700: #08785b;
+    --brand-600: #0a8a67;
+    --brand-100: #dff3eb;
+    --danger: #b42318;
+    --shadow: 0 24px 70px rgba(20, 45, 36, 0.12);
+}
+
+* { box-sizing: border-box; }
+html { min-width: 320px; color-scheme: light; }
+body { margin: 0; min-height: 100vh; font-family: var(--font-sans); color: var(--ink-950); background: var(--canvas); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-synthesis: none; text-rendering: optimizeLegibility; }
+button, input { font: inherit; }
+a { color: var(--brand-700); font-weight: 700; text-underline-offset: 3px; }
+button, a, input { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 3px solid rgba(10, 138, 103, .28); outline-offset: 2px; }

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Purchase Log Details | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}"><link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}"><link rel="stylesheet" th:href="@{/css/pages/operations.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/purchase.css}">
+</head>
+<body class="dashboard-body purchase-module" data-purchase-page="logs"><div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('purchases')}"></aside><button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+    <div class="workspace"><header th:replace="~{fragments/settings-shell :: topbar('Purchase Log Details')}"></header>
+        <main class="operations-page">
+            <nav class="ops-breadcrumb" aria-label="Breadcrumb"><a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><strong>Purchase Log Details</strong></nav>
+            <div th:replace="~{fragments/purchase-ui :: subnav('logs')}"></div>
+            <section class="ops-heading"><div><span class="eyebrow">Purchase Management</span><h1>Purchase Log Details</h1><p>Review purchase activity and transaction history for this branch.</p></div><div class="ops-actions"><button class="ops-btn" data-print-page type="button">Print</button></div></section>
+
+            <section class="ops-card">
+                <div class="ops-card-head"><div><h2>Purchase activity</h2><p>Search or filter purchase activity.</p></div><div class="ops-pending-actions no-print" aria-label="Purchase log export actions">
+                    <a class="ops-btn" th:href="@{/owner/purchases/logs/export(branchId=${setup.branchId},supplierId=${selectedSupplierId},query=${query},format='xlsx')}">Excel</a>
+                    <a class="ops-btn" th:href="@{/owner/purchases/logs/export(branchId=${setup.branchId},supplierId=${selectedSupplierId},query=${query},format='csv')}">CSV</a>
+                    <a class="ops-btn" th:href="@{/owner/purchases/logs/export(branchId=${setup.branchId},supplierId=${selectedSupplierId},query=${query},format='pdf')}">PDF</a>
+                </div></div>
+                <div class="ops-card-body">
+                    <div class="ops-toolbar">
+                        <form class="ops-filter-form" method="get" th:action="@{/owner/purchases/logs}" data-purchase-filter-primary="2"><div class="ops-field wide"><label for="logSearch">Search</label><input id="logSearch" name="q" type="search" th:value="${query}" placeholder="Reference, transaction detail or subject"></div><div class="ops-field"><label for="logSupplier">Supplier</label><select id="logSupplier" name="supplierId"><option value="">All suppliers</option><option th:each="s:${suppliers}" th:value="${s.id}" th:text="${s.name}" th:selected="${selectedSupplierId == s.id}">Supplier</option></select></div><div class="ops-field"><label for="logSort">Sort by</label><select id="logSort" name="sortBy"><option value="createdAt" th:selected="${sortBy == 'createdAt'}">Date &amp; time</option><option value="action" th:selected="${sortBy == 'action'}">Transaction type</option><option value="actorId" th:selected="${sortBy == 'actorId'}">Created by</option></select></div><div class="ops-field"><label for="logDirection">Direction</label><select id="logDirection" name="sortDir"><option value="desc" th:selected="${sortDir == 'desc'}">Descending</option><option value="asc" th:selected="${sortDir == 'asc'}">Ascending</option></select></div><div class="ops-field"><label for="logSize">Rows</label><select id="logSize" name="size"><option value="10" th:selected="${selectedSize == 10}">10</option><option value="25" th:selected="${selectedSize == 25}">25</option><option value="50" th:selected="${selectedSize == 50}">50</option><option value="100" th:selected="${selectedSize == 100}">100</option></select></div><div class="ops-filter-actions"><a class="ops-btn" th:href="@{/owner/purchases/logs}">Reset</a><button class="ops-btn primary" type="submit">Apply</button></div></form>
+                    </div>
+                </div>
+                <div class="ops-table-wrap"><table class="ops-table"><thead><tr><th>Serial</th><th>Creation Date &amp; Time</th><th>Transaction Type</th><th>Supplier</th><th>Payment Method</th><th>Created By</th><th class="numeric">Total Amount</th><th>View</th></tr></thead><tbody>
+                    <tr th:each="p,stat:${logs.content}"><td th:text="${logs.number * logs.size + stat.count}">1</td><td class="purchase-date-cell"><span th:text="${#temporals.format(p.createdAt,'dd/MM/yyyy')}">—</span><small th:text="${#temporals.format(p.createdAt,'hh:mm a')}">—</small></td><td th:text="${p.transactionType}">Purchase</td><td th:text="${supplierMap[p.supplierId] != null ? supplierMap[p.supplierId].name : 'Supplier #' + p.supplierId}">—</td><td th:text="${p.paymentMethod != null ? p.paymentMethod : '—'}">—</td><td th:text="${p.actorId}">—</td><td class="numeric" th:text="${p.totalAmount != null ? #numbers.formatDecimal(p.totalAmount,1,2) : '—'}">—</td><td><a class="ops-btn" th:if="${p.purchaseId != null}" th:href="@{/owner/purchases/{id}(id=${p.purchaseId})}">View</a></td></tr>
+                    <tr th:if="${logs.empty}"><td colspan="8"><div class="ops-empty"><strong>No purchase log records</strong><span>No records are available for the active branch yet.</span></div></td></tr>
+                </tbody></table></div>
+                <div class="ops-pagination" th:if="${logs.totalPages > 1}"><small th:text="|Showing ${logs.number * logs.size + 1}–${logs.number * logs.size + logs.numberOfElements} of ${logs.totalElements}|">Rows</small><nav aria-label="Purchase log pagination"><a class="ops-page-link" th:classappend="${logs.first ? ' disabled' : ''}" th:href="@{/owner/purchases/logs(page=${logs.number-1},size=${selectedSize},supplierId=${selectedSupplierId},q=${query},sortBy=${sortBy},sortDir=${sortDir})}" aria-label="Previous page">‹</a><span class="ops-page-link active" th:text="${logs.number+1}">1</span><a class="ops-page-link" th:classappend="${logs.last ? ' disabled' : ''}" th:href="@{/owner/purchases/logs(page=${logs.number+1},size=${selectedSize},supplierId=${selectedSupplierId},q=${query},sortBy=${sortBy},sortDir=${sortDir})}" aria-label="Next page">›</a></nav></div>
+            </section>
+        </main>
+    </div>
+</div><script th:src="@{/js/pages/dashboard-shell.js}" defer></script><script th:src="@{/js/pages/operations.js}" defer></script>
+<script th:src="@{/js/pages/purchase-ui.js}" defer></script></body></html>

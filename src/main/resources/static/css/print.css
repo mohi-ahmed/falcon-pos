@@ -1,0 +1,17 @@
+@page { size: landscape; margin: 12mm; }
+@media print {
+  body { background:#fff !important; color:#111 !important; font:10pt/1.35 Arial,sans-serif !important; }
+  aside,.sidebar-scrim,.topbar,.breadcrumb,.module-breadcrumb,.ops-breadcrumb,
+  .branch-page-heading .branch-actions,.branch-toolbar,.toolbar,.pagination-bar,
+  .table-actions,.row-actions,.no-export,[data-print-page],[data-print],button,
+  form[action*="archive"],form[action*="delete"],form[action*="activate"],form[action*="deactivate"] { display:none !important; }
+  .app-shell,.workspace,main,.branch-page,.module-page,.operations-page,.inventory-page { display:block !important; width:auto !important; max-width:none !important; margin:0 !important; padding:0 !important; }
+  .module-card,.ops-card,.branch-panel { border:0 !important; box-shadow:none !important; overflow:visible !important; }
+  .table-wrap,.branch-table-wrap { overflow:visible !important; }
+  table,.module-table,.catalog-table,.settings-table,.branch-table,.ops-table { width:100% !important; min-width:0 !important; border-collapse:collapse !important; }
+  thead { display:table-header-group; }
+  tr { break-inside:avoid; }
+  th,td { border:1px solid #bbb !important; padding:5px !important; color:#111 !important; background:#fff !important; }
+  a { color:#111 !important; text-decoration:none !important; }
+  .print-only { display:block !important; }
+}

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Your Falcon POS workplace setup is complete.">
+    <title>Setup complete | Falcon POS</title>
+    <link rel="stylesheet" href="../../static/css/base.css" th:href="@{/css/base.css}">
+    <link rel="stylesheet" href="../../static/css/components.css" th:href="@{/css/components.css}">
+    <link rel="stylesheet" href="../../static/css/pages/business-setup.css" th:href="@{/css/pages/business-setup.css}">
+    <link rel="stylesheet" href="../../static/css/pages/setup-complete.css" th:href="@{/css/pages/setup-complete.css}">
+</head>
+<body class="setup-complete-body">
+<header class="setup-topbar">
+    <a class="brand" href="../public/index.html" th:href="@{/}" aria-label="Falcon POS home">
+        <img class="brand-logo" src="../../static/images/brand/falcon-mark.svg" th:src="@{/images/brand/falcon-mark.svg}" alt="">
+        <span><strong>Falcon POS</strong><small>Retail operations</small></span>
+    </a>
+    <div class="topbar-meta">
+        <span class="secure-chip"><span aria-hidden="true">✓</span> Setup verified</span>
+        <span class="topbar-divider" aria-hidden="true"></span>
+        <a class="support-link" href="mailto:support@falconpos.com">Need help?</a>
+    </div>
+</header>
+<main class="complete-main">
+    <section class="complete-card" aria-labelledby="completeTitle">
+        <div class="complete-visual" aria-hidden="true">
+            <span class="visual-orbit orbit-one"></span><span class="visual-orbit orbit-two"></span>
+            <div class="success-emblem"><svg viewBox="0 0 24 24"><path d="m6.8 12.2 3.2 3.2 7.3-7.3"/></svg></div>
+            <span class="visual-label">Ready to operate</span>
+        </div>
+        <div class="complete-content">
+            <span class="eyebrow">Setup complete</span>
+            <h1 id="completeTitle">Your workplace is ready</h1>
+            <p class="complete-copy">Everything needed to begin has been created securely. You can now continue to your owner dashboard.</p>
+            <div class="workspace-summary">
+                <div class="summary-icon" aria-hidden="true">F</div>
+                <div class="summary-copy"><span>Business workspace</span><strong th:text="${setup.businessName}">Falcon Mini Mart</strong><small><span class="status-dot" aria-hidden="true"></span> Active and verified</small></div>
+            </div>
+            <div class="branch-summary">
+                <span class="branch-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 10h16M6 10v9h12v-9M8 10V6h8v4M9 19v-5h6v5"/></svg></span>
+                <div><span>First branch</span><strong th:text="${setup.branchName}">Main Branch</strong></div><span class="ready-badge">Ready</span>
+            </div>
+            <a class="primary-button dashboard-button" href="dashboard-entry.html" th:href="@{/owner/dashboard}"><span>Continue to Owner Dashboard</span><span aria-hidden="true">→</span></a>
+            <p class="security-note"><span aria-hidden="true">✓</span> Your workplace data is isolated and protected.</p>
+        </div>
+    </section>
+</main>
+<dialog id="createdDialog" class="created-dialog" th:if="${workplaceCreated}" data-created-dialog>
+    <div class="dialog-success" aria-hidden="true">✓</div><span class="eyebrow">Success</span>
+    <h2>Workplace created successfully</h2><p>Your business and first branch are ready. Continue to review your completed setup.</p>
+    <button type="button" class="primary-button" data-close-dialog>View setup</button>
+</dialog>
+<script src="../../static/js/pages/setup-complete.js" th:src="@{/js/pages/setup-complete.js}" defer></script>
+</body>
+</html>

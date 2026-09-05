@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Group Permissions | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}"><link rel="stylesheet" th:href="@{/css/components.css}"><link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}"><link rel="stylesheet" th:href="@{/css/pages/settings.css}"><link rel="stylesheet" th:href="@{/css/pages/user-management.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell><aside th:replace="~{fragments/settings-shell :: sidebar('users')}"></aside><button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button><div class="workspace"><header th:replace="~{fragments/settings-shell :: topbar('Users & Roles')}"></header>
+<main class="settings-main" id="main-content"><nav class="settings-breadcrumb"><a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><a th:href="@{/owner/users}">Users &amp; Roles</a><span>/</span><a th:href="@{/owner/user-groups}">User Groups</a><span>/</span><strong>Permissions</strong></nav><div class="settings-page-shell"><aside th:replace="~{fragments/user-shell :: userNav(${userSection})}"></aside><div class="settings-page-content">
+<header class="settings-page-header settings-page-header-action"><div><span class="eyebrow">Permission configuration</span><h1 th:text="${group.name() + ' access'}">Cashier access</h1><p>Choose which pages and actions this group may access. Staff members inherit these permissions from their assigned User Group.</p></div><a class="settings-secondary-button" th:href="@{/owner/user-groups}">Back to groups</a></header>
+<div class="edit-warning" th:if="${group.protectedGroup()}"><span>!</span><div><strong>Protected group permissions are read-only.</strong><p>Owner and Primary Admin groups are protected from permission changes.</p></div></div>
+<form th:action="@{'/owner/user-groups/' + ${group.id()} + '/permissions'}" th:object="${groupPermissionRequest}" method="post">
+<div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}" role="alert"><span>!</span><div><strong>Permission update failed</strong><span th:each="error : ${#fields.globalErrors()}" th:text="${error}">Validation</span></div></div>
+<div class="permission-page-grid">
+<section class="permission-panel"><div class="permission-panel-head"><div><span class="section-kicker">Permission catalogue</span><h2>Pages and actions</h2><p>Select the pages and actions this role should be allowed to use.</p></div></div>
+<div class="permission-list">
+<label class="permission-check" th:each="permission : ${permissions}"><input type="checkbox" th:field="*{permissionIds}" th:value="${permission.id()}" data-permission-checkbox th:disabled="${group.protectedGroup()}"><span class="permission-check-icon" th:text="${#strings.substring(permission.code(),0,1)}">P</span><span><strong th:text="${permission.name()}">Open POS</strong><small th:text="${permission.code()}">POS_OPEN</small></span></label>
+<div class="table-empty" th:if="${#lists.isEmpty(permissions)}"><span class="empty-state-mark">!</span><strong>No active permissions available</strong><p>No permissions are currently available for selection.</p></div>
+</div>
+<div class="permission-actions"><a class="settings-secondary-button" th:href="@{/owner/user-groups}">Cancel</a><button class="settings-primary-button" type="submit" th:disabled="${group.protectedGroup()}">Save permissions</button></div></section>
+<aside class="permission-summary-card"><h3 th:text="${group.name()}">Cashier</h3><p>Role permission summary</p><div class="permission-summary-count"><small>Selected permissions</small><strong data-selected-permission-count th:text="${#sets.size(group.permissionIds())}">0</strong></div><div class="permission-summary-note">Only selected permissions are granted to members of this group.</div><div class="permission-summary-note" th:if="${group.userCount() > 0}" th:text="${group.userCount() + ' active user' + (group.userCount() == 1 ? '' : 's') + ' will inherit this group configuration.'}">Users inherit this role.</div><a class="settings-secondary-button" style="width:100%;margin-top:12px" th:if="${!group.protectedGroup()}" th:href="@{'/owner/user-groups/' + ${group.id()} + '/edit'}">Edit group identity</a></aside>
+</div></form>
+</div></div></main></div></div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script><script th:src="@{/js/pages/user-management.js}" defer></script>
+</body></html>

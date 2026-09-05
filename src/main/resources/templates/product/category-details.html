@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Category Details | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/catalog-management.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/product-ui.css}">
+</head>
+<body class="dashboard-body product-ui">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('products')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Products')}"></header>
+        <main class="catalog-page">
+            <div th:replace="~{fragments/product-ui :: nav('categories')}"></div>
+            <nav class="catalog-breadcrumb"><a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><a th:href="@{/owner/products/categories}">Categories</a><span>/</span><strong>Details</strong></nav>
+            <section class="catalog-heading">
+                <div class="catalog-heading-copy">
+                    <span class="eyebrow">Product catalogue</span>
+                    <h1 th:text="${category.name}">Category</h1>
+                    <p th:text="${category.description ?: 'No description provided.'}">Category description.</p>
+                </div>
+                <div class="catalog-heading-actions">
+                    <a class="catalog-btn" th:href="@{/owner/products/categories}">Back to Categories</a>
+                    <a class="catalog-btn primary" th:if="${!category.archived}" th:href="@{/owner/products/categories/{id}/edit(id=${category.id})}">Edit Category</a>
+                </div>
+            </section>
+            <div class="flash-message" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="flash-message error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+            <section class="catalog-card category-details-card">
+                <div class="catalog-card-head">
+                    <div><h2>Category record</h2><p>Category information and display settings.</p></div>
+                    <span class="status-pill" th:classappend="${category.archived ? ' archived' : (category.status.name() == 'INACTIVE' ? ' inactive' : '')}" th:text="${category.archived ? 'Archived' : category.status}">Active</span>
+                </div>
+                <div class="catalog-card-body">
+                    <div class="category-thumb">
+                        <img th:if="${category.thumbnailReference != null and !#strings.isEmpty(category.thumbnailReference)}" th:src="${category.thumbnailReference}" alt="">
+                        <span th:unless="${category.thumbnailReference != null and !#strings.isEmpty(category.thumbnailReference)}" th:text="${#strings.substring(category.name,0,1)}">C</span>
+                    </div>
+                    <div class="category-detail-grid">
+                        <div><strong>Slug</strong><p th:text="${category.slug}">—</p></div>
+                        <div><strong>Total products</strong><p th:text="${category.totalProducts}">0</p></div>
+                        <div><strong>Display order</strong><p th:text="${category.displayOrder}">0</p></div>
+                        <div><strong>Created</strong><p th:text="${#temporals.format(category.createdAt,'dd MMM yyyy')}">—</p></div>
+                        <div style="grid-column:1/-1"><strong>Thumbnail reference</strong><p th:text="${category.thumbnailReference ?: 'Not provided'}">Not provided</p></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script>
+<script th:src="@{/js/pages/product-ui.js}" defer></script>
+</body>
+</html>

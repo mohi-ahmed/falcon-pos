@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Open Cashier Shift | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}"><link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}"><link rel="stylesheet" th:href="@{/css/pages/operations.css}"><link rel="stylesheet" th:href="@{/css/pages/cash-management.css}">
+</head>
+<body class="dashboard-body cash-ui cash-page-open-shift"><div class="app-shell" data-app-shell>
+<aside th:replace="~{fragments/settings-shell :: sidebar('cash-management')}"></aside><button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+<div class="workspace"><header th:replace="~{fragments/settings-shell :: topbar('Open Cashier Shift')}"></header><main class="operations-page">
+<nav class="ops-breadcrumb"><a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><a th:href="@{/owner/cash-management}">Cash Management</a><span>/</span><strong>Open Cashier Shift</strong></nav>
+<section class="ops-heading"><div><span class="eyebrow">Cashier Shift</span><div class="cash-heading-line"><h1>Open Cashier Shift</h1><span class="cash-head-status neutral">New shift</span></div><div class="cash-head-meta"><strong th:text="${setup.branchName}">Branch</strong><span class="cash-dot-sep">•</span><span th:text="${setup.branchCode}">CODE</span><span class="cash-dot-sep">•</span><span>Branch-scoped operation</span><span class="cash-dot-sep">•</span><span th:text="${currency}">BDT</span></div></div><div class="ops-actions"><a class="ops-btn" th:href="@{/owner/cash-management}">← Cashbook</a></div></section>
+<div th:replace="~{fragments/operations-ui :: flashMessages}"></div>
+<div class="cash-form-shell">
+<section class="ops-card cash-form-card"><div class="ops-card-head"><div><h2>Open shift information</h2><p>Assign an eligible register, cashier and source cash location before physical cash activity begins.</p></div></div>
+<form class="ops-card-body" method="post" th:action="@{/owner/cash-management/shifts/open}" th:object="${openShiftRequest}" novalidate>
+<input type="hidden" th:field="*{openKey}"><div class="ops-grid two">
+<div class="ops-field"><label for="openShiftBranch">Branch</label><input id="openShiftBranch" th:value="${setup.branchName}" readonly></div>
+<div class="ops-field" th:classappend="${#fields.hasErrors('registerId')} ? ' has-error'"><label for="registerId">Register / Counter *</label><select id="registerId" th:field="*{registerId}" required><option value="">Select register</option><option th:each="r:${activeRegisters}" th:value="${r.id}" th:text="|${r.name} · ${r.code}|">Register</option></select><small class="field-error" th:errors="*{registerId}"></small></div>
+<div class="ops-field" th:classappend="${#fields.hasErrors('cashierUserId')} ? ' has-error'"><label for="cashierUserId">Cashier *</label><select id="cashierUserId" th:field="*{cashierUserId}" required><option value="">Select cashier</option><option th:each="u:${cashiers}" th:value="${u.id}" th:text="${u.fullName}">Cashier</option></select><small class="field-error" th:errors="*{cashierUserId}"></small></div>
+<div class="ops-field" th:classappend="${#fields.hasErrors('shiftCode')} ? ' has-error'"><label for="shiftCode">Shift ID *</label><input id="shiftCode" th:field="*{shiftCode}" required><small class="field-error" th:errors="*{shiftCode}"></small></div>
+<div class="ops-field" th:classappend="${#fields.hasErrors('openingFloat')} ? ' has-error'"><label for="openingFloat">Opening Float *</label><input id="openingFloat" th:field="*{openingFloat}" type="number" step="0.0001" min="0" required><small class="ops-help">Backend fixed precision remains unchanged; operational totals display two decimals.</small><small class="field-error" th:errors="*{openingFloat}"></small></div>
+<div class="ops-field" th:classappend="${#fields.hasErrors('sourceCashLocationId')} ? ' has-error'"><label for="sourceCashLocationId">Source Cash Location *</label><select id="sourceCashLocationId" th:field="*{sourceCashLocationId}" required><option value="">Select source</option><option th:each="c:${allowedOpeningCashLocations}" th:value="${c.id}" th:text="|${c.name} · ${#strings.capitalizeWords(#strings.toLowerCase(#strings.replace(c.type.name(), '_', ' ')))}|">Safe</option></select><small class="field-error" th:errors="*{sourceCashLocationId}"></small></div>
+<div class="ops-field full" th:classappend="${#fields.hasErrors('note')} ? ' has-error'"><label for="openNote">Note</label><textarea id="openNote" th:field="*{note}" maxlength="1000" placeholder="Optional opening note"></textarea><small class="field-error" th:errors="*{note}"></small></div>
+</div>
+<div class="ops-note cash-mt-12"><strong>Opening float:</strong> an internal transfer from the selected Cash Location to this cashier shift. It is not cash income.</div>
+<div class="ops-action-row"><a class="ops-btn" th:href="@{/owner/cash-management/shifts}">Cancel</a><button class="ops-btn primary" type="submit">Open cashier shift</button></div>
+</form></section>
+<aside class="ops-card cash-side-card"><div class="ops-card-head"><div><h2>Opening controls</h2><p>Current branch availability and integrity rules.</p></div></div><div class="ops-card-body">
+<h3 class="cash-side-title">Active branch</h3><div class="cash-fact"><span>Branch</span><strong th:text="${setup.branchName}">Branch</strong></div><div class="cash-fact"><span>Registers available</span><strong th:text="${#lists.size(activeRegisters)}">0</strong></div><div class="cash-fact"><span>Opening locations</span><strong th:text="${#lists.size(allowedOpeningCashLocations)}">0</strong></div><div class="cash-fact"><span>Cashiers available</span><strong th:text="${#lists.size(cashiers)}">0</strong></div>
+<div class="ops-note cash-mt-12">The same register can have only one Open shift. Existing branch policy also controls whether one cashier may operate multiple eligible registers concurrently.</div>
+</div></aside>
+</div>
+</main></div></div><script th:src="@{/js/pages/dashboard-shell.js}" defer></script><script th:src="@{/js/pages/operations.js}" defer></script><script th:src="@{/js/pages/cash-management.js}" defer></script></body></html>

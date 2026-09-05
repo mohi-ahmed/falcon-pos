@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Supplier List | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/catalog-management.css}">
+</head>
+<body class="dashboard-body">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('suppliers')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Suppliers')}"></header>
+        <main class="catalog-page">
+            <nav class="catalog-breadcrumb"><a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span><strong>Suppliers</strong><span>/</span><strong>Supplier List</strong></nav>
+            <section class="catalog-heading">
+                <div class="catalog-heading-copy"><span class="eyebrow">Supplier management</span><h1>Supplier List</h1><p>View registered suppliers, their contact information, linked product count and current status.</p></div>
+                <div class="catalog-heading-actions"><a class="catalog-btn primary" th:href="@{/owner/suppliers/new}">+ Add Supplier</a></div>
+            </section>
+
+            <div th:replace="~{fragments/supplier-ui :: feedback}"></div>
+
+            <details class="catalog-card supplier-inline-create">
+                <summary><span><strong>Add New Supplier</strong><small>Expand to register a supplier without leaving the Supplier List.</small></span><span class="summary-chevron">⌄</span></summary>
+                <form class="inline-create-body" th:action="@{/owner/suppliers}" th:object="${supplierRequest}" method="post">
+                    <div class="form-grid">
+                        <div class="form-field"><label for="inlineSupplierName">Supplier name *</label><input id="inlineSupplierName" th:field="*{name}" maxlength="120" required></div>
+                        <div class="form-field"><label for="inlineSupplierCode">Code name</label><input id="inlineSupplierCode" th:field="*{codeName}" maxlength="60"></div>
+                        <div class="form-field"><label for="inlineSupplierEmail">Email</label><input id="inlineSupplierEmail" type="email" th:field="*{email}" maxlength="160"></div>
+                        <div class="form-field"><label for="inlineSupplierMobile">Mobile number</label><input id="inlineSupplierMobile" th:field="*{mobileNumber}" maxlength="32"></div>
+                        <div class="form-field"><label for="inlineSupplierAddress">Address</label><input id="inlineSupplierAddress" th:field="*{address}" maxlength="500"></div>
+                        <div class="form-field"><label for="inlineSupplierCity">City</label><input id="inlineSupplierCity" th:field="*{city}" maxlength="100"></div>
+                        <div class="form-field"><label for="inlineSupplierState">State / Division</label><input id="inlineSupplierState" th:field="*{state}" maxlength="100"></div>
+                        <div class="form-field"><label for="inlineSupplierCountry">Country</label><input id="inlineSupplierCountry" th:field="*{country}" maxlength="100"></div>
+                        <div class="form-field"><label for="inlineSupplierOrder">Display order</label><input id="inlineSupplierOrder" type="number" min="0" th:field="*{displayOrder}"></div>
+                        <label class="form-check"><input type="checkbox" th:field="*{active}"><span>Active<small>Available for current supplier selection.</small></span></label>
+                        <div class="form-field full"><label>Assigned branches *</label><div class="branch-chip-row"><label class="branch-chip" th:each="branch : ${branches}"><input type="checkbox" th:field="*{branchIds}" th:value="${branch.branchId}"><span th:text="${branch.branchName}">Branch</span></label></div><small class="field-error" th:errors="*{branchIds}"></small><small class="form-hint">Select one or multiple branches that can use this supplier.</small></div>
+                        <div class="form-field full"><label for="inlineSupplierDetails">Additional details</label><textarea id="inlineSupplierDetails" th:field="*{additionalDetails}" maxlength="1000"></textarea></div>
+                    </div>
+                    <div class="inline-create-actions"><button class="catalog-btn" type="reset">Reset</button><button class="catalog-btn primary" type="submit">Save Supplier</button></div>
+                </form>
+            </details>
+
+            <section class="catalog-card">
+                <form class="toolbar" method="get" th:action="@{/owner/suppliers}">
+                    <div class="toolbar-search"><span>⌕</span><input type="search" name="q" th:value="${query}" placeholder="Search name, mobile, email or code"></div>
+                    <select name="size" onchange="this.form.submit()"><option value="10" th:selected="${selectedSize == 10}">10 rows</option><option value="25" th:selected="${selectedSize == 25}">25 rows</option><option value="50" th:selected="${selectedSize == 50}">50 rows</option><option value="100" th:selected="${selectedSize == 100}">100 rows</option></select>
+                    <select name="sort" onchange="this.form.submit()" aria-label="Sort suppliers"><option value="created-desc" th:selected="${selectedSort == 'created-desc'}">Newest first</option><option value="created-asc" th:selected="${selectedSort == 'created-asc'}">Oldest first</option><option value="name-asc" th:selected="${selectedSort == 'name-asc'}">Name A–Z</option><option value="name-desc" th:selected="${selectedSort == 'name-desc'}">Name Z–A</option></select>
+                    <button class="catalog-btn" type="submit">Search</button>
+                    <div class="toolbar-spacer"></div>
+                    <div class="export-group"><a class="export-btn" th:href="@{/owner/suppliers/export(format='xlsx',q=${query},sort=${selectedSort})}">Excel</a><a class="export-btn" th:href="@{/owner/suppliers/export(format='csv',q=${query},sort=${selectedSort})}">CSV</a><a class="export-btn" th:href="@{/owner/suppliers/export(format='pdf',q=${query},sort=${selectedSort})}">PDF</a><button class="export-btn" type="button" data-export="print">Print</button></div>
+                </form>
+                <div class="table-wrap">
+                    <table class="catalog-table" data-catalog-table>
+                        <thead><tr><th>ID</th><th>Supplier</th><th>Mobile</th><th>Total Supplied Products</th><th>Created Date</th><th>Status</th><th class="no-export">Actions</th></tr></thead>
+                        <tbody>
+                        <tr th:if="${suppliers.empty}"><td colspan="7" class="table-empty">No supplier matches the selected search.</td></tr>
+                        <tr th:each="supplier : ${suppliers.content}">
+                            <td th:text="${supplier.id}">1</td>
+                            <td><div class="product-cell"><span class="supplier-avatar compact-avatar" th:text="${#strings.substring(supplier.name,0,1)}">S</span><span><strong th:text="${supplier.name}">Supplier</strong><small th:text="${supplier.codeName ?: 'No code name'}">Code</small></span></div></td>
+                            <td th:text="${supplier.mobileNumber ?: '—'}">—</td>
+                            <td th:text="${supplier.totalSuppliedProducts}">0</td>
+                            <td th:text="${supplier.createdAt}">—</td>
+                            <td><span class="status-pill" th:classappend="${!supplier.active ? ' inactive' : ''}" th:text="${supplier.active ? 'Active' : 'Inactive'}">Active</span></td>
+                            <td class="no-export">
+                                <div class="actions-inline">
+                                    <a class="table-action" th:if="${supplier.active and !supplier.archived}" th:href="@{/owner/purchases/new(supplierId=${supplier.id})}">Purchase</a>
+                                    <a class="table-action" th:href="@{/owner/suppliers/{id}(id=${supplier.id})}">View</a>
+                                    <a class="table-action" th:href="@{/owner/suppliers/{id}/edit(id=${supplier.id})}">Edit</a>
+                                    <button class="table-action danger" type="button" th:attr="data-modal-open=${'archive-supplier-' + supplier.id}">Delete</button>
+                                </div>
+                                <div class="modal-backdrop" th:id="${'archive-supplier-' + supplier.id}" role="dialog" aria-modal="true" aria-label="Archive supplier">
+                                    <div class="modal-card"><div class="modal-card-head"><h3>Archive supplier?</h3><p th:text="|${supplier.name} will be removed from the active Supplier List without erasing its previous product connections or future purchase history.|">Archive.</p></div><div class="modal-card-foot"><button class="catalog-btn" type="button" data-modal-close>Cancel</button><form th:action="@{/owner/suppliers/{id}/archive(id=${supplier.id})}" method="post"><button class="catalog-btn danger" type="submit">Archive Supplier</button></form></div></div>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-foot">
+                    <span th:text="|Showing ${suppliers.numberOfElements} of ${suppliers.totalElements} supplier record(s)|">0 records</span>
+                    <div class="pagination">
+                        <a class="page-link" th:if="${suppliers.hasPrevious()}" th:href="@{/owner/suppliers(q=${query},size=${selectedSize},sort=${selectedSort},page=${suppliers.number - 1})}">‹</a>
+                        <span class="page-link is-active" th:text="${suppliers.number + 1}">1</span>
+                        <a class="page-link" th:if="${suppliers.hasNext()}" th:href="@{/owner/suppliers(q=${query},size=${selectedSize},sort=${selectedSort},page=${suppliers.number + 1})}">›</a>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script>
+<script th:src="@{/js/pages/catalog-management.js}" defer></script>
+</body>
+</html>

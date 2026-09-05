@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="Verify the email used to create a Falcon POS owner account.">
+    <title>Verify owner email | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}" href="../../static/css/base.css">
+    <link rel="stylesheet" th:href="@{/css/components.css}" href="../../static/css/components.css">
+    <link rel="stylesheet" th:href="@{/css/pages/auth-flow.css}" href="../../static/css/pages/auth-flow.css">
+</head>
+<body class="auth-body"><main class="auth-layout">
+    <aside class="auth-aside">
+        <a class="brand" th:href="@{/}" href="../public/index.html"><span class="brand-mark">F</span><span><strong>Falcon POS</strong><small>Retail operations</small></span></a>
+        <div class="aside-copy"><span class="aside-kicker">Owner account · Step 2 of 3</span><h2>Verify the person creating the workspace.</h2><p>Email verification protects business ownership and prevents unauthorized workspace creation.</p><ul class="trust-list"><li><span>✓</span> Short-lived, single-use code</li><li><span>✓</span> Limited attempts and resend frequency</li><li><span>✓</span> Email remains the recovery channel</li></ul></div>
+        <p class="aside-foot">Never share a verification code.</p>
+    </aside>
+    <section class="auth-main"><div class="auth-card" aria-labelledby="pageTitle">
+        <a class="brand mobile-brand" th:href="@{/}" href="../public/index.html"><span class="brand-mark">F</span><span><strong>Falcon POS</strong><small>Retail operations</small></span></a>
+        <a class="back-link" th:href="@{/signup}" href="owner-signup.html">← Change account details</a>
+        <span class="eyebrow">Step 2 of 3</span><h1 id="pageTitle">Verify your email</h1>
+        <p class="auth-copy">Enter the six-digit code sent to <strong th:text="${maskedEmail}">m•••@example.com</strong>. It expires in 10 minutes.</p>
+        <div class="status-message" data-tone="success" role="status" th:if="${verificationNotice}"><span class="status-icon">✓</span><span th:text="${verificationNotice}"></span></div>
+        <div class="status-message" data-tone="error" role="alert" th:if="${verificationError}"><span class="status-icon">!</span><span th:text="${verificationError}"></span></div>
+        <div th:object="${verificationForm}">
+            <div class="status-message"
+                 data-tone="error"
+                 role="alert"
+                 th:if="${#fields.hasGlobalErrors()}">
+                <span class="status-icon">!</span>
+                <span th:each="error : ${#fields.globalErrors()}"
+                      th:text="${error}"></span>
+            </div>
+        </div>
+        <form th:action="@{/owner/email-verification}" th:object="${verificationForm}" method="post" data-auth-form="reset-otp" data-server-form="true" novalidate>
+            <input type="hidden" th:field="*{email}"><input type="hidden" th:field="*{code}" data-otp-code>
+            <div class="otp-row" data-otp aria-label="Six digit email verification code"><input aria-label="Digit 1" inputmode="numeric" autocomplete="one-time-code" maxlength="1" required autofocus><input aria-label="Digit 2" inputmode="numeric" maxlength="1" required><input aria-label="Digit 3" inputmode="numeric" maxlength="1" required><input aria-label="Digit 4" inputmode="numeric" maxlength="1" required><input aria-label="Digit 5" inputmode="numeric" maxlength="1" required><input aria-label="Digit 6" inputmode="numeric" maxlength="1" required></div>
+            <p class="field-error" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></p>
+            <button class="primary-button" type="submit" data-submit-label="Verify and continue">Verify and continue <span>→</span></button>
+        </form>
+        <form th:action="@{/owner/email-verification/resend}" method="post" class="helper-row"><span>Didn't receive it?</span><button class="text-link-button" type="submit" data-resend-code>Resend code</button></form>
+    </div></section>
+</main><script th:src="@{/js/pages/auth-flow.js}" src="../../static/js/pages/auth-flow.js" defer></script></body></html>

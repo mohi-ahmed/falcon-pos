@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<aside class="sidebar" id="dashboard-sidebar" aria-label="Primary navigation" th:fragment="sidebar(activeSection)"
+       th:attr="data-ui-favicon=${uiBrandingSettings != null ? uiBrandingSettings.faviconReference() : null}">
+    <div class="sidebar-brand-row">
+        <a class="brand" th:href="@{/owner/dashboard}" aria-label="Falcon POS">
+            <span class="brand-mark brand-image" aria-hidden="true"
+                  th:if="${uiBrandingSettings != null and !#strings.isEmpty(uiBrandingSettings.businessLogoReference())}"><img th:src="${uiBrandingSettings.businessLogoReference()}" alt=""></span>
+            <span class="brand-mark" aria-hidden="true"
+                  th:unless="${uiBrandingSettings != null and !#strings.isEmpty(uiBrandingSettings.businessLogoReference())}">F</span>
+            <span><strong th:text="${uiBrandingSettings != null and !#strings.isEmpty(uiBrandingSettings.name()) ? uiBrandingSettings.name() : 'Falcon POS'}">Falcon POS</strong><small>Retail operations</small></span>
+        </a>
+        <button class="icon-button sidebar-close" type="button" data-sidebar-close aria-label="Close navigation"><span class="shell-control-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18"/></svg></span></button>
+        <button class="sidebar-collapse-toggle" type="button" data-sidebar-collapse aria-controls="dashboard-sidebar" aria-expanded="true" aria-label="Collapse navigation" title="Collapse navigation">
+            <span class="shell-control-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m15 18-6-6 6-6"/></svg></span>
+        </button>
+    </div>
+
+
+    <nav class="navigation" data-sidebar-accordion>
+        <p class="navigation-label">Workspace</p>
+        <a class="navigation-link" sec:authorize="isAuthenticated()" th:classappend="${activeSection == 'dashboard' ? ' is-active' : ''}" th:href="@{/owner/dashboard}">
+            <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg></span><span>Dashboard</span>
+        </a>
+        <a class="navigation-link" sec:authorize="hasRole('OWNER') or hasAuthority('POS_OPEN')" th:classappend="${activeSection == 'pos' ? ' is-active' : ''}" th:href="@{/owner/pos}">
+            <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 8h10M7 12h4M15 12h2M7 16h10"/></svg></span><span>Point of Sale</span><span class="nav-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M14 7l5 5-5 5"/></svg></span>
+        </a>
+        <div class="navigation-group" sec:authorize="hasRole('OWNER') or hasAuthority('SELL_ACCESS')" th:classappend="${activeSection == 'sell' ? ' is-open is-current' : ''}" data-nav-group>
+            <button class="navigation-link navigation-parent" type="button" data-nav-toggle th:classappend="${activeSection == 'sell' ? ' is-active' : ''}" th:attr="aria-expanded=${activeSection == 'sell'}" aria-controls="nav-sell">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14M5 10h14M5 15h9M5 19h6"/><path d="m16 16 2 2 3-4"/></svg></span><span>Sell</span><span class="nav-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5"/></svg></span>
+            </button>
+            <div class="navigation-submenu" id="nav-sell" data-nav-submenu>
+                <a class="navigation-sublink" th:classappend="${activePage == 'sell-list' ? ' is-active' : ''}" th:href="@{/owner/sales(branchId=${setup.branchId})}">Sell List</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'sell-returns' ? ' is-active' : ''}" th:href="@{/owner/sales/returns/list(branchId=${setup.branchId})}">Sell Return List</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'sell-log' ? ' is-active' : ''}" th:href="@{/owner/sales/log(branchId=${setup.branchId})}">Sell Log</a>
+            </div>
+        </div>
+
+        <div class="navigation-group" sec:authorize="hasRole('OWNER') or hasAuthority('PRODUCT_ACCESS')" th:classappend="${activeSection == 'products' ? ' is-open is-current' : ''}" data-nav-group>
+            <button class="navigation-link navigation-parent" type="button" data-nav-toggle
+                    th:classappend="${activeSection == 'products' ? ' is-active' : ''}"
+                    th:attr="aria-expanded=${activeSection == 'products'}" aria-controls="nav-products">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/></svg></span><span>Products</span><span class="nav-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5"/></svg></span>
+            </button>
+            <div class="navigation-submenu" id="nav-products" data-nav-submenu>
+                <a class="navigation-sublink" th:classappend="${activePage == 'add-product' ? ' is-active' : ''}" th:href="@{/owner/products/new}">Add Product</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'product-list' ? ' is-active' : ''}" th:href="@{/owner/products}">Product List</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'add-category' ? ' is-active' : ''}" th:href="@{/owner/products/categories/new}">Add Category</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'category-list' ? ' is-active' : ''}" th:href="@{/owner/products/categories}">Category List</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'stock-alert' ? ' is-active' : ''}" th:href="@{/owner/products/stock-alert}">Stock Alert</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'expiry-alert' ? ' is-active' : ''}" th:href="@{/owner/products/expiry-alert}">Expiry Alert</a>
+            </div>
+        </div>
+
+        <div class="navigation-group" sec:authorize="hasRole('OWNER') or hasAuthority('PURCHASE_ACCESS')" th:classappend="${activeSection == 'purchases' ? ' is-open is-current' : ''}" data-nav-group>
+            <button class="navigation-link navigation-parent" type="button" data-nav-toggle
+                    th:classappend="${activeSection == 'purchases' ? ' is-active' : ''}"
+                    th:attr="aria-expanded=${activeSection == 'purchases'}" aria-controls="nav-purchases">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6h2l2.2 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 9H7"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg></span><span>Purchases</span><span class="nav-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5"/></svg></span>
+            </button>
+            <div class="navigation-submenu" id="nav-purchases" data-nav-submenu>
+                <a class="navigation-sublink" th:classappend="${activePage == 'add-purchase' ? ' is-active' : ''}" th:href="@{/owner/purchases/new}">Add Purchase</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'purchase-list' ? ' is-active' : ''}" th:href="@{/owner/purchases}">Purchase List</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'purchase-returns' ? ' is-active' : ''}" th:href="@{/owner/purchases/returns}">Purchase Return List</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'purchase-log' ? ' is-active' : ''}" th:href="@{/owner/purchases/logs}">Purchase Log Details</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'stock-import' ? ' is-active' : ''}" th:href="@{/owner/purchases/stock-import}">Stock Import</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'stock-import-history' ? ' is-active' : ''}" th:href="@{/owner/purchases/stock-import/history}">Stock Import History</a>
+            </div>
+        </div>
+
+        <p class="navigation-label">Management</p>
+        <a class="navigation-link" sec:authorize="hasRole('OWNER') or hasAuthority('BRANCH_MANAGEMENT')" th:classappend="${activeSection == 'branches' ? ' is-active' : ''}" th:href="@{/owner/branches}">
+            <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20V8l8-4 8 4v12"/><path d="M8 20v-7h8v7M3 20h18"/></svg></span><span>Branches</span><span class="nav-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M14 7l5 5-5 5"/></svg></span>
+        </a>
+
+        <div class="navigation-group" sec:authorize="hasRole('OWNER') or hasAuthority('USER_MANAGEMENT')" th:classappend="${activeSection == 'users' ? ' is-open is-current' : ''}" data-nav-group>
+            <button class="navigation-link navigation-parent" type="button" data-nav-toggle
+                    th:classappend="${activeSection == 'users' ? ' is-active' : ''}"
+                    th:attr="aria-expanded=${activeSection == 'users'}" aria-controls="nav-users">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3 19 6v5c0 4.6-2.8 8-7 10-4.2-2-7-5.4-7-10V6l7-3Z"/><circle cx="12" cy="9" r="2.2"/><path d="M8.8 15.5c.7-1.8 1.8-2.7 3.2-2.7s2.5.9 3.2 2.7"/></svg></span><span>Users &amp; Roles</span><span class="nav-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5"/></svg></span>
+            </button>
+            <div class="navigation-submenu" id="nav-users" data-nav-submenu>
+                <a class="navigation-sublink" th:classappend="${userSection == 'users' ? ' is-active' : ''}" th:href="@{/owner/users}">User List</a>
+                <a class="navigation-sublink" th:classappend="${userSection == 'add-user' ? ' is-active' : ''}" th:href="@{/owner/users/new}">Add User</a>
+                <a class="navigation-sublink" th:classappend="${userSection == 'groups' ? ' is-active' : ''}" th:href="@{/owner/user-groups}">User Groups</a>
+                <a class="navigation-sublink" th:classappend="${userSection == 'add-group' ? ' is-active' : ''}" th:href="@{/owner/user-groups/new}">Add User Group</a>
+            </div>
+        </div>
+
+        <div class="navigation-group" sec:authorize="hasRole('OWNER') or hasAuthority('SUPPLIER_ACCESS')" th:classappend="${activeSection == 'suppliers' ? ' is-open is-current' : ''}" data-nav-group>
+            <button class="navigation-link navigation-parent" type="button" data-nav-toggle
+                    th:classappend="${activeSection == 'suppliers' ? ' is-active' : ''}"
+                    th:attr="aria-expanded=${activeSection == 'suppliers'}" aria-controls="nav-suppliers">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 7h11v10H3zM14 10h3l4 4v3h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M5 4h7M3 11h11"/></svg></span><span>Suppliers</span><span class="nav-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5"/></svg></span>
+            </button>
+            <div class="navigation-submenu" id="nav-suppliers" data-nav-submenu>
+                <a class="navigation-sublink" th:classappend="${activePage == 'add-supplier' ? ' is-active' : ''}" th:href="@{/owner/suppliers/new}">Add Supplier</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'supplier-list' ? ' is-active' : ''}" th:href="@{/owner/suppliers}">Supplier List</a>
+            </div>
+        </div>
+
+
+        <div class="navigation-group" sec:authorize="hasRole('OWNER') or hasAuthority('INVENTORY_VIEW')" th:classappend="${activeSection == 'inventory' ? ' is-open is-current' : ''}" data-nav-group>
+            <button class="navigation-link navigation-parent" type="button" data-nav-toggle th:classappend="${activeSection == 'inventory' ? ' is-active' : ''}" th:attr="aria-expanded=${activeSection == 'inventory'}" aria-controls="nav-inventory">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/><path d="M7.5 8.7v4.8l4.5 2.3"/></svg></span><span>Inventory</span><span class="nav-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5"/></svg></span>
+            </button>
+            <div class="navigation-submenu" id="nav-inventory" data-nav-submenu>
+                <a class="navigation-sublink" th:classappend="${activePage == 'inventory-overview' ? ' is-active' : ''}" th:href="@{/owner/inventory}">Inventory Overview</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'stock-movements' ? ' is-active' : ''}" th:href="@{/owner/inventory/movements}">Stock Movement Ledger</a>
+                <a class="navigation-sublink" sec:authorize="hasRole('OWNER') or hasAuthority('INVENTORY_COUNT_CREATE_SUBMIT')" th:classappend="${activePage == 'create-stock-count' ? ' is-active' : ''}" th:href="@{/owner/inventory/counts/new}">Create Stock Count</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'stock-count-list' ? ' is-active' : ''}" th:href="@{/owner/inventory/counts}">Stock Count List</a>
+                <a class="navigation-sublink" sec:authorize="hasRole('OWNER') or hasAuthority('INVENTORY_ADJUSTMENT_CREATE_SUBMIT')" th:classappend="${activePage == 'create-adjustment' ? ' is-active' : ''}" th:href="@{/owner/inventory/adjustments/new}">Create Adjustment</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'adjustment-list' ? ' is-active' : ''}" th:href="@{/owner/inventory/adjustments}">Adjustment List</a>
+                <a class="navigation-sublink" sec:authorize="hasRole('OWNER') or hasAuthority('INVENTORY_TRANSFER_CREATE_SUBMIT')" th:classappend="${activePage == 'create-transfer' ? ' is-active' : ''}" th:href="@{/owner/inventory/transfers/new}">Create Branch Transfer</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'transfer-list' ? ' is-active' : ''}" th:href="@{/owner/inventory/transfers}">Branch Transfer List</a>
+                <a class="navigation-sublink" sec:authorize="hasRole('OWNER') or hasAuthority('INVENTORY_WASTAGE_CREATE_SUBMIT')" th:classappend="${activePage == 'create-wastage' ? ' is-active' : ''}" th:href="@{/owner/inventory/wastage/new}">Inventory Loss &amp; Wastage</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'wastage-history' ? ' is-active' : ''}" th:href="@{/owner/inventory/wastage}">Wastage History</a>
+            </div>
+        </div>
+
+        <div class="navigation-group" sec:authorize="hasRole('OWNER') or hasAuthority('CASH_MANAGEMENT_ACCESS')" th:classappend="${activeSection == 'cash-management' ? ' is-open is-current' : ''}" data-nav-group>
+            <button class="navigation-link navigation-parent" type="button" data-nav-toggle th:classappend="${activeSection == 'cash-management' ? ' is-active' : ''}" th:attr="aria-expanded=${activeSection == 'cash-management'}" aria-controls="nav-cash-management">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M7 9h10M7 13h5M16 13h1M7 16h3"/></svg></span><span>Cash Management</span><span class="nav-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5"/></svg></span>
+            </button>
+            <div class="navigation-submenu" id="nav-cash-management" data-nav-submenu>
+                <a class="navigation-sublink" th:classappend="${activePage == 'cashbook' ? ' is-active' : ''}" th:href="@{/owner/cash-management}">Branch Cashbook</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'open-shift' ? ' is-active' : ''}" th:href="@{/owner/cash-management/shifts/open}">Open Cashier Shift</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'active-shift' ? ' is-active' : ''}" th:href="@{/owner/cash-management/shifts/active}">Active Shift</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'shift-history' ? ' is-active' : ''}" th:href="@{/owner/cash-management/shifts}">Shift History</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'cash-transfer' ? ' is-active' : ''}" th:href="@{/owner/cash-management/transfers/new}">Cash Transfer &amp; Handover</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'cash-variance' ? ' is-active' : ''}" th:href="@{/owner/cash-management/variance}">Cash Variance Review</a>
+            </div>
+        </div>
+
+        <div class="navigation-group" sec:authorize="hasRole('OWNER') or hasAuthority('CUSTOMER_ACCESS')" th:classappend="${activeSection == 'customers' ? ' is-open is-current' : ''}" data-nav-group>
+            <button class="navigation-link navigation-parent" type="button" data-nav-toggle th:classappend="${activeSection == 'customers' ? ' is-active' : ''}" th:attr="aria-expanded=${activeSection == 'customers'}" aria-controls="nav-customers">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.3"/><path d="M3.5 20v-1.6A4.4 4.4 0 0 1 7.9 14h2.2a4.4 4.4 0 0 1 4.4 4.4V20M15 14.4h1.8a3.7 3.7 0 0 1 3.7 3.7V20"/></svg></span><span>Customers</span><span class="nav-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5"/></svg></span>
+            </button>
+            <div class="navigation-submenu" id="nav-customers" data-nav-submenu>
+                <a class="navigation-sublink" th:classappend="${activePage == 'customer-list' ? ' is-active' : ''}" th:href="@{/owner/customers}">Customer List</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'customer-add' ? ' is-active' : ''}" th:href="@{/owner/customers/add}">Add Customer</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'customer-due' ? ' is-active' : ''}" th:href="@{/owner/customers/due-invoices(branchId=${setup.branchId})}">Due Invoice List</a>
+            </div>
+        </div>
+        <div class="navigation-group" sec:authorize="hasRole('OWNER') or hasAuthority('PAYMENT_VIEW') or hasAuthority('PAYMENT_VIEW_CONSOLIDATED') or hasAuthority('PAYMENT_RECEIVE_CUSTOMER_DUE') or hasAuthority('PAYMENT_PAY_SUPPLIER_DUE')" th:classappend="${activeSection == 'payments' ? ' is-open is-current' : ''}" data-nav-group>
+            <button class="navigation-link navigation-parent" type="button" data-nav-toggle th:classappend="${activeSection == 'payments' ? ' is-active' : ''}" th:attr="aria-expanded=${activeSection == 'payments'}" aria-controls="nav-payments">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M3 10h18M7 15h3"/></svg></span><span>Payments</span><span class="nav-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5"/></svg></span>
+            </button>
+            <div class="navigation-submenu" id="nav-payments" data-nav-submenu>
+                <a class="navigation-sublink" sec:authorize="hasRole('OWNER') or hasAuthority('PAYMENT_VIEW') or hasAuthority('PAYMENT_VIEW_CONSOLIDATED')" th:classappend="${activePage == 'payment-overview' ? ' is-active' : ''}" th:href="@{/owner/payments}">Payment Overview</a>
+                <a class="navigation-sublink" sec:authorize="hasRole('OWNER') or hasAuthority('PAYMENT_RECEIVE_CUSTOMER_DUE')" th:classappend="${activePage == 'receive-customer-due' ? ' is-active' : ''}" th:href="@{/owner/payments/customer(branchId=${setup.branchId})}">Receive Customer Due</a>
+                <a class="navigation-sublink" sec:authorize="hasRole('OWNER') or hasAuthority('PAYMENT_PAY_SUPPLIER_DUE')" th:classappend="${activePage == 'pay-supplier-due' ? ' is-active' : ''}" th:href="@{/owner/payments/supplier(branchId=${setup.branchId})}">Pay Supplier Due</a>
+                <a class="navigation-sublink" sec:authorize="hasRole('OWNER') or hasAuthority('PAYMENT_VIEW') or hasAuthority('PAYMENT_VIEW_CONSOLIDATED')" th:classappend="${activePage == 'payment-history' ? ' is-active' : ''}" th:href="@{/owner/payments/history(branchId=${setup.branchId})}">Payment History</a>
+            </div>
+        </div>
+        <div class="navigation-group" sec:authorize="hasRole('OWNER') or hasAuthority('EXPENDITURE_ACCESS') or hasAuthority('EXPENSE_VIEW')" th:classappend="${activeSection == 'expenses' ? ' is-open is-current' : ''}" data-nav-group>
+            <button class="navigation-link navigation-parent" type="button" data-nav-toggle
+                    th:classappend="${activeSection == 'expenses' ? ' is-active' : ''}"
+                    th:attr="aria-expanded=${activeSection == 'expenses'}" aria-controls="nav-expenses">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 6.5c0-1.4-1.8-2.5-4.5-2.5S8 5.1 8 6.8c0 4.2 9 2.3 9 7 0 1.8-1.8 3.2-4.8 3.2S7 15.6 7 14"/></svg></span><span>Expenses</span><span class="nav-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5"/></svg></span>
+            </button>
+            <div class="navigation-submenu" id="nav-expenses" data-nav-submenu>
+                <a class="navigation-sublink" sec:authorize="hasRole('OWNER') or hasAuthority('EXPENSE_CREATE')" th:classappend="${activePage == 'add-expense' ? ' is-active' : ''}" th:href="@{/owner/expenses/add}">Add Expense</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'expense-list' ? ' is-active' : ''}" th:href="@{/owner/expenses}">Expense List</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'add-expense-category' ? ' is-active' : ''}" th:href="@{/owner/expense-categories/add}">Add Expense Category</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'expense-category-list' ? ' is-active' : ''}" th:href="@{/owner/expense-categories}">Expense Category List</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'expense-monthwise' ? ' is-active' : ''}" th:href="@{/owner/expenses/monthwise}">Expense Monthwise</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'expense-summary' ? ' is-active' : ''}" th:href="@{/owner/expenses/summary}">Expense Summary</a>
+            </div>
+        </div>
+        <div class="navigation-group" sec:authorize="hasRole('OWNER') or hasAuthority('ANALYTICS_REPORTS_ACCESS')" th:classappend="${activeSection == 'analytics' ? ' is-open is-current' : ''}" data-nav-group>
+            <button class="navigation-link navigation-parent" type="button" data-nav-toggle th:classappend="${activeSection == 'analytics' ? ' is-active' : ''}" th:attr="aria-expanded=${activeSection == 'analytics'}" aria-controls="nav-analytics">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span><span>Reports &amp; Analytics</span><span class="nav-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5"/></svg></span>
+            </button>
+            <div class="navigation-submenu" id="nav-analytics" data-nav-submenu>
+                <a class="navigation-sublink" th:classappend="${activePage == 'analytics-overview' ? ' is-active' : ''}" th:href="@{/owner/analytics}">Analytics Overview</a>
+                <a class="navigation-sublink" th:classappend="${activePage == 'analytics-reports' ? ' is-active' : ''}" th:href="@{/owner/analytics/reports}">Reports</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="navigation-group" sec:authorize="hasRole('OWNER') or hasAuthority('SETTINGS_ACCESS')" th:classappend="${activeSection == 'settings' ? ' is-open is-current' : ''}" data-nav-group>
+            <button class="navigation-link navigation-parent" type="button" data-nav-toggle
+                    th:classappend="${activeSection == 'settings' ? ' is-active' : ''}"
+                    th:attr="aria-expanded=${activeSection == 'settings'}" aria-controls="nav-settings">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.6v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 4.1 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H2.3V9.6h.1A1.7 1.7 0 0 0 4 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.46 3.7l.06.06A1.7 1.7 0 0 0 8.4 4.1a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V2.3h4.04v.1A1.7 1.7 0 0 0 15 4a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 8.4c.23.37.47.67.8.88.33.2.7.31 1.1.31h.1v4.04h-.1a1.7 1.7 0 0 0-1.9 1.37Z"/></svg></span><span>Settings</span><span class="nav-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5"/></svg></span>
+            </button>
+            <div class="navigation-submenu" id="nav-settings" data-nav-submenu>
+                <a class="navigation-sublink" th:classappend="${settingsTab == 'general' ? ' is-active' : ''}" th:href="@{/owner/settings/general}">Branch Settings</a>
+                <a class="navigation-sublink" th:classappend="${settingsTab == 'payment-methods' ? ' is-active' : ''}" th:href="@{/owner/settings/payment-methods}">Payment Methods</a>
+                <a class="navigation-sublink" th:classappend="${settingsTab == 'units' ? ' is-active' : ''}" th:href="@{/owner/settings/units}">Units</a>
+                <a class="navigation-sublink" th:classappend="${settingsTab == 'taxes' ? ' is-active' : ''}" th:href="@{/owner/settings/taxes}">Tax Rates</a>
+                <a class="navigation-sublink" th:classappend="${settingsTab == 'printers' ? ' is-active' : ''}" th:href="@{/owner/settings/printers}">Printers</a>
+                <a class="navigation-sublink" th:classappend="${settingsTab == 'cash-configuration' ? ' is-active' : ''}" th:href="@{/owner/settings/cash-configuration}">Registers &amp; Cash Locations</a>
+            </div>
+        </div>
+        <div class="build-note"><small>Falcon workspace</small><strong>Controlled configuration</strong><span>Master settings remain separate from posted operational transactions.</span></div>
+    </div>
+</aside>
+
+<header class="topbar" th:fragment="topbar(contextTitle)">
+    <button class="topbar-nav-toggle" type="button" data-sidebar-toggle aria-controls="dashboard-sidebar" aria-expanded="true" aria-label="Collapse navigation" title="Collapse navigation">
+        <span class="topbar-nav-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9 4v16M13 8h5M13 12h5M13 16h3"/></svg>
+        </span>
+    </button>
+    <div class="topbar-context"><small th:text="${setup.businessName}">Business</small><strong th:text="${contextTitle}">Settings</strong></div>
+    <div class="topbar-actions">
+        <div class="topbar-live-clock" data-live-clock role="timer" aria-label="Live local date and time" title="Live date and time from this device">
+            <span class="live-clock-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2M7 3.5v2M17 3.5v2"/></svg>
+            </span>
+            <span class="live-clock-copy"><small data-live-date>05 Sep 2026</small><strong data-live-time>--:--:--</strong></span>
+        </div>
+        <a class="branch-switcher" th:href="@{/owner/branches/change}" aria-label="Current working branch"
+           sec:authorize="hasRole('OWNER') or hasAuthority('BRANCH_CHANGE')">
+            <span class="branch-avatar branch-avatar-small branch-store-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M4 10h16v10H4V10Z"/><path d="M3 10 5 4h14l2 6"/><path d="M8 20v-6h8v6"/><path d="M3 10c0 1.5 1.2 2.7 2.7 2.7S8.3 11.5 8.3 10c0 1.5 1.2 2.7 2.7 2.7s2.7-1.2 2.7-2.7c0 1.5 1.2 2.7 2.7 2.7S19 11.5 19 10"/></svg>
+            </span>
+            <span class="branch-switcher-copy"><small>Working in</small><strong th:text="${setup.branchName}">Main Branch</strong></span>
+            <span class="topbar-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5"/></svg></span>
+        </a>
+        <div class="branch-switcher" sec:authorize="!hasRole('OWNER') and !hasAuthority('BRANCH_CHANGE')">
+            <span class="branch-avatar branch-avatar-small branch-store-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M4 10h16v10H4V10Z"/><path d="M3 10 5 4h14l2 6"/><path d="M8 20v-6h8v6"/><path d="M3 10c0 1.5 1.2 2.7 2.7 2.7S8.3 11.5 8.3 10c0 1.5 1.2 2.7 2.7 2.7s2.7-1.2 2.7-2.7c0 1.5 1.2 2.7 2.7 2.7S19 11.5 19 10"/></svg>
+            </span>
+            <span class="branch-switcher-copy"><small>Working in</small><strong th:text="${setup.branchName}">Main Branch</strong></span>
+        </div>
+        <div class="profile-menu">
+            <button class="profile-trigger" type="button" data-profile-trigger aria-expanded="false" aria-controls="profile-dropdown">
+                <span class="profile-avatar" th:text="${#strings.substring(#authentication.principal.staff ? #authentication.principal.username : setup.ownerName,0,1)}">U</span>
+                <span class="profile-copy"><strong th:text="${#authentication.principal.staff ? #authentication.principal.username : setup.ownerName}">User</strong><small th:text="${#authentication.principal.staff ? #authentication.principal.userGroupName : 'Owner'}">Role</small></span><span class="topbar-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5"/></svg></span>
+            </button>
+            <div class="profile-dropdown" id="profile-dropdown" data-profile-dropdown hidden>
+                <div class="profile-summary"><strong th:text="${#authentication.principal.staff ? #authentication.principal.username : setup.ownerName}">User</strong><small th:text="${#authentication.principal.staff ? #authentication.principal.userGroupName : 'Primary owner account'}">Account</small></div>
+                <span class="dropdown-item is-disabled" aria-disabled="true">My profile <small>Later</small></span>
+                <span class="dropdown-item is-disabled" aria-disabled="true">Security <small>Later</small></span>
+                <form th:action="@{/sign-out}" method="post"><button class="dropdown-item sign-out" type="submit">Sign out</button></form>
+            </div>
+        </div>
+    </div>
+</header>
+
+<aside class="settings-local-nav" aria-label="Settings navigation" th:fragment="settingsNav(activeTab)">
+    <div class="settings-local-nav-heading">
+        <span class="settings-local-nav-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z"/><path d="M19.2 13.3c.04-.42.04-.84 0-1.26l1.78-1.4-1.8-3.12-2.1.85a8.03 8.03 0 0 0-1.1-.64L15.66 5.5h-3.6l-.33 2.23c-.39.18-.76.4-1.1.64l-2.1-.85-1.8 3.12 1.78 1.4a6.75 6.75 0 0 0 0 1.26l-1.78 1.4 1.8 3.12 2.1-.85c.34.25.71.46 1.1.64l.33 2.23h3.6l.33-2.23c.39-.18.76-.4 1.1-.64l2.1.85 1.8-3.12-1.79-1.4Z"/></svg>
+        </span>
+        <span><strong>Settings</strong><small>Business configuration</small></span>
+    </div>
+    <nav class="settings-local-nav-links">
+        <a class="settings-local-link" th:classappend="${activeTab == 'general' ? ' is-active' : ''}" th:href="@{/owner/settings/general}">
+            <span class="settings-local-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h16M6 20V9l6-4 6 4v11M9 20v-6h6v6"/></svg></span>
+            <span><strong>Branch settings</strong><small>General, POS &amp; expiry</small></span>
+        </a>
+        <a class="settings-local-link" th:classappend="${activeTab == 'payment-methods' ? ' is-active' : ''}" th:href="@{/owner/settings/payment-methods}">
+            <span class="settings-local-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M3.5 10h17M7 15h3"/></svg></span>
+            <span><strong>Payment methods</strong><small>Checkout options</small></span>
+        </a>
+        <a class="settings-local-link" th:classappend="${activeTab == 'units' ? ' is-active' : ''}" th:href="@{/owner/settings/units}">
+            <span class="settings-local-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M5 17h14M8 4 5 7l3 3M16 14l3 3-3 3"/></svg></span>
+            <span><strong>Units</strong><small>Measurement names</small></span>
+        </a>
+        <a class="settings-local-link" th:classappend="${activeTab == 'taxes' ? ' is-active' : ''}" th:href="@{/owner/settings/taxes}">
+            <span class="settings-local-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m7 17 10-10M8 8h.01M16 16h.01"/><circle cx="8" cy="8" r="2.2"/><circle cx="16" cy="16" r="2.2"/></svg></span>
+            <span><strong>Tax rates</strong><small>Tax configuration</small></span>
+        </a>
+        <a class="settings-local-link" th:classappend="${activeTab == 'printers' ? ' is-active' : ''}" th:href="@{/owner/settings/printers}">
+            <span class="settings-local-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v6H7z"/><path d="M17 12h.01"/></svg></span>
+            <span><strong>Printers</strong><small>Device configuration</small></span>
+        </a>
+        <a class="settings-local-link" th:classappend="${activeTab == 'cash-configuration' ? ' is-active' : ''}" th:href="@{/owner/settings/cash-configuration}">
+            <span class="settings-local-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M7 9h10M7 13h4M15 13h2M7 16h3"/></svg></span>
+            <span><strong>Registers &amp; cash locations</strong><small>Counters, safes &amp; drawers</small></span>
+        </a>
+    </nav>
+    <div class="settings-local-nav-foot">
+        <span class="status-dot"></span>
+        <span><strong th:text="${setup.branchName}">Main Branch</strong><small>Current branch context</small></span>
+    </div>
+</aside>
+</body>
+</html>

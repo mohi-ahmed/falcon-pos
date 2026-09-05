@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Page not found | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}" href="../../static/css/base.css">
+    <link rel="stylesheet" th:href="@{/css/components.css}" href="../../static/css/components.css">
+</head>
+<body>
+<main class="auth-main">
+    <section class="auth-card" aria-labelledby="errorTitle">
+        <a class="brand" th:href="@{/}" href="../public/index.html">
+            <span class="brand-mark" aria-hidden="true">F</span>
+            <span><strong>Falcon POS</strong><small>Retail operations</small></span>
+        </a>
+        <span class="eyebrow">Page not found</span>
+        <h1 id="errorTitle">We could not find the page you requested.</h1>
+        <p>The link may be outdated, or the page may have moved to another part of your Falcon workspace.</p>
+        <a class="primary-button" th:href="@{/}" href="../public/index.html">Return home</a>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Add Purchase | Falcon POS</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/dashboard-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/operations.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/purchase.css}">
+</head>
+<body class="dashboard-body purchase-module" data-purchase-page="new">
+<div class="app-shell" data-app-shell>
+    <aside th:replace="~{fragments/settings-shell :: sidebar('purchases')}"></aside>
+    <button class="sidebar-scrim" type="button" data-sidebar-close aria-label="Close navigation"></button>
+
+    <div class="workspace">
+        <header th:replace="~{fragments/settings-shell :: topbar('Add Purchase')}"></header>
+        <main class="operations-page">
+            <nav class="ops-breadcrumb">
+                <a th:href="@{/owner/dashboard}">Dashboard</a><span>/</span>
+                <a th:href="@{/owner/purchases}">Purchases</a><span>/</span><strong>Add Purchase</strong>
+            </nav>
+            <div th:replace="~{fragments/purchase-ui :: subnav('new')}"></div>
+
+            <section class="ops-heading">
+                <div>
+                    <span class="eyebrow">Purchase Management</span>
+                    <h1 th:text="${editPurchaseId == null ? 'Add Purchase' : 'Edit Draft Purchase #' + editPurchaseId}">Add Purchase</h1>
+                    <p>Record supplier purchases, product quantities, costs and payment details.</p>
+                </div>
+                <div class="ops-actions">
+                    <a class="ops-btn" th:href="@{/owner/purchases}">Purchase List</a>
+                    <a class="ops-btn" th:href="@{/owner/purchases/stock-import}">Stock Import</a>
+                </div>
+            </section>
+
+            <div class="flash-message" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="flash-message error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+            <div class="flash-message error" th:if="${validationErrors != null}" role="alert">
+                <strong>Please fix the following:</strong>
+                <ul><li th:each="message : ${validationErrors}" th:text="${message}">Validation message</li></ul>
+            </div>
+
+            <form method="post" th:action="${editPurchaseId == null ? '/owner/purchases' : '/owner/purchases/' + editPurchaseId}" th:object="${purchaseRequest}" data-purchase-form>
+                <input type="hidden" th:field="*{branchId}">
+                <input type="hidden" th:field="*{idempotencyKey}">
+                <input type="hidden" name="redirectTo" value="purchases">
+
+                <div class="ops-split">
+                    <div>
+                        <section class="ops-card">
+                            <div class="ops-card-head">
+                                <div>
+                                    <h2>Purchase information</h2>
+                                    <p>Purchase date, supplier and reference details.</p>
+                                </div>
+                                <span class="ops-status">Draft Entry</span>
+                            </div>
+                            <div class="ops-card-body">
+                                <div class="ops-grid purchase-info-grid">
+                                    <div class="ops-field purchase-span-4">
+                                        <label for="purchaseDate">Purchase Date</label>
+                                        <input id="purchaseDate" th:field="*{purchaseDate}" type="date" required>
+                                    </div>
+                                    <div class="ops-field purchase-span-4">
+                                        <label for="supplierId">Supplier</label>
+                                        <select id="supplierId" th:field="*{supplierId}" required>
+                                            <option value="">Select supplier</option>
+                                            <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.name}"
+                                                    >Supplier</option>
+                                        </select>
+                                    </div>
+                                    <div class="ops-field purchase-span-4">
+                                        <label for="supplierInvoiceReference">Supplier Invoice / Reference</label>
+                                        <input id="supplierInvoiceReference" th:field="*{supplierInvoiceReference}" maxlength="120" placeholder="e.g. SUP-INV-1024">
+                                    </div>
+                                    <div class="ops-field purchase-span-6">
+                                        <label for="attachmentReference">Invoice / Receipt / Delivery Document Reference</label>
+                                        <input id="attachmentReference" th:field="*{attachmentReference}" maxlength="500" placeholder="Invoice, receipt or delivery reference">
+                                    </div>
+                                    <div class="ops-field purchase-span-6">
+                                        <label for="purchaseNotes">Notes</label>
+                                        <textarea id="purchaseNotes" th:field="*{notes}" maxlength="1000" placeholder="Add a note (optional)"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="ops-card">
+                            <div class="ops-card-head">
+                                <div>
+                                    <h2>Purchase products</h2>
+                                    <p>Select products, scan a barcode or import a CSV.</p>
+                                </div>
+                                <button class="ops-btn primary" type="button" data-add-purchase-item>+ Add Item</button>
+                            </div>
+                            <div class="ops-card-body">
+                                <div class="ops-product-tools">
+                                    <div class="ops-field wide">
+                                        <label for="productSearch">Search product / variant / SKU</label>
+                                        <input id="productSearch" type="search" data-purchase-product-search placeholder="Search by product, variant or SKU">
+                                    </div>
+                                    <div class="ops-field">
+                                        <label for="purchaseBarcode">Barcode Scanner</label>
+                                        <input id="purchaseBarcode" type="text" inputmode="numeric" autocomplete="off"
+                                               list="purchaseBarcodeOptions" data-purchase-barcode placeholder="Scan or enter barcode">
+                                        <datalist id="purchaseBarcodeOptions">
+                                            <option th:each="b : ${barcodeOptions}" th:value="${b.barcode}"
+                                                    th:attr="data-variant-id=${b.variant.variantId},
+                                                             data-barcode-unit-id=${b.unitId},
+                                                             data-barcode-unit-name=${unitMap[b.unitId] != null ? unitMap[b.unitId].name : 'Unit #' + b.unitId}">Barcode</option>
+                                        </datalist>
+                                        <small class="ops-help" data-barcode-status>Ready to scan.</small>
+                                    </div>
+                                    <div class="ops-tool-actions">
+                                        <button class="ops-btn" type="button" data-create-purchase-product>+ Create New Product</button>
+                                        <button class="ops-btn" type="button" data-purchase-csv-trigger>Import Purchase CSV</button>
+                                        <input class="visually-hidden" type="file" accept=".csv,text/csv" data-purchase-csv aria-label="Import Purchase CSV">
+                                        <small class="ops-help" data-purchase-csv-status>No file selected.</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ops-line-list" data-purchase-items>
+                                <article class="ops-line" data-purchase-item>
+                                    <div class="ops-line-head">
+                                        <div><span class="ops-line-number" data-line-number>Item 1</span><strong>Purchase item</strong></div>
+                                        <button class="ops-btn danger" type="button" data-remove-purchase-item disabled>Remove</button>
+                                    </div>
+                                    <div class="ops-line-grid purchase-item-grid">
+                                        <div class="ops-field purchase-span-6">
+                                            <label>Product Variant</label>
+                                            <select name="items[0].productVariantId" data-variant required>
+                                                <option value="">Select product variant</option>
+                                                <option th:each="v : ${variantOptions}"
+                                                        th:value="${v.variantId}"
+                                                        th:text="|${v.productName} · ${v.variantName} · ${v.sku}|"
+                                                        th:attr="data-sku=${v.sku},
+                                                                 data-product-name=${v.productName},
+                                                                 data-variant-name=${v.variantName},
+                                                                 data-purchase-unit-id=${v.purchaseUnitId != null ? v.purchaseUnitId : v.baseInventoryUnitId},
+                                                                 data-purchase-unit-name=${unitMap[v.purchaseUnitId != null ? v.purchaseUnitId : v.baseInventoryUnitId] != null ? unitMap[v.purchaseUnitId != null ? v.purchaseUnitId : v.baseInventoryUnitId].name : 'Unit #' + (v.purchaseUnitId != null ? v.purchaseUnitId : v.baseInventoryUnitId)},
+                                                                 data-base-unit-id=${v.baseInventoryUnitId},
+                                                                 data-base-unit-name=${unitMap[v.baseInventoryUnitId] != null ? unitMap[v.baseInventoryUnitId].name : 'Unit #' + v.baseInventoryUnitId},
+                                                                 data-selling-price=${v.sellingPrice},
+                                                                 data-track-expiry=${v.trackExpiry},
+                                                                 data-batch-required=${v.batchTrackingRequired}">Variant</option>
+                                            </select>
+                                            <input type="hidden" name="items[0].enteredUnitId" data-entered-unit required>
+                                        </div>
+                                        <div class="ops-field purchase-span-3">
+                                            <label>Purchase Unit</label>
+                                            <input data-unit-label readonly placeholder="Select a variant">
+                                        </div>
+                                        <div class="ops-field purchase-span-3">
+                                            <label>Quantity</label>
+                                            <input name="items[0].enteredQuantity" data-quantity type="number" min="0.00000001" step="0.00000001" required>
+                                        </div>
+                                        <div class="ops-field purchase-span-3">
+                                            <label>Unit Cost</label>
+                                            <input name="items[0].unitCost" data-unit-cost type="number" min="0" step="0.0001" required>
+                                        </div>
+                                        <div class="ops-field purchase-span-3">
+                                            <label>Selling Price</label>
+                                            <input name="items[0].intendedSellingPrice" data-selling-price type="number" min="0" step="0.0001">
+                                        </div>
+                                        <div class="ops-field purchase-span-3">
+                                            <label>Item Tax</label>
+                                            <input name="items[0].itemTax" data-item-tax type="number" min="0" step="0.0001" value="0">
+                                        </div>
+                                        <div class="ops-field purchase-span-3">
+                                            <label>Item Discount</label>
+                                            <input name="items[0].itemDiscount" data-item-discount type="number" min="0" step="0.0001" value="0">
+                                        </div>
+                                        <div class="ops-field purchase-span-4">
+                                            <label>Batch / Lot Number</label>
+                                            <input name="items[0].batchNumber" maxlength="100" data-batch-number>
+                                        </div>
+                                        <div class="ops-field purchase-span-4">
+                                            <label>Manufacturing Date</label>
+                                            <input name="items[0].manufacturingDate" type="date">
+                                        </div>
+                                        <div class="ops-field purchase-span-4">
+                                            <label>Expiry / Best-Before Date</label>
+                                            <input name="items[0].expiryDate" type="date">
+                                        </div>
+                                        <div class="ops-field purchase-span-12">
+                                            <label>Stock Unit</label>
+                                            <div class="ops-preview" data-conversion-preview>Select a product to view how the purchase unit will be added to stock.</div>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
+                        </section>
+                    </div>
+
+                    <aside class="ops-summary">
+                        <section class="ops-card">
+                            <div class="ops-card-head">
+                                <div><h2>Order &amp; payment</h2><p>Review charges, payment and supplier due.</p></div>
+                            </div>
+                            <div class="ops-card-body">
+                                <div class="ops-field"><label>Order Tax</label><input th:field="*{orderTax}" data-order-tax type="number" min="0" step="0.0001"></div>
+                                <div class="ops-field"><label>Shipping Charges</label><input th:field="*{shippingCharges}" data-shipping type="number" min="0" step="0.0001"></div>
+                                <div class="ops-field"><label>Other Charges</label><input th:field="*{otherCharges}" data-other-charges type="number" min="0" step="0.0001"></div>
+                                <div class="ops-field"><label>Purchase Discount</label><input th:field="*{discount}" data-purchase-discount type="number" min="0" step="0.0001"></div>
+                                <div class="ops-field"><label>Paid Amount</label><input th:field="*{paidAmount}" data-paid-amount type="number" min="0" step="0.0001" th:readonly="${editPurchaseId != null}"></div>
+                                <div class="ops-field">
+                                    <label>Payment Method</label>
+                                    <select th:field="*{paymentMethodId}" th:disabled="${editPurchaseId != null}"><option value="">Select when paying now</option><option th:each="m : ${paymentMethods}" th:value="${m.id}" th:text="${m.name}">Method</option></select>
+                                </div>
+                                <div class="ops-field"><label>Transaction Reference</label><input th:field="*{transactionReference}" maxlength="160" placeholder="Enter reference when required" th:readonly="${editPurchaseId != null}"></div>
+
+                                <div class="ops-form-section" style="margin-top:14px">
+                                    <h3>Cash details</h3>
+                                    <div class="ops-field"><label>Cash Location</label><select th:field="*{cashLocationId}" th:disabled="${editPurchaseId != null}"><option value="">Select for physical cash</option><option th:each="c : ${cashLocations}" th:value="${c.id}" th:text="${c.name}">Cash Location</option></select></div>
+                                    <div class="ops-field"><label>Register / Counter</label><select th:field="*{registerId}" th:disabled="${editPurchaseId != null}"><option value="">Select for physical cash</option><option th:each="r : ${registers}" th:value="${r.id}" th:text="|${r.name} · ${r.code}|">Register</option></select></div>
+                                    <div class="ops-field"><label>Active Cashier Shift</label><select th:field="*{cashierShiftId}" th:disabled="${editPurchaseId != null}"><option value="">Select for physical cash</option><option th:each="s : ${openShifts}" th:value="${s.id}" th:text="|${s.shiftCode} · Register ${s.registerId}|">Shift</option></select></div>
+                                </div>
+
+                                <div class="ops-calculation" aria-live="polite">
+                                    <div class="ops-summary-row"><span>Item Subtotal</span><strong data-preview-subtotal>0.00</strong></div>
+                                    <div class="ops-summary-row"><span>Order Charges / Tax</span><strong data-preview-charges>0.00</strong></div>
+                                    <div class="ops-summary-row"><span>Purchase Discount</span><strong data-preview-discount>0.00</strong></div>
+                                    <div class="ops-summary-row total"><span>Estimated Payable</span><strong data-preview-payable>0.00</strong></div>
+                                    <div class="ops-summary-row"><span>Estimated Supplier Due</span><strong data-preview-due>0.00</strong></div>
+                                    <div class="ops-summary-row"><span>Estimated Change</span><strong data-preview-change>0.00</strong></div>
+                                </div>
+                                <div class="ops-action-row">
+                                    <button class="ops-btn" type="reset">Reset</button>
+                                    <button class="ops-btn primary" type="submit" th:text="${editPurchaseId == null ? 'Confirm Purchase' : 'Save Draft Changes'}">Confirm Purchase</button>
+                                </div>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </form>
+
+            <template id="purchaseItemTemplate">
+                <article class="ops-line" data-purchase-item>
+                    <div class="ops-line-head">
+                        <div><span class="ops-line-number" data-line-number>Item</span><strong>Purchase item</strong></div>
+                        <button class="ops-btn danger" type="button" data-remove-purchase-item>Remove</button>
+                    </div>
+                    <div class="ops-line-grid purchase-item-grid">
+                        <div class="ops-field purchase-span-6">
+                            <label>Product Variant</label>
+                            <select data-field="productVariantId" data-variant required>
+                                <option value="">Select product variant</option>
+                                <option th:each="v : ${variantOptions}"
+                                        th:value="${v.variantId}"
+                                        th:text="|${v.productName} · ${v.variantName} · ${v.sku}|"
+                                        th:attr="data-sku=${v.sku},
+                                                 data-product-name=${v.productName},
+                                                 data-variant-name=${v.variantName},
+                                                 data-purchase-unit-id=${v.purchaseUnitId != null ? v.purchaseUnitId : v.baseInventoryUnitId},
+                                                 data-purchase-unit-name=${unitMap[v.purchaseUnitId != null ? v.purchaseUnitId : v.baseInventoryUnitId] != null ? unitMap[v.purchaseUnitId != null ? v.purchaseUnitId : v.baseInventoryUnitId].name : 'Unit #' + (v.purchaseUnitId != null ? v.purchaseUnitId : v.baseInventoryUnitId)},
+                                                 data-base-unit-id=${v.baseInventoryUnitId},
+                                                 data-base-unit-name=${unitMap[v.baseInventoryUnitId] != null ? unitMap[v.baseInventoryUnitId].name : 'Unit #' + v.baseInventoryUnitId},
+                                                 data-selling-price=${v.sellingPrice},
+                                                 data-track-expiry=${v.trackExpiry},
+                                                 data-batch-required=${v.batchTrackingRequired}">Variant</option>
+                            </select>
+                            <input type="hidden" data-field="enteredUnitId" data-entered-unit required>
+                        </div>
+                        <div class="ops-field purchase-span-3"><label>Purchase Unit</label><input data-unit-label readonly placeholder="Select a variant"></div>
+                        <div class="ops-field purchase-span-3"><label>Quantity</label><input data-field="enteredQuantity" data-quantity type="number" min="0.00000001" step="0.00000001" required></div>
+                        <div class="ops-field purchase-span-3"><label>Unit Cost</label><input data-field="unitCost" data-unit-cost type="number" min="0" step="0.0001" required></div>
+                        <div class="ops-field purchase-span-3"><label>Selling Price</label><input data-field="intendedSellingPrice" data-selling-price type="number" min="0" step="0.0001"></div>
+                        <div class="ops-field purchase-span-3"><label>Item Tax</label><input data-field="itemTax" data-item-tax type="number" min="0" step="0.0001" value="0"></div>
+                        <div class="ops-field purchase-span-3"><label>Item Discount</label><input data-field="itemDiscount" data-item-discount type="number" min="0" step="0.0001" value="0"></div>
+                        <div class="ops-field purchase-span-4"><label>Batch / Lot Number</label><input data-field="batchNumber" maxlength="100" data-batch-number></div>
+                        <div class="ops-field purchase-span-4"><label>Manufacturing Date</label><input data-field="manufacturingDate" type="date"></div>
+                        <div class="ops-field purchase-span-4"><label>Expiry / Best-Before Date</label><input data-field="expiryDate" type="date"></div>
+                        <div class="ops-field purchase-span-12"><label>Stock Unit</label><div class="ops-preview" data-conversion-preview>Select a product to view how the purchase unit will be added to stock.</div></div>
+                    </div>
+                </article>
+            </template>
+
+            <section class="ops-card">
+                <div class="ops-card-head">
+                    <div><h2>Recent Purchases</h2><p>Latest purchases for this branch.</p></div>
+                    <a class="ops-btn" th:href="@{/owner/purchases}">Open Full List</a>
+                </div>
+                <div class="ops-table-wrap">
+                    <table class="ops-table">
+                        <thead><tr><th>Date</th><th>Invoice ID</th><th>Supplier</th><th>Creator</th><th>Total</th><th>Paid</th><th>Outstanding Due</th><th>Payment Status</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody>
+                        <tr th:each="p : ${recentPurchases.content}">
+                            <td class="purchase-date-cell"><span th:text="${#temporals.format(p.purchaseDate,'dd/MM/yyyy')}">—</span></td>
+                            <td th:text="|#${p.id}|">#1</td>
+                            <td th:text="${supplierMap[p.supplierId] != null ? supplierMap[p.supplierId].name : 'Supplier #' + p.supplierId}">Supplier</td>
+                            <td th:text="${p.createdByActorId}">—</td>
+                            <td class="numeric" th:text="${#numbers.formatDecimal(p.totalPayable,1,2)}">0.00</td>
+                            <td class="numeric" th:text="${#numbers.formatDecimal(p.paidAmount,1,2)}">0.00</td>
+                            <td class="numeric" th:text="${#numbers.formatDecimal(p.dueAmount,1,2)}">0.00</td>
+                            <td><span class="ops-status" th:text="${p.paymentStatus}">UNPAID</span></td>
+                            <td><span class="ops-status neutral" th:text="${p.status}">CONFIRMED</span></td>
+                            <td><a class="ops-btn" th:href="@{/owner/purchases/{id}(id=${p.id})}">View</a></td>
+                        </tr>
+                        <tr th:if="${recentPurchases.empty}"><td colspan="10"><div class="ops-empty"><strong>No data available</strong><span>Confirmed purchases will appear here.</span></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<script th:inline="javascript">window.falconPurchaseFormState = /*[[${purchaseRequest}]]*/ null;</script>
+<script th:src="@{/js/pages/dashboard-shell.js}" defer></script>
+<script th:src="@{/js/pages/operations.js}" defer></script>
+<script th:src="@{/js/pages/purchase-ui.js}" defer></script>
+</body>
+</html>
